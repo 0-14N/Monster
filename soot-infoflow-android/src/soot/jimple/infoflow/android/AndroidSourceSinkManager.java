@@ -18,10 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.monster.taint.Monster;
+
 import soot.Local;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
+import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.IdentityStmt;
@@ -182,8 +185,8 @@ public class AndroidSourceSinkManager extends MethodBasedSourceSinkManager {
 
 	@Override
 	public SourceInfo getSourceInfo(Stmt sCallSite, InterproceduralCFG<Unit, SootMethod> cfg) {
-		//return getSourceType(sCallSite, cfg) != SourceType.NoSource ? sourceInfo : null;
-		return getSourceType(sCallSite, cfg) == SourceType.MethodCall ? sourceInfo : null;
+		return getSourceType(sCallSite, cfg) != SourceType.NoSource ? sourceInfo : null;
+		//return getSourceType(sCallSite, cfg) == SourceType.MethodCall ? sourceInfo : null;
 	}
 
 	/**
@@ -203,16 +206,31 @@ public class AndroidSourceSinkManager extends MethodBasedSourceSinkManager {
 		if (super.getSourceInfo(sCallSite, cfg) != null)
 			return SourceType.MethodCall;
 		// This call might read out sensitive data from the UI
+		/*
 		if (isUISource(sCallSite, cfg))
 			return SourceType.UISource;
+			*/
 		// This statement might access a sensitive parameter in a callback
 		// method
+		/*
 		final String callSiteSignature = cfg.getMethodOf(sCallSite).getSignature();
 		if (sCallSite instanceof IdentityStmt) {
 			IdentityStmt is = (IdentityStmt) sCallSite;
 			if (is.getRightOp() instanceof ParameterRef)
 				if (this.callbackMethods.containsKey(callSiteSignature))
 					return SourceType.Callback;
+		}
+		*/
+		final String methodSignature = cfg.getMethodOf(sCallSite).getSignature();
+		if(sCallSite instanceof IdentityStmt){
+			IdentityStmt is = (IdentityStmt) sCallSite;
+			Value rv = is.getRightOp();
+			if(rv instanceof ParameterRef){
+				ParameterRef pr = (ParameterRef) rv;
+				pr.getIndex();
+				if(Monster.v().isMSTCallback(methodSignature, pr.getIndex()))
+					return SourceType.Callback;
+			}
 		}
 		return SourceType.NoSource;
 	}

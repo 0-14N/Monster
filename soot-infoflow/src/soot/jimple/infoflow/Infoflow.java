@@ -328,6 +328,9 @@ public class Infoflow extends AbstractInfoflow {
         if (callgraphAlgorithm != CallgraphAlgorithm.OnDemand)
         	logger.info("Callgraph has {} edges", Scene.v().getCallGraph().size());
         iCfg = icfgFactory.buildBiDirICFG(callgraphAlgorithm);
+        
+        //init MSTCallbacks first
+        Monster.v().initMSTCallbacks();
 
         //[start] Searching sources and sinks
         HashMap<SootMethod, Set<Unit>> sources = new HashMap<SootMethod, Set<Unit>>(), 
@@ -353,6 +356,8 @@ public class Infoflow extends AbstractInfoflow {
         					sources.put(sm, sourceUnits);
         				}
         				sourceUnits.add(u);
+        				if(debug)
+        					logger.info("Found source {} : {}", sm.getName(), u);
         			}
         			//sink
         			if(sourcesSinks.isSink(s, iCfg)){
@@ -362,6 +367,8 @@ public class Infoflow extends AbstractInfoflow {
         					sinks.put(sm, sinkUnits);
         				}
         				sinkUnits.add(u);
+        				if(debug)
+        					logger.info("Found sink {} : {}", sm.getName(), u);
         			}
         			//related to static field
         			List<ValueBox> useAndDefBoxes = u.getUseAndDefBoxes();

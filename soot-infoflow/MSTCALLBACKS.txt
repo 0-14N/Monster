@@ -1,0 +1,9 @@
+#format: <classname: return_type method_name(parameter_type, parameter_type, ...)> 
+#is_static[0|1] parameters_count tainted_parameter_index1 tainted_parameter_index2
+
+#Service
+<android.app.Service: android.os.IBinder onBind(android.content.Intent)> 0 1 0
+<android.app.Service: int onStartCommand(android.content.Intent,int,int)> 0 3 0
+
+#BroadcastReceiver
+<android.content.BroadcastReceiver: void onReceive(android.content.Context,android.content.Intent)> 0 2 1
