@@ -118,7 +118,7 @@ public class Test {
 		}
 		
 		//start with cleanup:
-		File outputDir = new File("JimpleOutput");
+		File outputDir = new File("sootOutput");
 		if (outputDir.isDirectory()){
 			boolean success = true;
 			for(File f : outputDir.listFiles()){

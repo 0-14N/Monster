@@ -30,7 +30,3 @@ soot-infoflow-android/sootOutput
 soot-infoflow-android/test
 soot-infoflow-android/testAPKs
 soot-infoflow-android/tmp.log
-monstaint/.classpath
-monstaint/.project
-monstaint/.settings
-monstaint/bin

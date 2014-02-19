@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,14 +28,20 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.monster.taint.Monster;
+
 import soot.MethodOrMethodContext;
 import soot.PackManager;
 import soot.PatchingChain;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Transform;
 import soot.Unit;
+import soot.Value;
+import soot.ValueBox;
+import soot.jimple.StaticFieldRef;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowResults.SinkInfo;
 import soot.jimple.infoflow.InfoflowResults.SourceInfo;
@@ -263,6 +270,7 @@ public class Infoflow extends AbstractInfoflow {
 	        PackManager.v().getPack("wjpp").apply();
 	        PackManager.v().getPack("cg").apply();
 		}
+		
         runAnalysis(sourcesSinks, null);
 		if (debug)
 			PackManager.v().writeOutput();
@@ -320,7 +328,64 @@ public class Infoflow extends AbstractInfoflow {
         if (callgraphAlgorithm != CallgraphAlgorithm.OnDemand)
         	logger.info("Callgraph has {} edges", Scene.v().getCallGraph().size());
         iCfg = icfgFactory.buildBiDirICFG(callgraphAlgorithm);
+
+        //[start] Searching sources and sinks
+        HashMap<SootMethod, Set<Unit>> sources = new HashMap<SootMethod, Set<Unit>>(), 
+        		  sinks = new HashMap<SootMethod, Set<Unit>>();
+        /**
+         * For optimization purpose in the later analysis, we'd better record each method's
+         * reachable static fields. To record this relationship, we have to iterate each 
+         * method's each unit, so we can do it at this step to avoid another iteration later.
+         * 
+         * The relationship is saved in 'methodReachableSFsMap'
+         */
+        HashMap<SootMethod, Set<SootField>> methodReachableSFsMap = new HashMap<SootMethod, Set<SootField>>();
+        for(SootMethod sm : getMethodsForSeeds(iCfg)){
+        	if(sm.hasActiveBody()){
+        		PatchingChain<Unit> units = sm.getActiveBody().getUnits();
+        		for(Unit u : units){
+        			Stmt s = (Stmt) u;
+        			//source
+        			if(sourcesSinks.getSourceInfo(s, iCfg) != null){
+        				Set<Unit> sourceUnits = sources.get(sm);
+        				if(sourceUnits == null){
+        					sourceUnits = new HashSet<Unit>();
+        					sources.put(sm, sourceUnits);
+        				}
+        				sourceUnits.add(u);
+        			}
+        			//sink
+        			if(sourcesSinks.isSink(s, iCfg)){
+        				Set<Unit> sinkUnits = sinks.get(sm);
+        				if(sinkUnits == null){
+        					sinkUnits = new HashSet<Unit>();
+        					sinks.put(sm, sinkUnits);
+        				}
+        				sinkUnits.add(u);
+        			}
+        			//related to static field
+        			List<ValueBox> useAndDefBoxes = u.getUseAndDefBoxes();
+        			for(ValueBox vBox : useAndDefBoxes){
+        				Value value = vBox.getValue();
+        				if(value instanceof StaticFieldRef){
+        					StaticFieldRef sfr = (StaticFieldRef) value;
+        					Set<SootField> staticFields = methodReachableSFsMap.get(sm);
+        					if(staticFields == null){
+        						staticFields = new HashSet<SootField>();
+        						methodReachableSFsMap.put(sm, staticFields);
+        					}
+        					staticFields.add(sfr.getField());
+        				}
+        			}
+        		}
+        	}
+        }
+        Monster.v().init(iCfg, sourcesSinks, sources, sinks, methodReachableSFsMap);
+        logger.info("Found {} sources and {} sink.", sources.size(), sinks.size());
+        //[end] 
         
+        //[start] IDFS
+        /*
         int numThreads = Runtime.getRuntime().availableProcessors();
 		CountingThreadPoolExecutor executor = createExecutor(numThreads);
 		
@@ -465,6 +530,8 @@ public class Infoflow extends AbstractInfoflow {
 		
 		for (ResultsAvailableHandler handler : onResultsAvailable)
 			handler.onResultsAvailable(iCfg, results);
+		//[end] IDFS
+		*/
 	}
 	
 	/**
