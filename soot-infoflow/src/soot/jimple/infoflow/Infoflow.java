@@ -66,7 +66,7 @@ public class Infoflow extends AbstractInfoflow {
 	
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static boolean debug = false;
+    private static boolean debug = true;
 	private static int accessPathLength = 5;
 	
 	private final InfoflowResults results = new InfoflowResults();
@@ -581,10 +581,10 @@ public class Infoflow extends AbstractInfoflow {
 				Stmt s = (Stmt) u;
 				if (sourcesSinks.getSourceInfo(s, iCfg) != null) {
 					forwardProblem.addInitialSeeds(u, Collections.singleton(forwardProblem.zeroValue()));
-					logger.debug("Source found: {}", u);
+					logger.info("Source found: {}", u);
 				}
 				if (sourcesSinks.isSink(s, iCfg)) {
-		            logger.debug("Sink found: {}", u);
+		            logger.info("Sink found: {}", u);
 					sinkCount++;
 				}
 			}

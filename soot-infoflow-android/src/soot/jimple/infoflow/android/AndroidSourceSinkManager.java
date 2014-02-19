@@ -182,7 +182,8 @@ public class AndroidSourceSinkManager extends MethodBasedSourceSinkManager {
 
 	@Override
 	public SourceInfo getSourceInfo(Stmt sCallSite, InterproceduralCFG<Unit, SootMethod> cfg) {
-		return getSourceType(sCallSite, cfg) != SourceType.NoSource ? sourceInfo : null;
+		//return getSourceType(sCallSite, cfg) != SourceType.NoSource ? sourceInfo : null;
+		return getSourceType(sCallSite, cfg) == SourceType.MethodCall ? sourceInfo : null;
 	}
 
 	/**

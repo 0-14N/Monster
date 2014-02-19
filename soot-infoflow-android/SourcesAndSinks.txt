@@ -60,9 +60,9 @@
 <android.text.Editable: java.lang.String toString()> -> _SOURCE_
 
 <android.util.Log: int i(java.lang.String,java.lang.String)> -> _SINK_
-%<android.util.Log: int d(java.lang.String,java.lang.String)> -> _SINK_
-%<android.util.Log: int e(java.lang.String,java.lang.String)> -> _SINK_
-%<android.util.Log: int v(java.lang.String,java.lang.String)> -> _SINK_
+<android.util.Log: int d(java.lang.String,java.lang.String)> -> _SINK_
+<android.util.Log: int e(java.lang.String,java.lang.String)> -> _SINK_
+<android.util.Log: int v(java.lang.String,java.lang.String)> -> _SINK_
 
 
 <java.net.URLConnection: void setRequestProperty(java.lang.String,java.lang.String)> -> _SINK_
