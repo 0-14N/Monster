@@ -2,6 +2,9 @@ package com.monster.taint;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -13,9 +16,19 @@ import com.monster.taint.mstcallback.MSTCallbackFactory;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
+import soot.jimple.IdentityStmt;
 import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.infoflow.source.ISourceSinkManager;
 
+/**
+ * This is the manager of analyzing.
+ * 
+ * Q: Why "Monster"?
+ * A: I was listening Eminem's "Monster" ... 
+ * 
+ * @author chenxiong
+ *
+ */
 public class Monster {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private static boolean debug = true;
@@ -31,6 +44,11 @@ public class Monster {
 	 * The source can also be some callbacks (e.g. Service.onStart)
 	 */
 	private Set<MSTCallback> mstCallBacks = null;
+	/**
+	 * Analysis starts at sources, each source is contained in a method.
+	 * We use sourceMethodHubs to store those methods contain sources.
+	 */
+	private Set<MethodHub> sourceMethodHubs = null;
 	
 	private Monster(){}
 	
@@ -41,6 +59,10 @@ public class Monster {
 		return monster;
 	}
 
+	/**
+	 * this method must be called first! 
+	 * even before calling "init"
+	 */
 	public void initMSTCallbacks(){
 		try {
 			this.mstCallBacks = MSTCallbackFactory.v().createMSTCallbacks();
@@ -58,10 +80,43 @@ public class Monster {
 		this.sources = sources;
 		this.sinks = sinks;
 		this.methodReachableSFsMap = methodReachableSFsMap;
+		this.sourceMethodHubs = new HashSet<MethodHub>();
 	}
 	
 	public void start(){
 		
+		//TODO collect source trigger units
+		
+		//TODO collect sink trigger units
+		
+		createSourceMethodHubs();
+		for(MethodHub methodHub : this.sourceMethodHubs){
+			methodHub.start();
+			
+			//TODO backwards to "dummyMain"
+		}
+	}
+
+	/**
+	 * create MethodHubs for sources, a MethodHub for each source unit,
+	 * maybe it should be optimized in future. 
+	 */
+	private void createSourceMethodHubs(){
+		Iterator iter = sources.entrySet().iterator();
+		while(iter.hasNext()){
+			Entry<SootMethod, Set<Unit>> entry = (Entry<SootMethod, Set<Unit>>) iter.next();
+			SootMethod method = entry.getKey();
+			Set<Unit> sourceUnits = entry.getValue();
+			for(Unit unit : sourceUnits){
+				MethodHubType type = null;
+				if(unit instanceof IdentityStmt)
+					type = MethodHubType.CALLED_FORWARD;
+				else
+					type = MethodHubType.INVOKING_RETURN;
+				MethodHub methodHub = new MethodHub(method, unit, type, true, null);
+				this.sourceMethodHubs.add(methodHub);
+			}
+		}
 	}
 
 	/**
@@ -71,6 +126,7 @@ public class Monster {
 	 * @param paramIdx
 	 * @return
 	 */
+	//[start] public boolean isMSTCallback(String signature, int paramIdx)
 	public boolean isMSTCallback(String signature, int paramIdx){
 		boolean isMSTCallback = false;
 		for(MSTCallback mstCallback : mstCallBacks){
@@ -81,4 +137,5 @@ public class Monster {
 		}
 		return isMSTCallback;
 	}
+	//[end]
 }

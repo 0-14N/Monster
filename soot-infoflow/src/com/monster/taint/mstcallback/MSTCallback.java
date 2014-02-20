@@ -6,6 +6,12 @@ import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 
+/**
+ * this class represents certain callbacks that their input parameters
+ * should be tainted, e.g. Service.onStartCommand(Intent intent*, ...)
+ * @author chenxiong
+ *
+ */
 public class MSTCallback {
 	private String signature = null;
 	private String name = null;

@@ -393,6 +393,9 @@ public class Infoflow extends AbstractInfoflow {
         logger.info("Found {} sources and {} sink.", sources.size(), sinks.size());
         //[end] 
         
+        //start Monster
+        Monster.v().start();
+        
         //[start] IDFS
         /*
         int numThreads = Runtime.getRuntime().availableProcessors();
