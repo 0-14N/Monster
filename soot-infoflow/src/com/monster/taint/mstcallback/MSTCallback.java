@@ -1,4 +1,4 @@
-package com.monster.taint.settings;
+package com.monster.taint.mstcallback;
 
 import java.util.List;
 

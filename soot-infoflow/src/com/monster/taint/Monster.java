@@ -7,8 +7,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.monster.taint.settings.MSTCallback;
-import com.monster.taint.settings.MSTCallbackFactory;
+import com.monster.taint.mstcallback.MSTCallback;
+import com.monster.taint.mstcallback.MSTCallbackFactory;
 
 import soot.SootField;
 import soot.SootMethod;
@@ -58,6 +58,10 @@ public class Monster {
 		this.sources = sources;
 		this.sinks = sinks;
 		this.methodReachableSFsMap = methodReachableSFsMap;
+	}
+	
+	public void start(){
+		
 	}
 
 	/**
