@@ -357,7 +357,8 @@ public class Infoflow extends AbstractInfoflow {
         				}
         				sourceUnits.add(u);
         				if(debug)
-        					logger.info("Found source {} : {}", sm.getName(), u);
+        					logger.info("Found source :\n \t\t {}->{} : {}", 
+        							sm.getDeclaringClass().getName(),sm.getName(), u);
         			}
         			//sink
         			if(sourcesSinks.isSink(s, iCfg)){
@@ -368,7 +369,8 @@ public class Infoflow extends AbstractInfoflow {
         				}
         				sinkUnits.add(u);
         				if(debug)
-        					logger.info("Found sink {} : {}", sm.getName(), u);
+        					logger.info("Found sink :\n \t\t {}->{} : {}", 
+        							sm.getDeclaringClass().getName(), sm.getName(), u);
         			}
         			//related to static field
         			List<ValueBox> useAndDefBoxes = u.getUseAndDefBoxes();

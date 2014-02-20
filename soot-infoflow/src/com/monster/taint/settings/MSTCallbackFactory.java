@@ -43,7 +43,7 @@ public class MSTCallbackFactory {
 		    while((line = br.readLine()) != null){
 		    	if(line.isEmpty() || line.startsWith("#")) continue;
 		    	
-		    	String[] tokens = line.split(" ");
+		    	String[] tokens = line.split("~");
 		    	assert(tokens.length >= 3);
 		    	String signature = tokens[0];
 		    	boolean isStatic = tokens[1].equals("0") ? false : true;

@@ -231,12 +231,14 @@ public class SetupApplication {
 		sinks = new HashSet<AndroidMethod>(sinkMethods);
 		
 		//add sink for Intents:
+		/* this fucking code caused an bug which I have spent hours debugging
 		{
 			AndroidMethod setResult = new AndroidMethod(SootMethodRepresentationParser.v().parseSootMethodString
 					("<android.app.Activity: void startActivity(android.content.Intent)>"));
 			setResult.setSink(true);
 			sinks.add(setResult);
 		}
+		*/
 		
 		System.out.println("Entry point calculation done.");
 		
