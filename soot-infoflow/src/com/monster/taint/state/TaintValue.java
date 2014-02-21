@@ -35,6 +35,8 @@ public class TaintValue {
 	
 	public void setDependence(TaintValue dependence){
 		this.dependence = dependence;
+		if(dependence != null)
+			dependence.addSlave(this);
 	}
 	
 	public TaintValue getDependence(){
@@ -49,7 +51,7 @@ public class TaintValue {
 		return ultimateDependence;
 	}
 	
-	public boolean addSlave(TaintValue slave){
+	private boolean addSlave(TaintValue slave){
 		boolean exists = false;
 		for(TaintValue tv : this.slaves){
 			if(tv.equals(slave)){
@@ -68,7 +70,9 @@ public class TaintValue {
 	}
 	
 	public void appendAllSootField(ArrayList<SootField> sootFields){
-		this.accessPath.addAll(sootFields);
+		if(sootFields != null){
+			this.accessPath.addAll(sootFields);
+		}
 	}
 	
 	public TaintValueType getType(){

@@ -195,19 +195,20 @@ public class ForwardsProblem {
 	private boolean handleLocal(Value lv, Local rv, Unit currUnit){
 		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOn(rv);
 		for(TaintValue tv : tvs){
-			//tv.type: TAINT, ALIAS
-			if(tv.getType() == TaintValueType.TAINT){
-				//lv should be tainted
-				if(this.units.indexOf(currUnit) > this.units.indexOf(tv.getActivationUnit())){
-					taintLV(lv, currUnit, TaintValueType.TAINT, tv, tv.getAccessPath());
-				}
-			}else if(tv.getType() == TaintValueType.ALIAS){
+			ArrayList<SootField> accessPath = tv.getAccessPath();
+			if(accessPath.size() == 0){
 				int currIndex = this.units.indexOf(currUnit);
-				int dependenceIndex = this.units.indexOf(tv.getActivationUnit());
-				int ultimateDepdenceIndex = this.units.indexOf(tv.getUltimateDependence().getActivationUnit());
-				if(currIndex > dependenceIndex){
-					
+				TaintValue ultimateDependence = tv.getUltimateDependence();
+				int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
+				if(currIndex > ultimateIndex){
+					//lv's type is TAINT
+					taintLV(lv, currUnit, TaintValueType.TAINT, ultimateDependence, accessPath);
+				}else{
+					//lv's type is ALIAS
+					taintLV(lv, currUnit, TaintValueType.ALIAS, tv, accessPath);
 				}
+			}else{
+				taintLV(lv, currUnit, TaintValueType.ALIAS, tv, accessPath);
 			}
 		}
 		return tvs.size() > 0;
@@ -263,7 +264,29 @@ public class ForwardsProblem {
 	 * @return true if rv is tainted or its field is tainted before currUnit
 	 */
 	private boolean handleStaticFieldRef(Value lv, StaticFieldRef rv, Unit currUnit){
-		
+		SootField sootField = rv.getField();
+		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getStaticFieldTVsBasedOn(sootField);
+		for(TaintValue tv : tvs){
+			ArrayList<SootField> accessPath = tv.getAccessPath();
+			if(accessPath.size() == 1){
+				int currIndex = this.units.indexOf(currUnit);
+				TaintValue ultimateDependence = tv.getUltimateDependence();
+				int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
+				if(currIndex > ultimateIndex){
+					taintLV(lv, currUnit, TaintValueType.TAINT, ultimateDependence, null);
+				}else{
+					taintLV(lv, currUnit, TaintValueType.ALIAS, tv, null);
+				}
+			}else{
+				assert(accessPath.size() > 1);
+				ArrayList<SootField> restFields = new ArrayList<SootField>();
+				for(int i = 1; i < accessPath.size(); i++){
+					restFields.add(accessPath.get(i));
+				}
+				taintLV(lv, currUnit, TaintValueType.ALIAS, tv, restFields);
+			}
+		}
+		return tvs.size() > 0;
 	}
 
 	/**

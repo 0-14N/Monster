@@ -2,6 +2,7 @@ package com.monster.taint.state;
 
 import java.util.ArrayList;
 
+import soot.SootField;
 import soot.Value;
 
 public class PathState {
@@ -36,9 +37,20 @@ public class PathState {
 	
 	public ArrayList<TaintValue> getTVsBasedOn(Value base){
 		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
-		for(TaintValue tv : taintValues){
+		for(TaintValue tv : this.taintValues){
 			if(tv.getBase() != null && tv.getBase().equals(base))
 				retTVs.add(tv);
+		}
+		return retTVs;
+	}
+	
+	public ArrayList<TaintValue> getStaticFieldTVsBasedOn(SootField sootField){
+		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
+		for(TaintValue tv : this.taintValues){
+			if(tv.getType() == TaintValueType.STATIC_FIELD){
+				if(tv.getAccessPath().get(0).equals(sootField))
+					retTVs.add(tv);
+			}
 		}
 		return retTVs;
 	}
