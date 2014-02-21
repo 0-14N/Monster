@@ -2,8 +2,10 @@ package com.monster.taint.state;
 
 import java.util.ArrayList;
 
+import soot.Local;
 import soot.SootField;
 import soot.Value;
+import soot.jimple.InstanceFieldRef;
 
 public class PathState {
 	private ArrayList<TaintValue> taintValues = null;
@@ -35,20 +37,33 @@ public class PathState {
 		return !exists;
 	}
 	
-	public ArrayList<TaintValue> getTVsBasedOn(Value base){
+	public ArrayList<TaintValue> getTVsBasedOnLocal(Local local){
 		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
 		for(TaintValue tv : this.taintValues){
-			if(tv.getBase() != null && tv.getBase().equals(base))
+			if(tv.getBase() != null && tv.getBase().equals(local))
 				retTVs.add(tv);
 		}
 		return retTVs;
 	}
 	
-	public ArrayList<TaintValue> getStaticFieldTVsBasedOn(SootField sootField){
+	public ArrayList<TaintValue> getTVsBasedOnStaticField(SootField sootField){
 		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
 		for(TaintValue tv : this.taintValues){
 			if(tv.getType() == TaintValueType.STATIC_FIELD){
 				if(tv.getAccessPath().get(0).equals(sootField))
+					retTVs.add(tv);
+			}
+		}
+		return retTVs;
+	}
+	
+	public ArrayList<TaintValue> getTVsBasedOnInstanceFieldRef(InstanceFieldRef ifr){
+		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
+		Value ifrBase = ifr.getBase();
+		SootField ifrField = ifr.getField();
+		for(TaintValue tv : this.taintValues){
+			if(tv.getBase() != null && tv.getBase().equals(ifrBase)){
+				if(tv.getAccessPath().size() > 0 && tv.getAccessPath().get(0).equals(ifrField))
 					retTVs.add(tv);
 			}
 		}

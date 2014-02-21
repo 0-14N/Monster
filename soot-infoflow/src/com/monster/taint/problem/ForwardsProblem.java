@@ -192,8 +192,8 @@ public class ForwardsProblem {
 	 * @param currUnit
 	 * @return true if rv is tainted or its field is tainted before currUnit
 	 */
-	private boolean handleLocal(Value lv, Local rv, Unit currUnit){
-		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOn(rv);
+	private boolean handleRVLocal(Value lv, Local rv, Unit currUnit){
+		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal(rv);
 		for(TaintValue tv : tvs){
 			ArrayList<SootField> accessPath = tv.getAccessPath();
 			if(accessPath.size() == 0){
@@ -263,9 +263,9 @@ public class ForwardsProblem {
 	 * @param currUnit
 	 * @return true if rv is tainted or its field is tainted before currUnit
 	 */
-	private boolean handleStaticFieldRef(Value lv, StaticFieldRef rv, Unit currUnit){
+	private boolean handleRVStaticFieldRef(Value lv, StaticFieldRef rv, Unit currUnit){
 		SootField sootField = rv.getField();
-		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getStaticFieldTVsBasedOn(sootField);
+		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnStaticField(sootField);
 		for(TaintValue tv : tvs){
 			ArrayList<SootField> accessPath = tv.getAccessPath();
 			if(accessPath.size() == 1){
@@ -297,8 +297,29 @@ public class ForwardsProblem {
 	 * @param currUnit
 	 * @return true if rv is tainted or its field is tainted before currUnit
 	 */
-	private boolean handleInstanceFieldRef(Value lv, InstanceFieldRef rv, Unit currUnit){
-		
+	private boolean handleRVInstanceFieldRef(Value lv, InstanceFieldRef rv, Unit currUnit){
+		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnInstanceFieldRef(rv);
+		for(TaintValue tv : tvs){
+			ArrayList<SootField> accessPath = tv.getAccessPath();
+			if(accessPath.size() == 1){
+				int currIndex = this.units.indexOf(currUnit);
+				TaintValue ultimateDependence = tv.getUltimateDependence();
+				int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
+				if(currIndex > ultimateIndex){
+					taintLV(lv, currUnit, TaintValueType.TAINT, ultimateDependence, null);
+				}else{
+					taintLV(lv, currUnit, TaintValueType.ALIAS, tv, null);
+				}
+			}else{
+				assert(accessPath.size() > 1);
+				ArrayList<SootField> restFields = new ArrayList<SootField>();
+				for(int i = 1; i < accessPath.size(); i++){
+					restFields.add(accessPath.get(i));
+				}
+				taintLV(lv, currUnit, TaintValueType.ALIAS, tv, restFields);
+			}
+		}
+		return tvs.size() > 0;
 	}
 
 	/**
@@ -309,8 +330,8 @@ public class ForwardsProblem {
 	 * @param currUnit
 	 * @return true if rv is tainted or its field is tainted before currUnit
 	 */
-	private boolean handleArrayRef(Value lv, ArrayRef rv, Unit currUnit){
-		
+	private boolean handleRVArrayRef(Value lv, ArrayRef rv, Unit currUnit){
+		return handleRVLocal(lv, (Local) rv.getBase(), currUnit);
 	}
 
 	/**
@@ -322,7 +343,7 @@ public class ForwardsProblem {
 	 * @return true if rv is tainted or its field is tainted before currUnit
 	 */
 	private boolean handleCastExpr(Value lv, CastExpr rv, Unit currUnit){
-		
+		return handleRVLocal(lv, (Local) rv.getOp(), currUnit);
 	}
 	
 }
