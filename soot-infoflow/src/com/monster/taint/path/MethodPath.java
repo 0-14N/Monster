@@ -57,8 +57,7 @@ public class MethodPath {
 				this.type == MethodHubType.CALLED_BACKWARD){
 			int startIndex = unitsOnPath.indexOf(activationUnit);
 			int stopIndex = unitsOnPath.size();
-			ForwardsProblem fProblem = new ForwardsProblem(unitsOnPath, startIndex, stopIndex, 
-					this.type, this);
+			ForwardsProblem fProblem = new ForwardsProblem(unitsOnPath, startIndex, stopIndex, this);
 			fProblem.solve();
 		}else if(this.type == MethodHubType.INVOKING_RETURN){
 			//TODO INVOKE_RETURN

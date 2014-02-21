@@ -37,6 +37,18 @@ public class TaintValue {
 		this.dependence = dependence;
 	}
 	
+	public TaintValue getDependence(){
+		return this.dependence;
+	}
+	
+	public TaintValue getUltimateDependence(){
+		TaintValue ultimateDependence = this;
+		while(ultimateDependence.getDependence() != null){
+			ultimateDependence = ultimateDependence.getDependence();
+		}
+		return ultimateDependence;
+	}
+	
 	public boolean addSlave(TaintValue slave){
 		boolean exists = false;
 		for(TaintValue tv : this.slaves){
@@ -74,8 +86,16 @@ public class TaintValue {
 		return this.base;
 	}
 	
+	public Set<TaintValue> getSlaves(){
+		return this.slaves;
+	}
+	
 	public ArrayList<SootField> getAccessPath(){
 		return this.accessPath;
+	}
+	
+	public Unit getActivationUnit(){
+		return this.activationUnit;
 	}
 
 	/**
@@ -91,6 +111,7 @@ public class TaintValue {
 		TaintValue other = (TaintValue) obj;
 		if(other.getType() != this.type)
 			return false;
+		
 		//not static field
 		if(this.type != TaintValueType.STATIC_FIELD){
 			//base
@@ -104,6 +125,10 @@ public class TaintValue {
 		for(int i = 0; i < this.accessPath.size(); i++){
 			if(!this.accessPath.get(i).equals(otherAccessPath.get(i)))
 				return false;
+		}
+		//activation unit
+		if(!this.activationUnit.equals(other.getActivationUnit())){
+			return false;
 		}
 		
 		return true;
