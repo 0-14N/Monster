@@ -157,22 +157,26 @@ public class MethodHub {
 			Iterator<Entry<MethodPath, PathState>> iter = this.pathStates.entrySet().iterator();
 			while(iter.hasNext()){
 				Entry<MethodPath, PathState> entry = iter.next();
-				MethodPath methodPath = entry.getKey();
 				PathState pathState = entry.getValue();
 				
 				Local thisLocal = this.method.getActiveBody().getThisLocal();
 				ArrayList<TaintValue> thisTVs = pathState.getTVsBasedOnLocal(thisLocal);
 				for(TaintValue thisTV : thisTVs){
-					
+					this.exitState.addThisTVContextSensitive(thisTV);
 				}
 				
 				List<Local> paramsLocals = this.method.getActiveBody().getParameterLocals();
-				ArrayList<ArrayList<TaintValue>> allArgsTVs = new ArrayList<ArrayList<TaintValue>>();
 				for(int i = 0; i < paramsLocals.size(); i++){
-					allArgsTVs.add(pathState.getTVsBasedOnLocal(paramsLocals.get(i)));
+					ArrayList<TaintValue> argTVs = pathState.getTVsBasedOnLocal(paramsLocals.get(i));
+					for(TaintValue argTV : argTVs){
+						this.exitState.addArgTVContextSensitive(i, argTV);
+					}
 				}
 				
 				ArrayList<TaintValue> staticTVs = pathState.getStaticTVs();
+				for(TaintValue staticTV : staticTVs){
+					this.exitState.addStaticTVContextSensitive(staticTV);
+				}
 			}
 		}
 	}

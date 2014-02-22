@@ -75,4 +75,50 @@ public class MethodState {
 		}
 	}
 	
+	public void addThisTVContextSensitive(TaintValue thisTV){
+		TaintValue exsitsTV = null;
+		for(TaintValue tv : this.thisTVs){
+			if(tv.equals(thisTV)){
+				exsitsTV = tv;
+				break;
+			}
+		}
+		if(exsitsTV == null){
+			this.thisTVs.add(thisTV);
+		}else{
+			exsitsTV.addContext(thisTV.getFirstContext());
+		}
+	}
+	
+	public void addArgTVContextSensitive(int argIndex, TaintValue argTV){
+		ArrayList<TaintValue> argTVs = this.argsTVs.get(argIndex);
+		TaintValue exsitsTV = null;
+		for(TaintValue tv : argTVs){
+			if(tv.equals(argTV)){
+				exsitsTV = tv;
+				break;
+			}
+		}
+		if(exsitsTV == null){
+			argTVs.add(argTV);
+		}else{
+			exsitsTV.addContext(argTV.getFirstContext());
+		}
+	}
+	
+	public void addStaticTVContextSensitive(TaintValue staticTV){
+		TaintValue exsitsTV = null;
+		for(TaintValue tv : this.staticTVs){
+			if(tv.equals(staticTV)){
+				exsitsTV = tv;
+				break;
+			}
+		}
+		if(exsitsTV == null){
+			this.staticTVs.add(staticTV);
+		}else{
+			exsitsTV.addContext(staticTV.getFirstContext());
+		}
+	}
+	
 }

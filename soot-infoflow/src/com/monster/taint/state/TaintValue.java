@@ -153,6 +153,10 @@ public class TaintValue {
 	public ArrayList<MethodPath> getContexts(){
 		return this.contexts;
 	}
+	
+	public MethodPath getFirstContext(){
+		return this.contexts.get(0);
+	}
 
 	/**
 	 * called only by MethodHub's mergePathStates

@@ -357,9 +357,11 @@ public class ForwardsProblem {
 							false, this.methodPath.getMethodHub());
 					newHub.setInitState(initState);
 					newHub.start();
+					newHub.mergePathStates();
 					
 					//TODO return from the method, handle the exit method state with current path state
 					MethodState exitState = newHub.getExitState();
+					assert(exitState != null);
 					ArrayList<TaintValue> outThisTVs = exitState.getThisTVs();
 					ArrayList<ArrayList<TaintValue>> outArgsTVs = exitState.getAllArgsTVs();
 					ArrayList<TaintValue> outStaticTVs = exitState.getStaticTVs();
