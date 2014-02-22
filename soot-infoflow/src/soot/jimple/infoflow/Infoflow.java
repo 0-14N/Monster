@@ -33,6 +33,7 @@ import com.monster.taint.Monster;
 import soot.MethodOrMethodContext;
 import soot.PackManager;
 import soot.PatchingChain;
+import soot.PointsToAnalysis;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootField;
@@ -62,6 +63,7 @@ import soot.jimple.infoflow.solver.BackwardsInfoflowCFG;
 import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.infoflow.solver.fastSolver.InfoflowSolver;
 import soot.jimple.infoflow.source.ISourceSinkManager;
+import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.util.SootMethodRepresentationParser;
 import soot.jimple.toolkits.callgraph.ReachableMethods;
 import soot.options.Options;
@@ -389,7 +391,8 @@ public class Infoflow extends AbstractInfoflow {
         		}
         	}
         }
-        Monster.v().init(iCfg, sourcesSinks, sources, sinks, methodReachableSFsMap);
+        PointsToAnalysis pta = Scene.v().getPointsToAnalysis();
+        Monster.v().init(iCfg, sourcesSinks, pta, (EasyTaintWrapper) taintWrapper, sources, sinks, methodReachableSFsMap);
         logger.info("Found {} sources and {} sink.", sources.size(), sinks.size());
         //[end] 
         

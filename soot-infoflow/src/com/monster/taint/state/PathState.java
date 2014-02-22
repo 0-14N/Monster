@@ -127,4 +127,13 @@ public class PathState {
 			}
 		}
 	}
+	
+	public ArrayList<TaintValue> getStaticTVs(){
+		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
+		for(TaintValue tv : this.taintValues){
+			if(tv.getType() == TaintValueType.STATIC_FIELD)
+				retTVs.add(tv);
+		}
+		return retTVs;
+	}
 }

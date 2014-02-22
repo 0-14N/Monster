@@ -32,6 +32,10 @@ public class MethodState {
 		return this.argsTVs.get(argIndex);
 	}
 	
+	public ArrayList<ArrayList<TaintValue>> getAllArgsTVs(){
+		return this.argsTVs;
+	}
+	
 	public ArrayList<TaintValue> getStaticTVs(){
 		return this.staticTVs;
 	}
@@ -39,4 +43,36 @@ public class MethodState {
 	public ArrayList<TaintValue> getRetTVs(){
 		return this.retTVs;
 	}
+	
+	public void setThisTVs(ArrayList<TaintValue> thisTVs){
+		this.thisTVs = thisTVs;
+	}
+	
+	public void setArgTVs(int index, ArrayList<TaintValue> argTVs){
+		this.argsTVs.set(index, argTVs);
+	}
+	
+	public void setStaticTVs(ArrayList<TaintValue> staticTVs){
+		this.staticTVs = staticTVs;
+	}
+	
+	public void addThisTV(TaintValue thisTV){
+		if(!this.thisTVs.contains(thisTV)){
+			this.thisTVs.add(thisTV);
+		}
+	}
+	
+	public void addArgTV(int argIndex, TaintValue argTV){
+		ArrayList<TaintValue> argTVs = this.argsTVs.get(argIndex);
+		if(!argTVs.contains(argTV)){
+			argTVs.add(argTV);
+		}
+	}
+	
+	public void addStaticTV(TaintValue staticTV){
+		if(!this.staticTVs.contains(staticTV)){
+			this.staticTVs.add(staticTV);
+		}
+	}
+	
 }

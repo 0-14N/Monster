@@ -43,6 +43,8 @@ public class MethodHub {
 	private HashMap<MethodPath, PathState> pathStates = null;
 	private MethodState exitState = null;
 	private MethodHub preHub = null;
+	//flag indicates whether pathsStates have been merged
+	private boolean pathStatesMerged = false;
 
 	/**
 	 * 
@@ -120,4 +122,31 @@ public class MethodHub {
 		return contains;
 	}
 	
+	private MethodHub getPreHub(){
+		return this.preHub;
+	}
+	
+	public boolean causeLoop(SootMethod method){
+		if(this.method.equals(method))
+			return true;
+		MethodHub preHub = getPreHub();
+		if(preHub == null)
+			return false;
+		else
+			return preHub.causeLoop(method);
+	}
+	
+	public MethodState getExitState(){
+		if(!this.pathStatesMerged)
+			return null;
+		else
+			return this.exitState;
+	}
+	
+	public void mergePathStates(){
+		if(!this.pathStatesMerged){
+			this.pathStatesMerged = true;
+			
+		}
+	}
 }

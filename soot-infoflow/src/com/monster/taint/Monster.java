@@ -12,13 +12,16 @@ import org.slf4j.LoggerFactory;
 
 import com.monster.taint.mstcallback.MSTCallback;
 import com.monster.taint.mstcallback.MSTCallbackFactory;
+import com.monster.taint.wrapper.MyWrapper;
 
+import soot.PointsToAnalysis;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
 import soot.jimple.IdentityStmt;
 import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.infoflow.source.ISourceSinkManager;
+import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 
 /**
  * This is the manager of analyzing.
@@ -37,6 +40,7 @@ public class Monster {
 	
 	private IInfoflowCFG iCfg = null;
 	private ISourceSinkManager sourcesSinks = null;
+	private PointsToAnalysis pta = null;
 	private HashMap<SootMethod, Set<Unit>> sources = null;
 	private HashMap<SootMethod, Set<Unit>> sinks = null;
 	private HashMap<SootMethod, Set<SootField>> methodReachableSFsMap = null;
@@ -73,10 +77,13 @@ public class Monster {
 	}
 	
 	public void init(IInfoflowCFG iCfg, ISourceSinkManager sourcesSinks, 
+			PointsToAnalysis pta, EasyTaintWrapper taintWrapper,
 			HashMap<SootMethod, Set<Unit>> sources, HashMap<SootMethod, Set<Unit>> sinks, 
 			HashMap<SootMethod, Set<SootField>> methodReachableSFsMap){
 		this.iCfg = iCfg;
 		this.sourcesSinks = sourcesSinks;
+		this.pta = pta;
+		MyWrapper.v().init(taintWrapper);
 		this.sources = sources;
 		this.sinks = sinks;
 		this.methodReachableSFsMap = methodReachableSFsMap;
@@ -138,4 +145,12 @@ public class Monster {
 		return isMSTCallback;
 	}
 	//[end]
+	
+	public PointsToAnalysis getPTA(){
+		return this.pta;
+	}
+	
+	public Set<SootField> getReachableStaticFields(SootMethod method){
+		return this.methodReachableSFsMap.get(method);
+	}
 }

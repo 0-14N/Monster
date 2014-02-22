@@ -449,4 +449,23 @@ public class EasyTaintWrapper extends AbstractTaintWrapper implements Cloneable 
 		return new EasyTaintWrapper(this);
 	}
 
+	//[start] add by chenxiong
+	public Map<String, Set<String>> getClassList() {
+		return classList;
+	}
+
+	public Map<String, Set<String>> getExcludeList() {
+		return excludeList;
+	}
+
+	public Map<String, Set<String>> getKillList() {
+		return killList;
+	}
+
+	public Set<String> getIncludeList() {
+		return includeList;
+	}
+	//[end]
+	
+	
 }

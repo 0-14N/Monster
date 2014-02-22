@@ -1,9 +1,20 @@
 package com.monster.taint.problem;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import soot.Local;
+import soot.PointsToAnalysis;
+import soot.PointsToSet;
+import soot.Scene;
 import soot.SootField;
+import soot.SootMethod;
+import soot.SootMethodRef;
+import soot.Type;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.ArrayRef;
@@ -12,19 +23,24 @@ import soot.jimple.CastExpr;
 import soot.jimple.Constant;
 import soot.jimple.IdentityStmt;
 import soot.jimple.InstanceFieldRef;
+import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InvokeExpr;
 import soot.jimple.ParameterRef;
 import soot.jimple.ReturnStmt;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.ThisRef;
-import soot.jimple.infoflow.util.BaseSelector;
 
+import com.monster.taint.MethodHub;
+import com.monster.taint.MethodHubType;
+import com.monster.taint.Monster;
 import com.monster.taint.path.MethodPath;
 import com.monster.taint.state.MethodState;
 import com.monster.taint.state.TaintValue;
 import com.monster.taint.state.TaintValueType;
+import com.monster.taint.wrapper.MyWrapper;
 
 public class ForwardsProblem {
+	private Logger logger = LoggerFactory.getLogger(getClass());
 	private MethodPath methodPath = null;
 	private ArrayList<Unit> units = null;
 	private int startIndex = -1;
@@ -54,7 +70,7 @@ public class ForwardsProblem {
 		
 			//virtualinvoke $r6.<java.lang.String: boolean equals(java.lang.Object)>($r1);
 			if(currUnit instanceof InvokeExpr){
-				handleInvokeExpr((InvokeExpr) currUnit, null);
+				handleInvokeExpr((InvokeExpr) currUnit, null, currUnit);
 			}
 			
 			if(currUnit instanceof ReturnStmt){
@@ -115,7 +131,7 @@ public class ForwardsProblem {
 	
 		//e.g. $z0 = virtualinvoke $r6.<java.lang.String: boolean equals(java.lang.Object)>($r1);
 		if(rv instanceof InvokeExpr){
-			handleInvokeExpr((InvokeExpr) rv, lv);
+			handleInvokeExpr((InvokeExpr) rv, lv, stmt);
 		}else{
 			//$r3 = <de.ub0r.android.smsdroid.Message: java.lang.String[] PROJECTION_READ>;
 			
@@ -174,8 +190,181 @@ public class ForwardsProblem {
 		}
 	}
 	
-	private void handleInvokeExpr(InvokeExpr invokeExpr, Value retValue){
+	private void handleInvokeExpr(InvokeExpr invokeExpr, Value retValue, Unit currUnit){
+		assert(invokeExpr != null);
+		Value thisBase = null;
+		List<Value> args = invokeExpr.getArgs();
+		int argsCount = invokeExpr.getArgCount();
+		int currIndex = this.units.indexOf(currUnit);
 		
+		if(invokeExpr instanceof InstanceInvokeExpr){
+			thisBase = ((InstanceInvokeExpr) invokeExpr).getBase();
+		}
+		
+		SootMethod method = invokeExpr.getMethod();
+		SootMethodRef smr = invokeExpr.getMethodRef();
+		
+		//method is null, do point to analysis 
+		if(method == null && invokeExpr instanceof InstanceInvokeExpr){
+			String oldSignature = smr.getSignature();
+			PointsToAnalysis pta = Monster.v().getPTA();
+			PointsToSet pts = null;
+			Set<Type> types = null;
+			pts = pta.reachingObjects((Local) thisBase);
+
+			if(pts != null){
+				types = pts.possibleTypes();
+				if(types != null){
+					for(Type type : types){
+						String newClassName = type.toString();
+						String[] tokens = oldSignature.split(":");
+						tokens[0] = "<" + newClassName + ":";
+						String newSignature = tokens[0] + tokens[1];
+						method = Scene.v().getMethod(newSignature);
+						if(method != null){
+							logger.info("**** found point to {}", newSignature);
+							break;
+						}
+					}
+				}
+			}
+		}
+	
+		String className = null;
+		String subSignature = null;
+		
+		//method is still null, try TaintWrapper
+		if(method == null){
+			className = smr.declaringClass().getName();
+			subSignature = smr.getSubSignature().getString();
+		}else{
+			className = method.getDeclaringClass().getName();
+			subSignature = method.getSubSignature();
+		}
+	
+		boolean isInTaintWrapper = false;
+		//Regardless of method is null or not, check whether in taint wrapper
+		//in excludelist, do ignore invoking
+		if(MyWrapper.v().isInExcludeList(className, subSignature)){
+			isInTaintWrapper = true;
+			return;
+		}else if(MyWrapper.v().isInClassList(className, subSignature)){
+			isInTaintWrapper = true;
+			if(retValue == null) return;
+			//taint retValue if any argument is tainted
+			boolean isTainted = false;
+			for(int i = 0; i < argsCount && !isTainted; i++){
+				Value arg = args.get(i);
+				assert(arg instanceof Local);
+				ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
+				for(int j = 0; j < tvs.size() && !isTainted; j++){
+					TaintValue tv = tvs.get(j);
+					TaintValue ultimateTV = tv.getUltimateDependence();
+					int ultimateIndex = this.units.indexOf(ultimateTV.getActivationUnit());
+					if(currIndex > ultimateIndex){
+						//taint retValue and break
+						taintLV(retValue, currUnit, TaintValueType.TAINT, ultimateTV, null);
+						isTainted = true;
+						break;
+					}
+				}
+			}
+			//no taints with args, check thisBase
+			if(!isTainted && thisBase != null){
+				assert(thisBase instanceof Local);
+				ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) thisBase);
+				for(TaintValue tv : tvs){
+					TaintValue ultimateTV = tv.getUltimateDependence();
+					int ultimateIndex = this.units.indexOf(ultimateTV.getActivationUnit());
+					if(currIndex > ultimateIndex){
+						//taint retValue and break
+						taintLV(retValue, currUnit, TaintValueType.TAINT, ultimateTV, null);
+						isTainted = true;
+						break;
+					}
+				}
+			}
+		}else if(MyWrapper.v().isInKillList(className, subSignature)){
+			isInTaintWrapper = true;
+			return;
+		}
+		
+		if(!isInTaintWrapper && method != null){
+			//check looping first
+			if(!this.methodPath.getMethodHub().causeLoop(method)){
+				//initial method state
+				MethodState initState = new MethodState(argsCount);
+				
+				ArrayList<TaintValue> thisTVs = null;
+				boolean thisTainted = false;
+				if(thisBase != null){
+					assert(thisBase instanceof Local);
+					thisTVs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) thisBase);
+					for(TaintValue thisTV : thisTVs){
+						int ultimateIndex = this.units.indexOf(thisTV.getUltimateDependence().getActivationUnit());
+						if(currIndex > ultimateIndex){
+							thisTainted = true;
+							initState.addThisTV(thisTV);
+						}
+					}
+				}
+				
+				ArrayList<ArrayList<TaintValue>> argsTVs = new ArrayList<ArrayList<TaintValue>>(argsCount);
+				boolean argsTainted = false;
+				for(int i = 0; i <argsCount; i++){
+					Value arg = args.get(i);
+					assert(arg instanceof Local);
+					ArrayList<TaintValue> argTVs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
+					argsTVs.set(i, argTVs);
+				}
+				for(int i = 0; i < argsCount && !argsTainted; i++){
+					ArrayList<TaintValue> argTVs = argsTVs.get(i);
+					for(int j = 0; j < argTVs.size() && !argsTainted; j++){
+						TaintValue argTV = argTVs.get(j);
+						int ultimateIndex = this.units.indexOf(argTV.getUltimateDependence().getActivationUnit());
+						if(currIndex > ultimateIndex){
+							argsTainted = true;
+							initState.addArgTV(i, argTV);
+						}
+					}
+				}
+				
+				ArrayList<TaintValue> staticTVs = this.methodPath.getPathState().getStaticTVs();
+				Set<SootField> reachableStaticFields = Monster.v().getReachableStaticFields(method);
+				boolean staticFieldsReachable = false;
+				if(reachableStaticFields != null){
+					for(TaintValue staticTV : staticTVs){
+						if(reachableStaticFields.contains(staticTV.getAccessPath().get(0))){
+							staticFieldsReachable = true;
+							initState.addStaticTV(staticTV);
+						}
+					}
+				}
+			
+				//it's so tough to get here, so we have to start new method
+				if(thisTainted || argsTainted || staticFieldsReachable){
+					//the initstate has been initialized, get the actual 
+					//taint values passed into new method hub
+					ArrayList<TaintValue> inThisTVs = initState.getThisTVs();
+					ArrayList<ArrayList<TaintValue>> inArgsTVs = initState.getAllArgsTVs();
+					ArrayList<TaintValue> inStaticTVs = initState.getStaticTVs();
+					
+					
+					//start new method hub
+					MethodHub newHub = new MethodHub(method, null, MethodHubType.CALLED_FORWARD, 
+							false, this.methodPath.getMethodHub());
+					newHub.setInitState(initState);
+					newHub.start();
+					
+					//TODO return from the method, handle the exit method state with current path state
+					MethodState exitState = newHub.getExitState();
+					ArrayList<TaintValue> outThisTVs = exitState.getThisTVs();
+					ArrayList<ArrayList<TaintValue>> outArgsTVs = exitState.getAllArgsTVs();
+					ArrayList<TaintValue> outStaticTVs = exitState.getStaticTVs();
+				}
+				
+			}
+		}
 	}
 	
 	private void handleReturnStmt(ReturnStmt stmt){
