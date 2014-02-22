@@ -108,6 +108,7 @@ public class ForwardsProblem {
 					for(TaintValue tv : thisTVs){
 						TaintValue newTV = new TaintValue(TaintValueType.TAINT, lv, stmt, this.methodPath);
 						newTV.appendAllSootField(tv.getAccessPath());
+						newTV.setInDependence(tv);
 						this.methodPath.getPathState().addTaintValue(newTV);
 					}
 				}else if(rv instanceof ParameterRef){
@@ -118,6 +119,7 @@ public class ForwardsProblem {
 					for(TaintValue tv : paramTVs){
 						TaintValue newTV = new TaintValue(TaintValueType.TAINT, lv, stmt, this.methodPath);
 						newTV.appendAllSootField(tv.getAccessPath());
+						newTV.setInDependence(tv);
 						this.methodPath.getPathState().addTaintValue(newTV);
 					}
 				}

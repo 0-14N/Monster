@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -14,9 +15,12 @@ import com.monster.taint.path.MethodPath;
 import com.monster.taint.path.MethodPathCreator;
 import com.monster.taint.state.MethodState;
 import com.monster.taint.state.PathState;
+import com.monster.taint.state.TaintValue;
 
+import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
+import soot.Value;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.ZonedBlockGraph;
 
@@ -113,7 +117,7 @@ public class MethodHub {
 	private boolean containsUnit(ArrayList<Block> blockList, Unit activationUnit){
 		boolean contains = false;
 		for(Block block : blockList){
-			Iterator iter = block.iterator();
+			Iterator<Unit> iter = block.iterator();
 			while(iter.hasNext()){
 				Unit unit = (Unit) iter.next();
 				if(unit.equals(activationUnit)) return true;
@@ -147,6 +151,29 @@ public class MethodHub {
 		if(!this.pathStatesMerged){
 			this.pathStatesMerged = true;
 			
+			this.exitState = new MethodState(this.method.getParameterCount());
+			
+			//merge all the path states
+			Iterator<Entry<MethodPath, PathState>> iter = this.pathStates.entrySet().iterator();
+			while(iter.hasNext()){
+				Entry<MethodPath, PathState> entry = iter.next();
+				MethodPath methodPath = entry.getKey();
+				PathState pathState = entry.getValue();
+				
+				Local thisLocal = this.method.getActiveBody().getThisLocal();
+				ArrayList<TaintValue> thisTVs = pathState.getTVsBasedOnLocal(thisLocal);
+				for(TaintValue thisTV : thisTVs){
+					
+				}
+				
+				List<Local> paramsLocals = this.method.getActiveBody().getParameterLocals();
+				ArrayList<ArrayList<TaintValue>> allArgsTVs = new ArrayList<ArrayList<TaintValue>>();
+				for(int i = 0; i < paramsLocals.size(); i++){
+					allArgsTVs.add(pathState.getTVsBasedOnLocal(paramsLocals.get(i)));
+				}
+				
+				ArrayList<TaintValue> staticTVs = pathState.getStaticTVs();
+			}
 		}
 	}
 }

@@ -16,12 +16,18 @@ public class TaintValue {
 	private Value base = null;
 	private ArrayList<SootField> accessPath = null;
 	private Unit activationUnit = null;
-	//dependence is the TaintValue this depend on
+	//dependence is the TaintValue this depend on, the dependence 
+	//cannot cross method bound
 	private TaintValue dependence = null;
 	//the TaintValues depend on this
 	private Set<TaintValue> slaves = null;
-	//on which path, this TaintValue activated
-	private MethodPath context = null;
+	//on which paths, this TaintValue activated
+	private ArrayList<MethodPath> contexts = null;
+	//next two dependences are across method bound
+	//inDependence is the taint value passed in from caller
+	private TaintValue inDependence = null;
+	//retDependence is the taint value return from callee
+	private TaintValue retDependence = null;
 	
 	public TaintValue(TaintValueType type, Value base, Unit activationUnit, 
 			MethodPath context){
@@ -30,7 +36,8 @@ public class TaintValue {
 		this.accessPath = new ArrayList<SootField>();
 		this.activationUnit = activationUnit;
 		this.slaves = new HashSet<TaintValue>();
-		this.context = context;
+		this.contexts = new ArrayList<MethodPath>();
+		this.contexts.add(context);
 	}
 	
 	public void setDependence(TaintValue dependence){
@@ -104,7 +111,7 @@ public class TaintValue {
 
 	/**
 	 * this comparison method can only be used in
-	 * the same method comparison.
+	 * the same method bound comparison.
 	 * : type, base, accessPath, activationUnit
 	 */
 	@Override
@@ -142,5 +149,27 @@ public class TaintValue {
 		
 		return true;
 	}
+
+	public ArrayList<MethodPath> getContexts(){
+		return this.contexts;
+	}
+
+	/**
+	 * called only by MethodHub's mergePathStates
+	 * @param context
+	 */
+	public void addContext(MethodPath context){
+		if(!this.contexts.contains(context))
+			this.contexts.add(context);
+	}
 	
+	public void setInDependence(TaintValue inDependence){
+		assert(this.inDependence == null);
+		this.inDependence = inDependence;
+	}
+	
+	public void setRetDependence(TaintValue retDependence){
+		assert(this.retDependence == null);
+		this.retDependence = retDependence;
+	}
 }
