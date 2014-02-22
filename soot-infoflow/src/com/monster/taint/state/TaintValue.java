@@ -104,7 +104,8 @@ public class TaintValue {
 
 	/**
 	 * this comparison method can only be used in
-	 * the same method comparison
+	 * the same method comparison.
+	 * : type, base, accessPath, activationUnit
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -119,8 +120,12 @@ public class TaintValue {
 		//not static field
 		if(this.type != TaintValueType.STATIC_FIELD){
 			//base
-			if(!this.base.equals(other.getBase()))
+			//if(!this.base.equals(other.getBase()))
+				//return false;
+			if(!(this.base.toString().equals(other.getBase().toString()) &&
+					this.base.getType().equals(other.getType()))){
 				return false;
+			}
 		}
 		//accessPath
 		if(this.accessPath.size() != other.getAccessPath().size())

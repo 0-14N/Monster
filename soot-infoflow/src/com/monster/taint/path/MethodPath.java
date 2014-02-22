@@ -25,7 +25,7 @@ public class MethodPath {
 		this.methodHub = methodHub;
 		this.type = type;
 		this.activationUnit = activationUnit;
-		this.pathState = new PathState();
+		this.pathState = new PathState(this);
 	}
 	
 	public MethodHub getMethodHub(){
@@ -62,5 +62,9 @@ public class MethodPath {
 		}else if(this.type == MethodHubType.INVOKING_RETURN){
 			//TODO INVOKE_RETURN
 		}
+	}
+	
+	public ArrayList<Unit> getUnitsOnPath(){
+		return this.unitsOnPath;
 	}
 }
