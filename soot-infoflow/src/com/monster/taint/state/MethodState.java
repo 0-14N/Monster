@@ -121,4 +121,19 @@ public class MethodState {
 		}
 	}
 	
+	public void addRetTVContextSensitive(TaintValue retTV){
+		TaintValue exsitsTV = null;
+		for(TaintValue tv : this.retTVs){
+			if(tv.equals(retTV)){
+				exsitsTV = tv;
+				break;
+			}
+		}
+		if(exsitsTV == null){
+			this.retTVs.add(retTV);
+		}else{
+			exsitsTV.addContext(retTV.getFirstContext());
+		}
+	}
+	
 }

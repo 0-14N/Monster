@@ -9,6 +9,7 @@ import com.monster.taint.problem.ForwardsProblem;
 import com.monster.taint.state.PathState;
 
 import soot.Unit;
+import soot.Value;
 import soot.toolkits.graph.Block;
 
 public class MethodPath {
@@ -18,6 +19,7 @@ public class MethodPath {
 	private Unit activationUnit = null;
 	private ArrayList<Unit> unitsOnPath = null;
 	private PathState pathState = null;
+	private Value retValue = null;
 	
 	public MethodPath(ArrayList<Block> blockList, MethodHub methodHub, 
 			MethodHubType type, Unit activationUnit){
@@ -38,6 +40,14 @@ public class MethodPath {
 	
 	public boolean isActivationUnit(Unit u){
 		return this.activationUnit.equals(u);
+	}
+	
+	public void setRetValue(Value retValue){
+		this.retValue = retValue;
+	}
+	
+	public Value getRetValue(){
+		return this.retValue;
 	}
 	
 	private void init(){

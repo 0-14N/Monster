@@ -21,6 +21,9 @@ import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
+import soot.jimple.ArrayRef;
+import soot.jimple.InstanceFieldRef;
+import soot.jimple.StaticFieldRef;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.ZonedBlockGraph;
 
@@ -176,6 +179,28 @@ public class MethodHub {
 				ArrayList<TaintValue> staticTVs = pathState.getStaticTVs();
 				for(TaintValue staticTV : staticTVs){
 					this.exitState.addStaticTVContextSensitive(staticTV);
+				}
+				
+				//return taint values
+				Value retValue = pathState.getMethodPath().getRetValue();
+				if(retValue != null){
+					ArrayList<TaintValue> retTVs = null;
+					//the retValue can be Local, instance field, static field, array
+					if(retValue instanceof Local){
+						retTVs = pathState.getTVsBasedOnLocal((Local) retValue);
+					}else if(retValue instanceof InstanceFieldRef){
+						retTVs = pathState.getTVsBasedOnInstanceFieldRef((InstanceFieldRef) retValue);
+					}else if(retValue instanceof StaticFieldRef){
+						StaticFieldRef sfr = (StaticFieldRef) retValue;
+						retTVs = pathState.getTVsBasedOnStaticField(sfr.getField());
+					}else if(retValue instanceof ArrayRef){
+						ArrayRef ar = (ArrayRef) retValue;
+						retTVs = pathState.getTVsBasedOnLocal((Local) ar.getBase());
+					}
+					assert(retTVs != null);
+					for(TaintValue retTV : retTVs){
+						this.exitState.addRetTVContextSensitive(retTV);
+					}
 				}
 			}
 		}

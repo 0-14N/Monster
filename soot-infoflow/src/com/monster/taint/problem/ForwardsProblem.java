@@ -27,6 +27,7 @@ import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InvokeExpr;
 import soot.jimple.ParameterRef;
 import soot.jimple.ReturnStmt;
+import soot.jimple.ReturnVoidStmt;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.ThisRef;
 
@@ -75,6 +76,11 @@ public class ForwardsProblem {
 			
 			if(currUnit instanceof ReturnStmt){
 				handleReturnStmt((ReturnStmt) currUnit);
+				break;
+			}
+			
+			if(currUnit instanceof ReturnVoidStmt){
+				break;
 			}
 			
 			currIndex++;
@@ -365,6 +371,7 @@ public class ForwardsProblem {
 					ArrayList<TaintValue> outThisTVs = exitState.getThisTVs();
 					ArrayList<ArrayList<TaintValue>> outArgsTVs = exitState.getAllArgsTVs();
 					ArrayList<TaintValue> outStaticTVs = exitState.getStaticTVs();
+					//compare the out*TVs with in*TVs to get new produced
 				}
 				
 			}
@@ -372,6 +379,9 @@ public class ForwardsProblem {
 	}
 	
 	private void handleReturnStmt(ReturnStmt stmt){
+		Value value = stmt.getOp();
+		assert(value != null);
+		this.methodPath.setRetValue(value);
 		
 	}
 	

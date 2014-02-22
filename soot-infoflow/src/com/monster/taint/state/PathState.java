@@ -136,4 +136,8 @@ public class PathState {
 		}
 		return retTVs;
 	}
+	
+	public MethodPath getMethodPath(){
+		return this.methodPath;
+	}
 }
