@@ -140,4 +140,44 @@ public class PathState {
 	public MethodPath getMethodPath(){
 		return this.methodPath;
 	}
+
+	private static boolean accessPathEquals(ArrayList<SootField> path1, ArrayList<SootField> path2){
+		if(path1.size() != path2.size())
+			return false;
+		for(int i = 0; i < path1.size(); i++){
+			if(!path1.get(i).equals(path2.get(i)))
+				return false;
+		}
+		return true;
+	}
+	
+	private static boolean containsAccessPath(ArrayList<TaintValue> oldTVs, 
+			ArrayList<SootField> accesPath){
+		boolean contains = false;
+		for(TaintValue oldTV : oldTVs){
+			ArrayList<SootField> oldAccessPath = oldTV.getAccessPath();
+			if(accessPathEquals(oldAccessPath, accesPath)){
+				contains = true;
+				break;
+			}
+		}
+		return contains;
+		
+	}
+	
+	public static ArrayList<TaintValue> getNewProducedTVs(ArrayList<TaintValue> oldTVs, 
+			ArrayList<TaintValue> retTVs){
+		ArrayList<TaintValue> newProducedTVs = new ArrayList<TaintValue>();
+		for(TaintValue retTV : retTVs){
+			if(!containsAccessPath(oldTVs, retTV.getAccessPath()))
+				newProducedTVs.add(retTV);
+		}
+		return newProducedTVs;
+	}
+	
+	public static ArrayList<TaintValue> getUntaintedNonStaticTVs(ArrayList<TaintValue> oldTVs,
+			ArrayList<TaintValue> retTVs){
+		return getNewProducedTVs(retTVs, oldTVs);
+	}
+	
 }

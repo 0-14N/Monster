@@ -36,6 +36,7 @@ import com.monster.taint.MethodHubType;
 import com.monster.taint.Monster;
 import com.monster.taint.path.MethodPath;
 import com.monster.taint.state.MethodState;
+import com.monster.taint.state.PathState;
 import com.monster.taint.state.TaintValue;
 import com.monster.taint.state.TaintValueType;
 import com.monster.taint.wrapper.MyWrapper;
@@ -343,8 +344,11 @@ public class ForwardsProblem {
 				if(reachableStaticFields != null){
 					for(TaintValue staticTV : staticTVs){
 						if(reachableStaticFields.contains(staticTV.getAccessPath().get(0))){
-							staticFieldsReachable = true;
-							initState.addStaticTV(staticTV);
+							int ultimateIndex = this.units.indexOf(staticTV.getUltimateDependence().getActivationUnit());
+							if(currIndex > ultimateIndex){
+								staticFieldsReachable = true;
+								initState.addStaticTV(staticTV);
+							}
 						}
 					}
 				}
@@ -371,7 +375,16 @@ public class ForwardsProblem {
 					ArrayList<TaintValue> outThisTVs = exitState.getThisTVs();
 					ArrayList<ArrayList<TaintValue>> outArgsTVs = exitState.getAllArgsTVs();
 					ArrayList<TaintValue> outStaticTVs = exitState.getStaticTVs();
+					ArrayList<TaintValue> retTVs = exitState.getRetTVs();
+					
 					//compare the out*TVs with in*TVs to get new produced
+					ArrayList<TaintValue> newProducedTVs = new ArrayList<TaintValue>();
+					ArrayList<TaintValue> untaintedTVs = new ArrayList<TaintValue>();
+					
+					if(thisBase != null){
+						newProducedTVs.addAll(PathState.getNewProducedTVs(oldTVs, retTVs))
+					}
+					
 				}
 				
 			}
@@ -382,7 +395,6 @@ public class ForwardsProblem {
 		Value value = stmt.getOp();
 		assert(value != null);
 		this.methodPath.setRetValue(value);
-		
 	}
 	
 	private void startBackwardsProblem(TaintValue dependence, Unit currUnit){
