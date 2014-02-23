@@ -382,8 +382,20 @@ public class ForwardsProblem {
 					ArrayList<TaintValue> untaintedTVs = new ArrayList<TaintValue>();
 					
 					if(thisBase != null){
-						newProducedTVs.addAll(PathState.getNewProducedTVs(oldTVs, retTVs))
+						ArrayList<TaintValue> newProducedThisTVs = PathState.getNewProducedTVs(inThisTVs, outThisTVs);
+						ArrayList<TaintValue> untaintedThisTVs = PathState.getUntaintedNonStaticTVs(inThisTVs, outThisTVs);
 					}
+					
+					if(argsCount > 0){
+						assert(outThisTVs.size() == argsCount);
+						for(int i = 0; i < argsCount; i++){
+							PathState.getNewProducedTVs(inArgsTVs.get(i), outArgsTVs.get(i));
+							PathState.getUntaintedNonStaticTVs(inArgsTVs.get(i), outArgsTVs.get(i));
+						}
+					}
+					
+					ArrayList<TaintValue> newProducedStaticTVs = PathState.getNewProducedTVs(inStaticTVs, outStaticTVs);
+					ArrayList<TaintValue> untaintedStaticTVs = PathState.getUntaintedNonStaticTVs(inStaticTVs, outStaticTVs);
 					
 				}
 				
@@ -413,24 +425,21 @@ public class ForwardsProblem {
 	 */
 	private boolean handleRVLocal(Value lv, Local rv, Unit currUnit){
 		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal(rv);
+		boolean result = false;
 		for(TaintValue tv : tvs){
 			ArrayList<SootField> accessPath = tv.getAccessPath();
-			if(accessPath.size() == 0){
-				int currIndex = this.units.indexOf(currUnit);
-				TaintValue ultimateDependence = tv.getUltimateDependence();
-				int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
-				if(currIndex > ultimateIndex){
-					//lv's type is TAINT
-					taintLV(lv, currUnit, TaintValueType.TAINT, ultimateDependence, accessPath);
-				}else{
-					//lv's type is ALIAS
-					taintLV(lv, currUnit, TaintValueType.ALIAS, tv, accessPath);
-				}
+			int currIndex = this.units.indexOf(currUnit);
+			TaintValue ultimateDependence = tv.getUltimateDependence();
+			int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
+			if(currIndex > ultimateIndex){
+				//lv's type is TAINT
+				taintLV(lv, currUnit, TaintValueType.TAINT, ultimateDependence, accessPath);
 			}else{
+				//lv's type is ALIAS
 				taintLV(lv, currUnit, TaintValueType.ALIAS, tv, accessPath);
 			}
 		}
-		return tvs.size() > 0;
+		return result;
 	}
 
 
@@ -445,12 +454,12 @@ public class ForwardsProblem {
 	private boolean handleRVStaticFieldRef(Value lv, StaticFieldRef rv, Unit currUnit){
 		SootField sootField = rv.getField();
 		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnStaticField(sootField);
+		int currIndex = this.units.indexOf(currUnit);
 		for(TaintValue tv : tvs){
 			ArrayList<SootField> accessPath = tv.getAccessPath();
+			TaintValue ultimateDependence = tv.getUltimateDependence();
+			int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
 			if(accessPath.size() == 1){
-				int currIndex = this.units.indexOf(currUnit);
-				TaintValue ultimateDependence = tv.getUltimateDependence();
-				int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
 				if(currIndex > ultimateIndex){
 					taintLV(lv, currUnit, TaintValueType.TAINT, ultimateDependence, null);
 				}else{
@@ -462,7 +471,11 @@ public class ForwardsProblem {
 				for(int i = 1; i < accessPath.size(); i++){
 					restFields.add(accessPath.get(i));
 				}
-				taintLV(lv, currUnit, TaintValueType.ALIAS, tv, restFields);
+				if(currIndex > ultimateIndex){
+					taintLV(lv, currUnit, TaintValueType.TAINT, tv, restFields);
+				}else{
+					taintLV(lv, currUnit, TaintValueType.ALIAS, tv, restFields);
+				}
 			}
 		}
 		return tvs.size() > 0;
@@ -478,12 +491,12 @@ public class ForwardsProblem {
 	 */
 	private boolean handleRVInstanceFieldRef(Value lv, InstanceFieldRef rv, Unit currUnit){
 		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnInstanceFieldRef(rv);
+		int currIndex = this.units.indexOf(currUnit);
 		for(TaintValue tv : tvs){
 			ArrayList<SootField> accessPath = tv.getAccessPath();
+			TaintValue ultimateDependence = tv.getUltimateDependence();
+			int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
 			if(accessPath.size() == 1){
-				int currIndex = this.units.indexOf(currUnit);
-				TaintValue ultimateDependence = tv.getUltimateDependence();
-				int ultimateIndex = this.units.indexOf(ultimateDependence.getActivationUnit());
 				if(currIndex > ultimateIndex){
 					taintLV(lv, currUnit, TaintValueType.TAINT, ultimateDependence, null);
 				}else{
@@ -495,7 +508,11 @@ public class ForwardsProblem {
 				for(int i = 1; i < accessPath.size(); i++){
 					restFields.add(accessPath.get(i));
 				}
-				taintLV(lv, currUnit, TaintValueType.ALIAS, tv, restFields);
+				if(currIndex > ultimateIndex){
+					taintLV(lv, currUnit, TaintValueType.TAINT, tv, restFields);
+				}else{
+					taintLV(lv, currUnit, TaintValueType.ALIAS, tv, restFields);
+				}
 			}
 		}
 		return tvs.size() > 0;
