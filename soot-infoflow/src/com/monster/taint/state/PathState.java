@@ -112,7 +112,7 @@ public class PathState {
 		}
 	}
 	
-	private void deleteTaintValue(TaintValue tv){
+	public void deleteTaintValue(TaintValue tv){
 		//delete tv's slaves
 		Set<TaintValue> slaves = tv.getSlaves();
 		for(TaintValue slave : slaves){

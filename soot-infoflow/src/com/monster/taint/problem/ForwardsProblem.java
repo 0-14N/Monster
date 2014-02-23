@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.media.jai.UntiledOpImage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -377,30 +379,63 @@ public class ForwardsProblem {
 					ArrayList<TaintValue> outStaticTVs = exitState.getStaticTVs();
 					ArrayList<TaintValue> retTVs = exitState.getRetTVs();
 					
-					//compare the out*TVs with in*TVs to get new produced
+					//compare the out*TVs with in*TVs to add new produced taint values
+					//and untainted related taint values
 					ArrayList<TaintValue> newProducedTVs = new ArrayList<TaintValue>();
-					ArrayList<TaintValue> untaintedTVs = new ArrayList<TaintValue>();
-					
+			
+					//this
 					if(thisBase != null){
 						ArrayList<TaintValue> newProducedThisTVs = PathState.getNewProducedTVs(inThisTVs, outThisTVs);
 						ArrayList<TaintValue> untaintedThisTVs = PathState.getUntaintedNonStaticTVs(inThisTVs, outThisTVs);
+						//untainted some this taint values
+						this.untaintedTVs(untaintedThisTVs);
+						//add new produced this's taint values
+						newProducedTVs.addAll(this.addNewProducedTVs(thisBase, TaintValueType.TAINT, newProducedThisTVs, currUnit));
 					}
-					
+				
+					//args
 					if(argsCount > 0){
 						assert(outThisTVs.size() == argsCount);
 						for(int i = 0; i < argsCount; i++){
-							PathState.getNewProducedTVs(inArgsTVs.get(i), outArgsTVs.get(i));
-							PathState.getUntaintedNonStaticTVs(inArgsTVs.get(i), outArgsTVs.get(i));
+							Value argValue = args.get(i);
+							ArrayList<TaintValue> newArgTVs = PathState.getNewProducedTVs(inArgsTVs.get(i), outArgsTVs.get(i));
+							ArrayList<TaintValue> untaintedArgTVs = PathState.getUntaintedNonStaticTVs(inArgsTVs.get(i), outArgsTVs.get(i));
+							this.untaintedTVs(untaintedArgTVs);
+							newProducedTVs.addAll(this.addNewProducedTVs(argValue, TaintValueType.TAINT, newArgTVs, currUnit));
 						}
 					}
-					
+				
+					//static fields
 					ArrayList<TaintValue> newProducedStaticTVs = PathState.getNewProducedTVs(inStaticTVs, outStaticTVs);
 					ArrayList<TaintValue> untaintedStaticTVs = PathState.getUntaintedNonStaticTVs(inStaticTVs, outStaticTVs);
+					this.untaintedTVs(untaintedStaticTVs);
+					newProducedTVs.addAll(this.addNewProducedTVs(null, TaintValueType.STATIC_FIELD, newProducedStaticTVs, currUnit));
 					
+					//return value
+					if(retValue != null){
+						newProducedTVs.addAll(this.addNewProducedTVs(retValue, TaintValueType.TAINT, retTVs, currUnit));
+					}
 				}
-				
 			}
 		}
+	}
+	
+	private void untaintedTVs(ArrayList<TaintValue> tvs){
+		for(TaintValue tv : tvs){
+			this.methodPath.getPathState().deleteTaintValue(tv);
+		}
+	}
+	
+	private ArrayList<TaintValue> addNewProducedTVs(Value base, TaintValueType type, ArrayList<TaintValue> newProduecedTVs, Unit currUnit){
+		ArrayList<TaintValue> result = new ArrayList<TaintValue>();
+		for(TaintValue tv : newProduecedTVs){
+			TaintValue newTV = new TaintValue(type, base, currUnit, this.methodPath);
+			newTV.appendAllSootField(tv.getAccessPath());
+			newTV.setRetDependence(tv);
+			if(this.methodPath.getPathState().addTaintValue(newTV))
+				result.add(newTV);
+		}
+		return result;
 	}
 	
 	private void handleReturnStmt(ReturnStmt stmt){
