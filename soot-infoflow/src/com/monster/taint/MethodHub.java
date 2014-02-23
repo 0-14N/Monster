@@ -97,6 +97,10 @@ public class MethodHub {
 	public MethodState getInitState(){
 		return this.initState;
 	}
+	
+	public MethodHubType getType(){
+		return this.type;
+	}
 
 	/**
 	 * calculated all the paths contain activationUnit
@@ -130,7 +134,7 @@ public class MethodHub {
 		return contains;
 	}
 	
-	private MethodHub getPreHub(){
+	public MethodHub getPreHub(){
 		return this.preHub;
 	}
 	

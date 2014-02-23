@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.media.jai.UntiledOpImage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -371,7 +370,7 @@ public class ForwardsProblem {
 					newHub.start();
 					newHub.mergePathStates();
 					
-					//TODO return from the method, handle the exit method state with current path state
+					//return from the method, handle the exit method state with current path state
 					MethodState exitState = newHub.getExitState();
 					assert(exitState != null);
 					ArrayList<TaintValue> outThisTVs = exitState.getThisTVs();
@@ -387,8 +386,11 @@ public class ForwardsProblem {
 					if(thisBase != null){
 						ArrayList<TaintValue> newProducedThisTVs = PathState.getNewProducedTVs(inThisTVs, outThisTVs);
 						ArrayList<TaintValue> untaintedThisTVs = PathState.getUntaintedNonStaticTVs(inThisTVs, outThisTVs);
-						//untainted some this taint values
-						this.untaintedTVs(untaintedThisTVs);
+						//untainted some taint valued if this forwards problems is not
+						//triggered by backwards problem
+						if(!this.triggeredByBProblem(this.methodPath.getMethodHub())){
+							this.untaintedTVs(untaintedThisTVs);
+						}
 						//add new produced this's taint values
 						newProducedTVs.addAll(this.addNewProducedTVs(thisBase, TaintValueType.TAINT, newProducedThisTVs, currUnit));
 					}
@@ -400,7 +402,9 @@ public class ForwardsProblem {
 							Value argValue = args.get(i);
 							ArrayList<TaintValue> newArgTVs = PathState.getNewProducedTVs(inArgsTVs.get(i), outArgsTVs.get(i));
 							ArrayList<TaintValue> untaintedArgTVs = PathState.getUntaintedNonStaticTVs(inArgsTVs.get(i), outArgsTVs.get(i));
-							this.untaintedTVs(untaintedArgTVs);
+							if(!this.triggeredByBProblem(this.methodPath.getMethodHub())){
+								this.untaintedTVs(untaintedArgTVs);
+							}
 							newProducedTVs.addAll(this.addNewProducedTVs(argValue, TaintValueType.TAINT, newArgTVs, currUnit));
 						}
 					}
@@ -408,12 +412,23 @@ public class ForwardsProblem {
 					//static fields
 					ArrayList<TaintValue> newProducedStaticTVs = PathState.getNewProducedTVs(inStaticTVs, outStaticTVs);
 					ArrayList<TaintValue> untaintedStaticTVs = PathState.getUntaintedNonStaticTVs(inStaticTVs, outStaticTVs);
-					this.untaintedTVs(untaintedStaticTVs);
+					if(!this.triggeredByBProblem(this.methodPath.getMethodHub())){
+						this.untaintedTVs(untaintedStaticTVs);
+					}
 					newProducedTVs.addAll(this.addNewProducedTVs(null, TaintValueType.STATIC_FIELD, newProducedStaticTVs, currUnit));
 					
 					//return value
 					if(retValue != null){
 						newProducedTVs.addAll(this.addNewProducedTVs(retValue, TaintValueType.TAINT, retTVs, currUnit));
+					}
+					
+					//for the new produced taint values, start backwards problems if it is necessary
+					for(TaintValue tv : newProducedTVs){
+						if(tv.getType() == TaintValueType.STATIC_FIELD && tv.getAccessPath().size() > 1){
+							startBackwardsProblem(tv, currUnit);
+						}else if(tv.getAccessPath().size() > 0){
+							startBackwardsProblem(tv, currUnit);
+						}
 					}
 				}
 			}
@@ -444,9 +459,9 @@ public class ForwardsProblem {
 		this.methodPath.setRetValue(value);
 	}
 	
-	private void startBackwardsProblem(TaintValue dependence, Unit currUnit){
+	private void startBackwardsProblem(TaintValue triggerTV, Unit currUnit){
 		int currIndex = this.units.indexOf(currUnit); 
-		BackwardsProblem bProblem = new BackwardsProblem(this.units, currIndex - 1, this.methodPath, dependence);
+		BackwardsProblem bProblem = new BackwardsProblem(this.units, currIndex - 1, this.methodPath, triggerTV);
 		bProblem.solve();
 	}
 
@@ -616,6 +631,15 @@ public class ForwardsProblem {
 			TaintValue newTV = new TaintValue(type, lv, activationUnit, this.methodPath);
 			newTV.appendAllSootField(rvAccessPath);
 		}
+	}
+	
+	private boolean triggeredByBProblem(MethodHub hub){
+		if(hub.getType() == MethodHubType.CALLED_BACKWARD){
+			return true;
+		}
+		if(hub.getPreHub() == null)
+			return false;
+		return triggeredByBProblem(hub.getPreHub());
 	}
 
 }

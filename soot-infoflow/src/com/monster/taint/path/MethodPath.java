@@ -63,6 +63,7 @@ public class MethodPath {
 	}
 	
 	public void start(){
+		this.init();
 		if(this.type == MethodHubType.CALLED_FORWARD || 
 				this.type == MethodHubType.CALLED_BACKWARD){
 			int startIndex = unitsOnPath.indexOf(activationUnit);
