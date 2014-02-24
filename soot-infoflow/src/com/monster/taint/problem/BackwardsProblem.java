@@ -30,9 +30,11 @@ import soot.Value;
 import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
 import soot.jimple.CastExpr;
+import soot.jimple.Constant;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InvokeExpr;
+import soot.jimple.InvokeStmt;
 import soot.jimple.StaticFieldRef;
 
 public class BackwardsProblem {
@@ -62,8 +64,9 @@ public class BackwardsProblem {
 				handleAssignStmt((AssignStmt) currUnit);
 			}
 			
-			if(currUnit instanceof InvokeExpr){
-				handleInvokeExpr((InvokeExpr) currUnit, null);
+			if(currUnit instanceof InvokeStmt){
+				InvokeExpr invokeExpr = ((InvokeStmt) currUnit).getInvokeExpr();
+				handleInvokeExpr(invokeExpr, null);
 			}
 			
 			currIndex--;
@@ -159,7 +162,7 @@ public class BackwardsProblem {
 			newTV.setDependence(dependence);
 			newTV.appendAllSootField(appendFields);
 		}
-		assert(newTV != null);
+		assert(newTV != null || value instanceof Constant);
 		this.methodPath.getPathState().addTaintValue(newTV);
 		ForwardsProblem fP = new ForwardsProblem(this.units, this.units.indexOf(activationUnit) + 1, 
 								this.startIndex, this.methodPath);
@@ -308,6 +311,7 @@ public class BackwardsProblem {
 			boolean isTainted = false;
 			for(int i = 0; i < argsCount && !isTainted; i++){
 				Value arg = args.get(i);
+				if(arg instanceof Constant) continue;
 				assert(arg instanceof Local);
 				ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
 				for(int j = 0; j < tvs.size() && !isTainted; j++){
@@ -363,12 +367,16 @@ public class BackwardsProblem {
 				}
 				
 				ArrayList<ArrayList<TaintValue>> argsTVs = new ArrayList<ArrayList<TaintValue>>(argsCount);
+				for(int i = 0; i < argsCount; i++){
+					argsTVs.add(new ArrayList<TaintValue>());
+				}
 				boolean argsTainted = false;
-				for(int i = 0; i <argsCount; i++){
+				for(int i = 0; i < argsCount; i++){
 					Value arg = args.get(i);
+					if(arg instanceof Constant) continue;
 					assert(arg instanceof Local);
 					ArrayList<TaintValue> argTVs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
-					argsTVs.set(i, argTVs);
+					argsTVs.get(i).addAll(argTVs);
 				}
 				for(int i = 0; i < argsCount && !argsTainted; i++){
 					ArrayList<TaintValue> argTVs = argsTVs.get(i);
@@ -437,6 +445,7 @@ public class BackwardsProblem {
 						assert(outThisTVs.size() == argsCount);
 						for(int i = 0; i < argsCount; i++){
 							Value argValue = args.get(i);
+							if(argValue instanceof Constant) continue;
 							ArrayList<TaintValue> newArgTVs = PathState.getNewProducedTVs(inArgsTVs.get(i), outArgsTVs.get(i));
 							newProducedTVs.addAll(this.addNewProducedTVs(argValue, TaintValueType.ALIAS, newArgTVs, currUnit));
 						}

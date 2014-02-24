@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +25,8 @@ import soot.jimple.IdentityStmt;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InvokeExpr;
+import soot.jimple.InvokeStmt;
+import soot.jimple.NewExpr;
 import soot.jimple.ParameterRef;
 import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
@@ -72,8 +73,9 @@ public class ForwardsProblem {
 			}
 		
 			//virtualinvoke $r6.<java.lang.String: boolean equals(java.lang.Object)>($r1);
-			if(currUnit instanceof InvokeExpr){
-				handleInvokeExpr((InvokeExpr) currUnit, null, currUnit);
+			if(currUnit instanceof InvokeStmt){
+				InvokeExpr invokeExpr = ((InvokeStmt) currUnit).getInvokeExpr();
+				handleInvokeExpr(invokeExpr, null, currUnit);
 			}
 			
 			if(currUnit instanceof ReturnStmt){
@@ -122,7 +124,7 @@ public class ForwardsProblem {
 				}else if(rv instanceof ParameterRef){
 					//e.g. $r1 := @parameter1: type;
 					int argIndex = ((ParameterRef) rv).getIndex();
-					assert(argIndex > 0);
+					assert(argIndex > 0) : stmt;
 					ArrayList<TaintValue> paramTVs = initMethodState.getArgTVs(argIndex);
 					for(TaintValue tv : paramTVs){
 						TaintValue newTV = new TaintValue(TaintValueType.TAINT, lv, stmt, this.methodPath);
@@ -192,7 +194,8 @@ public class ForwardsProblem {
 				rvTainted |= handleRVArrayRef(lv, (ArrayRef) rv, stmt);
 			}else if(rv instanceof CastExpr){
 				rvTainted |= handleRVCastExpr(lv, (CastExpr) rv, stmt);
-			}else if(rv instanceof Constant){
+			}else if(rv instanceof Constant ||
+					rv instanceof NewExpr){
 				this.methodPath.getPathState().eraseTaintOf(lv, stmt);
 			}
 			if(!rvTainted)
@@ -265,6 +268,8 @@ public class ForwardsProblem {
 			boolean isTainted = false;
 			for(int i = 0; i < argsCount && !isTainted; i++){
 				Value arg = args.get(i);
+				if(arg instanceof Constant)
+					continue;
 				assert(arg instanceof Local);
 				ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
 				for(int j = 0; j < tvs.size() && !isTainted; j++){
@@ -320,12 +325,17 @@ public class ForwardsProblem {
 				}
 				
 				ArrayList<ArrayList<TaintValue>> argsTVs = new ArrayList<ArrayList<TaintValue>>(argsCount);
+				for(int i = 0; i < argsCount; i++){
+					argsTVs.add(new ArrayList<TaintValue>());
+				}
 				boolean argsTainted = false;
 				for(int i = 0; i <argsCount; i++){
 					Value arg = args.get(i);
-					assert(arg instanceof Local);
+					if(arg instanceof Constant)
+						continue;
+					assert(arg instanceof Local) : arg.getClass().toString() + arg.toString();
 					ArrayList<TaintValue> argTVs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
-					argsTVs.set(i, argTVs);
+					argsTVs.get(i).addAll(argTVs);
 				}
 				for(int i = 0; i < argsCount && !argsTainted; i++){
 					ArrayList<TaintValue> argTVs = argsTVs.get(i);
@@ -400,6 +410,9 @@ public class ForwardsProblem {
 						assert(outThisTVs.size() == argsCount);
 						for(int i = 0; i < argsCount; i++){
 							Value argValue = args.get(i);
+							if(argValue instanceof Constant)
+								continue;
+							assert(argValue instanceof Local);
 							ArrayList<TaintValue> newArgTVs = PathState.getNewProducedTVs(inArgsTVs.get(i), outArgsTVs.get(i));
 							ArrayList<TaintValue> untaintedArgTVs = PathState.getUntaintedNonStaticTVs(inArgsTVs.get(i), outArgsTVs.get(i));
 							if(!this.triggeredByBProblem(this.methodPath.getMethodHub())){

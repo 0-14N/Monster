@@ -35,7 +35,7 @@ public class MethodPath {
 	}
 	
 	public PathState getPathState(){
-		return this.getPathState();
+		return this.pathState;
 	}
 	
 	public boolean isActivationUnit(Unit u){

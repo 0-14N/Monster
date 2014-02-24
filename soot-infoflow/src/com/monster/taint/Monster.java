@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.monster.taint.mstcallback.MSTCallback;
 import com.monster.taint.mstcallback.MSTCallbackFactory;
+import com.monster.taint.state.MethodState;
 import com.monster.taint.wrapper.MyWrapper;
 
 import soot.PointsToAnalysis;
@@ -109,7 +110,7 @@ public class Monster {
 		}
 		
 		//collect sink trigger units
-		Iterator<Entry<SootMethod, Set<Unit>>> sinkIter = this.sources.entrySet().iterator();
+		Iterator<Entry<SootMethod, Set<Unit>>> sinkIter = this.sinks.entrySet().iterator();
 		while(sinkIter.hasNext()){
 			Entry<SootMethod, Set<Unit>> entry = sinkIter.next();
 			SootMethod sinkContainer = entry.getKey();
@@ -124,8 +125,9 @@ public class Monster {
 		
 		for(MethodHub methodHub : this.sourceMethodHubs){
 			methodHub.start();
-			
-			//TODO backwards to "dummyMain"
+			methodHub.mergePathStates();
+			MethodState exitState = methodHub.getExitState();
+			logger.info("Analyzed source {}", methodHub);
 		}
 	}
 

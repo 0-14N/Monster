@@ -193,4 +193,14 @@ public class TaintValue {
 		assert(this.retDependence == null);
 		this.retDependence = retDependence;
 	}
+
+	@Override
+	public String toString() {
+		return "TaintValue [type=" + type + ", base=" + base + ", accessPath="
+				+ accessPath + ", activationUnit=" + activationUnit
+				+ ", dependence=" + dependence + ", slaves=" + slaves
+				+ ", inDependence=" + inDependence + ", retDependence="
+				+ retDependence + "]";
+	}
+	
 }

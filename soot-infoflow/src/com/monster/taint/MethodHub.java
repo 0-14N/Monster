@@ -23,6 +23,7 @@ import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.ArrayRef;
+import soot.jimple.Constant;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.StaticFieldRef;
 import soot.toolkits.graph.Block;
@@ -90,6 +91,7 @@ public class MethodHub {
 				this.type == MethodHubType.CALLED_BACKWARD){
 			for(MethodPath methodPath : paths){
 				methodPath.start();
+				this.pathStates.put(methodPath, methodPath.getPathState());
 			}
 		}
 	}
@@ -109,7 +111,7 @@ public class MethodHub {
 		ArrayList<ArrayList<Block>> pathBlockLists = MethodPathCreator.v().getPaths(this.zonedBlockGraph);
 		for(ArrayList<Block> blockList : pathBlockLists){
 			MethodPath methodPath = null;
-			if(this.type == MethodHubType.INVOKING_RETURN){
+			if(this.activationUnit != null){
 				if(containsUnit(blockList, activationUnit)){
 					methodPath = new MethodPath(blockList, this, this.type, this.activationUnit);
 				}
@@ -188,7 +190,7 @@ public class MethodHub {
 				
 				//return taint values
 				Value retValue = pathState.getMethodPath().getRetValue();
-				if(retValue != null){
+				if(retValue != null && !(retValue instanceof Constant)){
 					ArrayList<TaintValue> retTVs = null;
 					//the retValue can be Local, instance field, static field, array
 					if(retValue instanceof Local){
@@ -210,4 +212,10 @@ public class MethodHub {
 			}
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "MethodHub [method=" + method + "]";
+	}
+	
 }

@@ -54,11 +54,13 @@ public class MethodPathCreator {
 			}
 		}
 		*/
-		
+	
+		ArrayList<Block> nonExceptionHeads = new ArrayList<Block>();
 		HashMap<String, Block> exceptionHandlers = new HashMap<String, Block>();
 		for(i = 0; i < heads.size(); i++){
 			Block headBlk = heads.get(i);
 			Unit headU = headBlk.getHead();
+			boolean isExceptionHandler = false;
 			if(headU instanceof DefinitionStmt){
 				DefinitionStmt ds = (DefinitionStmt) headU;
 				Value rv = ds.getRightOp();
@@ -66,12 +68,16 @@ public class MethodPathCreator {
 				if(rv instanceof CaughtExceptionRef){
 					String exceptionType = lv.getType().toString();
 					exceptionHandlers.put(exceptionType, headBlk);
+					isExceptionHandler = true;
 				}
+			}
+			if(!isExceptionHandler){
+				nonExceptionHeads.add(headBlk);
 			}
 		}
 		
-		for(i = 0; i < heads.size(); i++){
-			Block head = heads.get(i);
+		for(i = 0; i < nonExceptionHeads.size(); i++){
+			Block head = nonExceptionHeads.get(i);
 			ArrayList<Integer> source = new ArrayList<Integer>();
 			//get the paths start from this head
 			ArrayList<ArrayList<Integer>> intLists = forkPaths(source, head, allBlocks, tails);
