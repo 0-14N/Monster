@@ -1,6 +1,7 @@
 package com.monster.taint;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,6 +54,9 @@ public class Monster {
 	 * We use sourceMethodHubs to store those methods contain sources.
 	 */
 	private Set<MethodHub> sourceMethodHubs = null;
+	//source and sink trigger units
+	private ArrayList<Unit> sourceTriggerUnits = new ArrayList<Unit>();
+	private ArrayList<Unit> sinkTriggerUnits = new ArrayList<Unit>();
 	
 	private Monster(){}
 	
@@ -94,9 +98,11 @@ public class Monster {
 		
 		//TODO collect source trigger units
 		
+		
 		//TODO collect sink trigger units
 		
 		createSourceMethodHubs();
+		
 		for(MethodHub methodHub : this.sourceMethodHubs){
 			methodHub.start();
 			

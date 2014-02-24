@@ -97,6 +97,23 @@ public class TaintValue {
 		return this.base;
 	}
 	
+	public boolean baseEquals(Value value){
+		if(this.base == null && value == null){
+			return true;
+		}
+		
+		if(this.base == null){
+			return false;
+		}
+		
+		if(value.toString().equals(this.base.toString()) &&
+				value.getType().equals(value.getType())){
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public Set<TaintValue> getSlaves(){
 		return this.slaves;
 	}
