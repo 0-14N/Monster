@@ -96,10 +96,29 @@ public class Monster {
 	
 	public void start(){
 		
-		//TODO collect source trigger units
+		//collect source trigger units
+		Iterator<Entry<SootMethod, Set<Unit>>> sourceIter = this.sources.entrySet().iterator();
+		while(sourceIter.hasNext()){
+			Entry<SootMethod, Set<Unit>> entry = sourceIter.next();
+			SootMethod sourceContainer = entry.getKey();
+			Set<Unit> sourceUnits = entry.getValue();
+			for(Unit sourceUnit : sourceUnits){
+				SootMethodNode sourceNode = new SootMethodNode(sourceContainer, null, null);
+				this.collectSourceSinkTriggerUnits(sourceContainer, sourceUnit, sourceNode, this.sourceTriggerUnits);
+			}
+		}
 		
-		
-		//TODO collect sink trigger units
+		//collect sink trigger units
+		Iterator<Entry<SootMethod, Set<Unit>>> sinkIter = this.sources.entrySet().iterator();
+		while(sinkIter.hasNext()){
+			Entry<SootMethod, Set<Unit>> entry = sinkIter.next();
+			SootMethod sinkContainer = entry.getKey();
+			Set<Unit> sinkUnits = entry.getValue();
+			for(Unit sinkUnit : sinkUnits){
+				SootMethodNode sinkNode = new SootMethodNode(sinkContainer, null, null);
+				this.collectSourceSinkTriggerUnits(sinkContainer, sinkUnit, sinkNode, this.sinkTriggerUnits);
+			}
+		}
 		
 		createSourceMethodHubs();
 		
@@ -110,6 +129,29 @@ public class Monster {
 		}
 	}
 
+	private void collectSourceSinkTriggerUnits(SootMethod smOnSourcePath, Unit u, 
+			SootMethodNode methodNode, ArrayList<Unit> collectedUnits){
+		if(smOnSourcePath.getName().equals("dummyMainMethod")){
+			if(!collectedUnits.contains(u)){
+				collectedUnits.add(u);
+			}
+			return;
+		}
+		Set<Unit> callerUnits = iCfg.getCallersOf(smOnSourcePath);
+		for(Unit callUnit : callerUnits){
+			try{
+				SootMethod caller = iCfg.getMethodOf(callUnit);
+				if(!methodNode.isMyAncestor(caller)){
+					SootMethodNode callerNode = new SootMethodNode(caller, methodNode, null);
+					methodNode.addSon(callerNode);
+					collectSourceSinkTriggerUnits(caller, callUnit, callerNode, collectedUnits);
+				}
+			}catch(Exception e){
+				logger.info(e.toString());
+			}
+		}
+	}
+	
 	/**
 	 * create MethodHubs for sources, a MethodHub for each source unit,
 	 * maybe it should be optimized in future. 
