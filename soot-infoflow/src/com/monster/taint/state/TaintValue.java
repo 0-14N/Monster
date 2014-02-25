@@ -142,7 +142,7 @@ public class TaintValue {
 			return false;
 		
 		//not static field
-		if(this.type != TaintValueType.STATIC_FIELD){
+		if(!this.isStaticField()){
 			//base
 			//if(!this.base.equals(other.getBase()))
 				//return false;
@@ -192,6 +192,13 @@ public class TaintValue {
 	public void setRetDependence(TaintValue retDependence){
 		assert(this.retDependence == null);
 		this.retDependence = retDependence;
+	}
+	
+	public boolean isStaticField(){
+		if(this.base == null && this.accessPath.size() > 0){
+			return true;
+		}
+		return false;
 	}
 
 	@Override

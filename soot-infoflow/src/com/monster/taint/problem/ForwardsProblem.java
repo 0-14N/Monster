@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.text.html.FormSubmitEvent.MethodType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +154,7 @@ public class ForwardsProblem {
 					//lv is static field
 					if(lv instanceof StaticFieldRef){
 						StaticFieldRef sfr = (StaticFieldRef) lv;
-						TaintValue sourceTV = new TaintValue(TaintValueType.STATIC_FIELD, null, stmt, this.methodPath);
+						TaintValue sourceTV = new TaintValue(TaintValueType.TAINT, null, stmt, this.methodPath);
 						sourceTV.appendSootField(sfr.getField());
 						this.methodPath.getPathState().addTaintValue(sourceTV);
 					}else if(lv instanceof InstanceFieldRef){
@@ -235,7 +233,7 @@ public class ForwardsProblem {
 				newSource = new TaintValue(TaintValueType.TAINT, retValue, currUnit, this.methodPath);
 			}else if(retValue instanceof StaticFieldRef){
 				StaticFieldRef sfr = (StaticFieldRef) retValue;
-				newSource = new TaintValue(TaintValueType.STATIC_FIELD, null, currUnit, this.methodPath);
+				newSource = new TaintValue(TaintValueType.TAINT, null, currUnit, this.methodPath);
 				newSource.appendSootField(sfr.getField());
 			}else if(retValue instanceof InstanceFieldRef){
 				InstanceFieldRef ifr = (InstanceFieldRef) retValue;
@@ -254,6 +252,15 @@ public class ForwardsProblem {
 		}else{
 			//this is not a source container, so this is a callee of certain method
 			MethodState initState = this.methodPath.getMethodHub().getInitState();
+			ArrayList<ArrayList<TaintValue>> argsTVs = initState.getAllArgsTVs();
+			ArrayList<TaintValue> thisTVs = initState.getThisTVs();
+			ArrayList<TaintValue> retTVs = initState.getRetTVs();
+			ArrayList<TaintValue> staticTVs = initState.getStaticTVs();
+			ArrayList<TaintValue>
+			
+			if(thisBase != null && thisTVs.size() > 0){
+				
+			}
 		}
 		
 	}
@@ -488,7 +495,7 @@ public class ForwardsProblem {
 					if(!this.triggeredByBProblem(this.methodPath.getMethodHub())){
 						this.untaintedTVs(untaintedStaticTVs);
 					}
-					newProducedTVs.addAll(this.addNewProducedTVs(null, TaintValueType.STATIC_FIELD, newProducedStaticTVs, currUnit));
+					newProducedTVs.addAll(this.addNewProducedTVs(null, TaintValueType.TAINT, newProducedStaticTVs, currUnit));
 					
 					//return value
 					if(retValue != null){
@@ -497,7 +504,7 @@ public class ForwardsProblem {
 					
 					//for the new produced taint values, start backwards problems if it is necessary
 					for(TaintValue tv : newProducedTVs){
-						if(tv.getType() == TaintValueType.STATIC_FIELD && tv.getAccessPath().size() > 1){
+						if(tv.isStaticField() && tv.getAccessPath().size() > 1){
 							startBackwardsProblem(tv, currUnit);
 						}else if(tv.getAccessPath().size() > 0){
 							startBackwardsProblem(tv, currUnit);
@@ -679,7 +686,7 @@ public class ForwardsProblem {
 			TaintValue dependence, ArrayList<SootField> rvAccessPath){
 		if(lv instanceof StaticFieldRef){
 			StaticFieldRef sfr = (StaticFieldRef) lv;
-			TaintValue newTV = new TaintValue(TaintValueType.STATIC_FIELD, null, activationUnit, this.methodPath);
+			TaintValue newTV = new TaintValue(type, null, activationUnit, this.methodPath);
 			newTV.appendSootField(sfr.getField());
 			newTV.appendAllSootField(rvAccessPath);
 			newTV.setDependence(dependence);

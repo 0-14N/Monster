@@ -59,7 +59,7 @@ public class PathState {
 	public ArrayList<TaintValue> getTVsBasedOnStaticField(SootField sootField){
 		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
 		for(TaintValue tv : this.taintValues){
-			if(tv.getType() == TaintValueType.STATIC_FIELD){
+			if(tv.isStaticField()){
 				if(tv.getAccessPath().get(0).equals(sootField))
 					retTVs.add(tv);
 			}
@@ -131,7 +131,7 @@ public class PathState {
 	public ArrayList<TaintValue> getStaticTVs(){
 		ArrayList<TaintValue> retTVs = new ArrayList<TaintValue>();
 		for(TaintValue tv : this.taintValues){
-			if(tv.getType() == TaintValueType.STATIC_FIELD)
+			if(tv.isStaticField())
 				retTVs.add(tv);
 		}
 		return retTVs;

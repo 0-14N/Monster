@@ -147,7 +147,7 @@ public class BackwardsProblem {
 			newTV.appendAllSootField(appendFields);
 		}else if(value instanceof StaticFieldRef){
 			StaticFieldRef sfr = (StaticFieldRef) value;
-			newTV = new TaintValue(TaintValueType.STATIC_FIELD, null, activationUnit, this.methodPath);
+			newTV = new TaintValue(type, null, activationUnit, this.methodPath);
 			newTV.setDependence(dependence);
 			newTV.appendSootField(sfr.getField());
 			newTV.appendAllSootField(appendFields);
@@ -191,7 +191,7 @@ public class BackwardsProblem {
 			}
 		}else if(value instanceof StaticFieldRef){
 			StaticFieldRef sfr = (StaticFieldRef) value;
-			if(tv.getType() == TaintValueType.STATIC_FIELD){
+			if(tv.isStaticField()){
 				ArrayList<SootField> accessPath = tv.getAccessPath();
 				if(accessPath.size() > 1 && accessPath.get(0).equals(sfr.getField())){
 					return true;
@@ -227,7 +227,7 @@ public class BackwardsProblem {
 			}
 		}else if(value instanceof StaticFieldRef){
 			StaticFieldRef sfr = (StaticFieldRef) value;
-			if(tv.getType() == TaintValueType.STATIC_FIELD){
+			if(tv.isStaticField()){
 				ArrayList<SootField> accessPath = tv.getAccessPath();
 				if(accessPath.size() == 1 && accessPath.get(0).equals(sfr.getField())){
 					return true;
@@ -453,7 +453,7 @@ public class BackwardsProblem {
 				
 					//static fields
 					ArrayList<TaintValue> newProducedStaticTVs = PathState.getNewProducedTVs(inStaticTVs, outStaticTVs);
-					newProducedTVs.addAll(this.addNewProducedTVs(null, TaintValueType.STATIC_FIELD, newProducedStaticTVs, currUnit));
+					newProducedTVs.addAll(this.addNewProducedTVs(null, TaintValueType.ALIAS, newProducedStaticTVs, currUnit));
 					
 					//return value
 					if(retValue != null){

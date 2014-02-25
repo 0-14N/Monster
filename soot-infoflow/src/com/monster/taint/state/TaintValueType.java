@@ -11,5 +11,4 @@ public enum TaintValueType {
 	TAINT,
 	ALIAS, //if a taint value's type is ALIAS, its dependence's may be alias, but its ultimate dependence's type
 			//must be TAINT. In other words, an alias is a taint value, which is not activated.
-	STATIC_FIELD,
 }
