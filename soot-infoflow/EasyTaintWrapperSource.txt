@@ -303,6 +303,44 @@
 <android.content.Intent: java.util.ArrayList<java.lang.String> getStringArrayListExtra(java.lang.String)>
 <android.content.Intent: java.lang.String getStringExtra(java.lang.String)>
 
+<android.os.Bundle: java.lang.Object get(java.lang.String)>
+<android.os.Bundle: boolean get(java.lang.String)>
+<android.os.Bundle: boolean get(java.lang.String,boolean)>
+<android.os.Bundle: boolean[] getBooleanArray(java.lang.String)>
+<android.os.Bundle: android.os.Bundle getBundle(java.lang.String)>
+<android.os.Bundle: byte getByte(java.lang.String)>
+<android.os.Bundle: java.lang.Byte getByte(java.lang.String,byte)>
+<android.os.Bundle: byte[] getByteArray(java.lang.String)>
+<android.os.Bundle: char getChar(java.lang.String)>
+<android.os.Bundle: char getChar(java.lang.String,char)>
+<android.os.Bundle: char[] getCharArray(java.lang.String)>
+<android.os.Bundle: java.lang.CharSequence getCharSequence(java.lang.String,java.lang.CharSequence)>
+<android.os.Bundle: java.lang.CharSequence getCharSequence(java.lang.String)>
+<android.os.Bundle: java.lang.CharSequence[] getCharSequenceArray(java.lang.String)>
+<android.os.Bundle: java.util.ArrayList<java.lang.CharSequence> getCharSequenceArrayList(java.lang.String)>
+<android.os.Bundle: double getDouble(java.lang.String)>
+<android.os.Bundle: double getDouble(java.lang.String,double)>
+<android.os.Bundle: double[] getDoubleArray(java.lang.String)>
+<android.os.Bundle: float getFloat(java.lang.String)>
+<android.os.Bundle: float getFloat(java.lang.String,float)>
+<android.os.Bundle: float[] getFloatArray(java.lang.String)>
+<android.os.Bundle: int getInt(java.lang.String,int)>
+<android.os.Bundle: int getInt(java.lang.String)>
+<android.os.Bundle: int[] getIntArray(java.lang.String)>
+<android.os.Bundle: java.util.ArrayList<java.lang.Integer> getIntegerArrayList(java.lang.String)>
+<android.os.Bundle: long getLong(java.lang.String)>
+<android.os.Bundle: long getLong(java.lang.String,long)>
+<android.os.Bundle: long[] getLongArray(java.lang.String)>
+<android.os.Bundle: short getShort(java.lang.String)>
+<android.os.Bundle: short getShort(java.lang.String,short)>
+<android.os.Bundle: short[] getShortArray(java.lang.String)>
+<android.os.Bundle: java.lang.String getString(java.lang.String,java.lang.String)>
+<android.os.Bundle: java.lang.String getString(java.lang.String)>
+<android.os.Bundle: java.lang.String[] getStringArray(java.lang.String)>
+<android.os.Bundle: java.util.ArrayList<java.lang.String> getStringArrayList(java.lang.String)>
+
+
+
 ~<android.content.ContextWrapper: android.content.Context getBaseContext()>
 
 <android.content.IntentFilter: void addAction(java.lang.String)>
