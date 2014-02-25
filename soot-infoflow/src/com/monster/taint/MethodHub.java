@@ -16,7 +16,6 @@ import com.monster.taint.path.MethodPathCreator;
 import com.monster.taint.state.MethodState;
 import com.monster.taint.state.PathState;
 import com.monster.taint.state.TaintValue;
-import com.monster.taint.state.TaintValueType;
 
 import soot.Local;
 import soot.SootMethod;

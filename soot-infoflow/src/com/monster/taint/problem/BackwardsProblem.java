@@ -53,6 +53,7 @@ public class BackwardsProblem {
 		this.currIndex = startIndex;
 		this.methodPath = methodPath;
 		this.triggerTV = triggerTV;
+		assert(this.triggerTV.getType() == TaintValueType.TAINT);
 	}
 	
 	public void solve(){
@@ -72,7 +73,8 @@ public class BackwardsProblem {
 			currIndex--;
 		}
 	}
-	
+
+	//[start] handleAssignStmt
 	private void handleAssignStmt(AssignStmt stmt){
 		if(this.methodPath.isActivationUnit(stmt)){
 			return;
@@ -98,7 +100,7 @@ public class BackwardsProblem {
 					}
 				}
 				
-				this.handleNewTaintValue(rv, appendFields, this.triggerTV, currUnit, TaintValueType.ALIAS);
+				this.handleNewAlias(rv, appendFields, this.triggerTV, currUnit, TaintValueType.ALIAS);
 			}
 			
 			//rv is part of 'triggerTV', but not equal to
@@ -115,13 +117,15 @@ public class BackwardsProblem {
 						appendFields.add(accessPath.get(i));
 					}
 				}
-				this.handleNewTaintValue(lv, appendFields, this.triggerTV, currUnit, TaintValueType.ALIAS);
+				this.handleNewAlias(lv, appendFields, this.triggerTV, currUnit, TaintValueType.ALIAS);
 			}else if(this.isEqualTV(rv, this.triggerTV)){
-				this.handleNewTaintValue(lv, new ArrayList<SootField>(), this.triggerTV, currUnit, TaintValueType.ALIAS);
+				this.handleNewAlias(lv, new ArrayList<SootField>(), this.triggerTV, currUnit, TaintValueType.ALIAS);
 			}
 		}
 	}
+	//[end]
 
+	//[start] handleNewAlias
 	/**
 	 * Found new alias, add it and start forwards problem, the new
 	 * alias's dependence is this.triggerTV
@@ -132,43 +136,38 @@ public class BackwardsProblem {
 	 * @param activationUnit
 	 * @param type : default is alias, if value is a static field ref, then STATIC_FIELD
 	 */
-	private void handleNewTaintValue(Value value, ArrayList<SootField> appendFields, TaintValue dependence,
+	private void handleNewAlias(Value value, ArrayList<SootField> appendFields, TaintValue dependence,
 			Unit activationUnit, TaintValueType type){
 		TaintValue newTV = null;
 		if(value instanceof Local){
 			newTV = new TaintValue(type, value, activationUnit, this.methodPath);
-			newTV.setDependence(dependence);
-			newTV.appendAllSootField(appendFields);
 		}else if(value instanceof InstanceFieldRef){
 			InstanceFieldRef ifr = (InstanceFieldRef) value;
 			newTV = new TaintValue(type, ifr.getBase(), activationUnit, this.methodPath);
-			newTV.setDependence(dependence);
 			newTV.appendSootField(ifr.getField());
-			newTV.appendAllSootField(appendFields);
 		}else if(value instanceof StaticFieldRef){
 			StaticFieldRef sfr = (StaticFieldRef) value;
 			newTV = new TaintValue(type, null, activationUnit, this.methodPath);
-			newTV.setDependence(dependence);
 			newTV.appendSootField(sfr.getField());
-			newTV.appendAllSootField(appendFields);
 		}else if(value instanceof ArrayRef){
 			ArrayRef ar = (ArrayRef) value;
 			newTV = new TaintValue(type, ar.getBase(), activationUnit, this.methodPath);
-			newTV.setDependence(dependence);
-			newTV.appendAllSootField(appendFields);
 		}else if(value instanceof CastExpr){
 			CastExpr ce = (CastExpr) value;
 			newTV = new TaintValue(type, ce.getOp(), activationUnit, this.methodPath);
-			newTV.setDependence(dependence);
-			newTV.appendAllSootField(appendFields);
 		}
-		assert(newTV != null || value instanceof Constant);
-		this.methodPath.getPathState().addTaintValue(newTV);
-		ForwardsProblem fP = new ForwardsProblem(this.units, this.units.indexOf(activationUnit) + 1, 
-								this.startIndex, this.methodPath);
-		fP.solve();
+		assert(newTV != null);
+		newTV.setDependence(dependence);
+		newTV.appendAllSootField(appendFields);
+		if(this.methodPath.getPathState().addTaintValue(newTV)){
+			ForwardsProblem fP = new ForwardsProblem(this.units, this.units.indexOf(activationUnit) + 1, 
+									this.startIndex, this.methodPath);
+			fP.solve();
+		}
 	}
+	//[end]
 
+	//[start] isPartOfTv
 	/**
 	 * whether value is part of (not equal to) tv
 	 * 
@@ -211,7 +210,9 @@ public class BackwardsProblem {
 		
 		return false;
 	}
-	
+	//[end]
+
+	//[start] isEqualTV
 	private boolean isEqualTV(Value value, TaintValue tv){
 		if(value instanceof Local){
 			if(tv.baseEquals(value) && tv.getAccessPath().size() == 0){
@@ -246,6 +247,8 @@ public class BackwardsProblem {
 		}
 		return false;
 	}
+	//[end]
+
 	
 	private void handleInvokeExpr(InvokeExpr invokeExpr, Value retValue){
 		assert(invokeExpr != null);
@@ -316,11 +319,10 @@ public class BackwardsProblem {
 				ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
 				for(int j = 0; j < tvs.size() && !isTainted; j++){
 					TaintValue tv = tvs.get(j);
-					TaintValue ultimateTV = tv.getUltimateDependence();
-					int ultimateIndex = this.units.indexOf(ultimateTV.getActivationUnit());
-					if(this.currIndex > ultimateIndex){
+					if(this.currIndex > tv.getMaxIndexOnDependencePath()){
 						//taint retValue and break
-						this.handleNewTaintValue(retValue, new ArrayList<SootField>(), ultimateTV, currUnit, TaintValueType.ALIAS);
+						//this.handleNewTaintValue(retValue, new ArrayList<SootField>(), ultimateTV, currUnit, TaintValueType.ALIAS);
+						this.taintLVWithoutBP(retValue, currUnit, TaintValueType.TAINT, tv, null, null, null);
 						isTainted = true;
 						break;
 					}
@@ -331,11 +333,10 @@ public class BackwardsProblem {
 				assert(thisBase instanceof Local);
 				ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) thisBase);
 				for(TaintValue tv : tvs){
-					TaintValue ultimateTV = tv.getUltimateDependence();
-					int ultimateIndex = this.units.indexOf(ultimateTV.getActivationUnit());
-					if(currIndex > ultimateIndex){
+					if(currIndex > tv.getMaxIndexOnDependencePath()){
 						//taint retValue and break
-						this.handleNewTaintValue(retValue, new ArrayList<SootField>(), ultimateTV, currUnit, TaintValueType.ALIAS);
+						//this.handleNewTaintValue(retValue, new ArrayList<SootField>(), ultimateTV, currUnit, TaintValueType.ALIAS);
+						this.taintLVWithoutBP(retValue, currUnit, TaintValueType.TAINT, tv, null, null, null);
 						isTainted = true;
 						break;
 					}
@@ -358,11 +359,8 @@ public class BackwardsProblem {
 					assert(thisBase instanceof Local);
 					thisTVs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) thisBase);
 					for(TaintValue thisTV : thisTVs){
-						int ultimateIndex = this.units.indexOf(thisTV.getUltimateDependence().getActivationUnit());
-						if(currIndex > ultimateIndex){
-							thisTainted = true;
-							initState.addThisTV(thisTV);
-						}
+						thisTainted = true;
+						initState.addThisTV(thisTV);
 					}
 				}
 				
@@ -382,11 +380,8 @@ public class BackwardsProblem {
 					ArrayList<TaintValue> argTVs = argsTVs.get(i);
 					for(int j = 0; j < argTVs.size() && !argsTainted; j++){
 						TaintValue argTV = argTVs.get(j);
-						int ultimateIndex = this.units.indexOf(argTV.getUltimateDependence().getActivationUnit());
-						if(currIndex > ultimateIndex){
-							argsTainted = true;
-							initState.addArgTV(i, argTV);
-						}
+						argsTainted = true;
+						initState.addArgTV(i, argTV);
 					}
 				}
 				
@@ -396,11 +391,8 @@ public class BackwardsProblem {
 				if(reachableStaticFields != null){
 					for(TaintValue staticTV : staticTVs){
 						if(reachableStaticFields.contains(staticTV.getAccessPath().get(0))){
-							int ultimateIndex = this.units.indexOf(staticTV.getUltimateDependence().getActivationUnit());
-							if(currIndex > ultimateIndex){
-								staticFieldsReachable = true;
-								initState.addStaticTV(staticTV);
-							}
+							staticFieldsReachable = true;
+							initState.addStaticTV(staticTV);
 						}
 					}
 				}
@@ -457,11 +449,34 @@ public class BackwardsProblem {
 					
 					//return value
 					if(retValue != null){
-						newProducedTVs.addAll(this.addNewProducedTVs(retValue, TaintValueType.ALIAS, retTVs, currUnit));
+						for(TaintValue retTV : retTVs){
+							//retValue can be Local, InstanceFieldRef, StaticFieldRef, ArrayRef
+							TaintValue newTV = null;
+							if(retValue instanceof Local){
+								newTV = new TaintValue(TaintValueType.ALIAS, retValue, currUnit, this.methodPath);
+							}else if(retValue instanceof InstanceFieldRef){
+								InstanceFieldRef ifr = (InstanceFieldRef) retValue;
+								newTV = new TaintValue(TaintValueType.ALIAS, ifr.getBase(), currUnit, this.methodPath);
+								newTV.appendSootField(ifr.getField());
+							}else if(retValue instanceof StaticFieldRef){
+								StaticFieldRef sfr = (StaticFieldRef) retValue;
+								newTV = new TaintValue(TaintValueType.ALIAS, null, currUnit, this.methodPath);
+								newTV.appendSootField(sfr.getField());
+							}else if(retValue instanceof ArrayRef){
+								ArrayRef ar = (ArrayRef) retValue;
+								newTV = new TaintValue(TaintValueType.ALIAS, ar.getBase(), currUnit, this.methodPath);
+							}
+							assert(newTV != null);
+							newTV.appendAllSootField(retTV.getAccessPath());
+							newTV.setRetDependence(retTV);
+							if(this.methodPath.getPathState().addTaintValue(newTV)){
+								newProducedTVs.add(newTV);
+							}
+						}
 					}
 					
 					//for the new produced taint values, start backwards problems if it is necessary
-					ForwardsProblem fP = new ForwardsProblem(this.units, this.currIndex + 1, this.startIndex - 1, this.methodPath);
+					ForwardsProblem fP = new ForwardsProblem(this.units, this.currIndex + 1, this.startIndex, this.methodPath);
 					fP.solve();
 				}
 			}
@@ -478,5 +493,34 @@ public class BackwardsProblem {
 				result.add(newTV);
 		}
 		return result;
+	}
+	
+	private boolean taintLVWithoutBP(Value lv, Unit activationUnit, TaintValueType type, 
+			TaintValue dependence, TaintValue inDependence, TaintValue retDependence,
+			ArrayList<SootField> rvAccessPath){
+		TaintValue newTV = null;
+		boolean added = false;
+		if(lv instanceof StaticFieldRef){
+			StaticFieldRef sfr = (StaticFieldRef) lv;
+			newTV = new TaintValue(type, null, activationUnit, this.methodPath);
+			newTV.appendSootField(sfr.getField());
+		}else if(lv instanceof InstanceFieldRef){
+			InstanceFieldRef ifr = (InstanceFieldRef) lv;
+			newTV = new TaintValue(type, ifr.getBase(), activationUnit, this.methodPath);
+			newTV.appendSootField(ifr.getField());
+		}else if(lv instanceof ArrayRef){
+			ArrayRef ar = (ArrayRef) lv;
+			newTV = new TaintValue(type, ar.getBase(), activationUnit, this.methodPath);
+		}else{
+			assert(lv instanceof Local);
+			newTV = new TaintValue(type, lv, activationUnit, this.methodPath);
+		}
+		assert(newTV != null);
+		newTV.appendAllSootField(rvAccessPath);
+		newTV.setDependence(dependence);
+		newTV.setInDependence(inDependence);
+		newTV.setRetDependence(retDependence);
+		added = this.methodPath.getPathState().addTaintValue(newTV);
+		return added;
 	}
 }

@@ -50,6 +50,13 @@ public class ForwardsProblem {
 	private int startIndex = -1;
 	private int stopIndex = -1;
 	
+	/**
+	 * [startIndex, stopIndex)
+	 * @param units
+	 * @param startIndex
+	 * @param stopIndex
+	 * @param methodPath
+	 */
 	public ForwardsProblem(ArrayList<Unit> units, int startIndex, int stopIndex, MethodPath methodPath){
 		this.methodPath = methodPath;
 		this.units = units;

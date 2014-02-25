@@ -49,7 +49,8 @@ public class TaintValue {
 	public TaintValue getDependence(){
 		return this.dependence;
 	}
-	
+
+	/* not used yet
 	private TaintValue getUltimateDependence(){
 		TaintValue ultimateDependence = this;
 		while(ultimateDependence.getDependence() != null){
@@ -57,6 +58,7 @@ public class TaintValue {
 		}
 		return ultimateDependence;
 	}
+	*/
 	
 	public int getMaxIndexOnDependencePath(){
 		int maxIndex = this.getIndexOfActivation();
