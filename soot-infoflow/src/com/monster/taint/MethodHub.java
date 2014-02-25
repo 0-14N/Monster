@@ -93,6 +93,11 @@ public class MethodHub {
 				methodPath.start();
 				this.pathStates.put(methodPath, methodPath.getPathState());
 			}
+		}else if(this.type == MethodHubType.INVOKING_RETURN){
+			for(MethodPath methodPath : paths){
+				methodPath.start();
+				this.pathStates.put(methodPath, methodPath.getPathState());
+			}
 		}
 	}
 	
@@ -213,6 +218,10 @@ public class MethodHub {
 				}
 			}
 		}
+	}
+	
+	public SootMethod getMethod(){
+		return this.method;
 	}
 
 	@Override

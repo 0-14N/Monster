@@ -127,7 +127,12 @@ public class Monster {
 			methodHub.start();
 			methodHub.mergePathStates();
 			MethodState exitState = methodHub.getExitState();
-			logger.info("Analyzed source {}", methodHub);
+			logger.info("Analyzed source {}, begin backwards!", methodHub);
+			ArrayList<MethodHub> callerHubs = getCallerHubsOf(methodHub);
+			for(MethodHub callerHub : callerHubs){
+				callerHub.setInitState(exitState);
+				stepBackwards(callerHub);
+			}
 		}
 	}
 
@@ -159,7 +164,7 @@ public class Monster {
 	 * maybe it should be optimized in future. 
 	 */
 	private void createSourceMethodHubs(){
-		Iterator iter = sources.entrySet().iterator();
+		Iterator<Entry<SootMethod, Set<Unit>>> iter = sources.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<SootMethod, Set<Unit>> entry = (Entry<SootMethod, Set<Unit>>) iter.next();
 			SootMethod method = entry.getKey();
@@ -176,6 +181,47 @@ public class Monster {
 		}
 	}
 
+	/**
+	 * To avoid looping, we should check it.
+	 * @param methodHub
+	 * @return
+	 */
+	private ArrayList<MethodHub> getCallerHubsOf(MethodHub methodHub){
+		ArrayList<MethodHub> callerHubs = new ArrayList<MethodHub>();
+		SootMethod method = methodHub.getMethod();
+		Set<Unit> callerUnits = this.iCfg.getCallersOf(method);
+		for(Unit callerUnit : callerUnits){
+			SootMethod caller = this.iCfg.getMethodOf(callerUnit);
+			//check loop existence
+			if(!methodHub.causeLoop(caller) && !caller.isPhantom()){
+				MethodHub callerHub = new MethodHub(caller, callerUnit, MethodHubType.INVOKING_RETURN, false, methodHub);
+				callerHubs.add(callerHub);
+			}
+		}
+		return callerHubs;
+	}
+
+	/**
+	 * Analyze currHub and continuously analyze currHub's callers
+	 * 
+	 * @param currHub : currHub's init state must be initialized before
+	 * 					calling this method
+	 */
+	private void stepBackwards(MethodHub currHub){
+		if(currHub.getMethod().getName().equals("dummyMainMethod")){
+			logger.info("Arrived at dummyMainMethod");
+		}else{
+			currHub.start();
+			currHub.mergePathStates();
+			MethodState exitState = currHub.getExitState();
+			ArrayList<MethodHub> callerMethodHubs = getCallerHubsOf(currHub);
+			for(MethodHub callerMethodHub : callerMethodHubs){
+				callerMethodHub.setInitState(exitState);
+				stepBackwards(callerMethodHub);
+			}
+		}
+	}
+	
 	/**
 	 * whether a method with 'signature', and paramIdx(st)
 	 * parameter is tainted
@@ -199,6 +245,7 @@ public class Monster {
 	public PointsToAnalysis getPTA(){
 		return this.pta;
 	}
+	
 	
 	public Set<SootField> getReachableStaticFields(SootMethod method){
 		return this.methodReachableSFsMap.get(method);

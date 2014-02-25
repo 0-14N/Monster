@@ -346,7 +346,7 @@ public class BackwardsProblem {
 			return;
 		}
 		
-		if(!isInTaintWrapper && method != null){
+		if(!isInTaintWrapper && method != null && !method.isPhantom()){
 			//check looping first
 			if(!this.methodPath.getMethodHub().causeLoop(method)){
 				//initial method state

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.text.html.FormSubmitEvent.MethodType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +67,9 @@ public class ForwardsProblem {
 			//at the beginning of method, assign parameters to
 			//local variables
 			if(currUnit instanceof IdentityStmt){
-				handleIdentityStmt((IdentityStmt) currUnit);
+				if(this.methodPath.getMethodHub().getType() != MethodHubType.INVOKING_RETURN){
+					handleIdentityStmt((IdentityStmt) currUnit);
+				}
 			}
 			
 			if(currUnit instanceof AssignStmt){
@@ -201,9 +205,66 @@ public class ForwardsProblem {
 				this.methodPath.getPathState().eraseTaintOf(lv, stmt);
 		}
 	}
+
+	/**
+	 * The invoke stmt (assign stmt) is the activation unit, 
+	 * instead of calling the method, initialize the path state.
+	 *  
+	 * @param invokeExpr
+	 * @param retValue
+	 * @param currUnit
+	 * 
+	 * Only called by this.handleInvokeExpr
+	 */
+	private void handleInvokeExprAtAcivationUnit(InvokeExpr invokeExpr, Value retValue, Unit currUnit){
+		assert(this.methodPath.getMethodHub().getType() == MethodHubType.INVOKING_RETURN);
+		Value thisBase = null;
+		List<Value> args = invokeExpr.getArgs();
+		int argsCount = invokeExpr.getArgCount();
+		
+		if(invokeExpr instanceof InstanceInvokeExpr){
+			thisBase = ((InstanceInvokeExpr) invokeExpr).getBase();
+		}
+
+		//if this is a source container, just taint retValue
+		if(this.methodPath.getMethodHub().isSource()){
+			assert(retValue != null);
+			TaintValue newSource = null; 
+			//retValue can be Local, static field, instance field, array ref
+			if(retValue instanceof Local){
+				newSource = new TaintValue(TaintValueType.TAINT, retValue, currUnit, this.methodPath);
+			}else if(retValue instanceof StaticFieldRef){
+				StaticFieldRef sfr = (StaticFieldRef) retValue;
+				newSource = new TaintValue(TaintValueType.STATIC_FIELD, null, currUnit, this.methodPath);
+				newSource.appendSootField(sfr.getField());
+			}else if(retValue instanceof InstanceFieldRef){
+				InstanceFieldRef ifr = (InstanceFieldRef) retValue;
+				newSource = new TaintValue(TaintValueType.TAINT, ifr.getBase(), currUnit, this.methodPath);
+				newSource.appendSootField(ifr.getField());
+			}else if(retValue instanceof ArrayRef){
+				ArrayRef ar = (ArrayRef) retValue;
+				newSource = new TaintValue(TaintValueType.TAINT, ar.getBase(), currUnit, this.methodPath);
+			}
+			assert(newSource != null);
+			this.methodPath.getPathState().addTaintValue(newSource);
+			//start backwards problem if necessary
+			if(retValue instanceof InstanceFieldRef){
+				this.startBackwardsProblem(newSource, currUnit);
+			}
+		}else{
+			//this is not a source container, so this is a callee of certain method
+			MethodState initState = this.methodPath.getMethodHub().getInitState();
+		}
+		
+	}
 	
 	private void handleInvokeExpr(InvokeExpr invokeExpr, Value retValue, Unit currUnit){
-		assert(invokeExpr != null);
+		//before invoking method, check whether currUnit is the activation unit.
+		if(this.methodPath.isActivationUnit(currUnit)){
+			this.handleInvokeExprAtAcivationUnit(invokeExpr, retValue, currUnit);
+			return;
+		}
+		
 		Value thisBase = null;
 		List<Value> args = invokeExpr.getArgs();
 		int argsCount = invokeExpr.getArgCount();
@@ -303,7 +364,7 @@ public class ForwardsProblem {
 			return;
 		}
 		
-		if(!isInTaintWrapper && method != null){
+		if(!isInTaintWrapper && method != null && !method.isPhantom()){
 			//check looping first
 			if(!this.methodPath.getMethodHub().causeLoop(method)){
 				//initial method state
@@ -642,6 +703,7 @@ public class ForwardsProblem {
 			assert(lv instanceof Local);
 			TaintValue newTV = new TaintValue(type, lv, activationUnit, this.methodPath);
 			newTV.appendAllSootField(rvAccessPath);
+			this.methodPath.getPathState().addTaintValue(newTV);
 		}
 	}
 	

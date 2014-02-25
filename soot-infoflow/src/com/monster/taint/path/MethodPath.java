@@ -63,7 +63,10 @@ public class MethodPath {
 	}
 	
 	public void start(){
+		//convert block list to unit list, convenient for iterating
 		this.init();
+		//for CALLED_FORWARD and CALLED_BACKWARD types MethodHub,
+		//the path state can be initialized when analyzing IdentityStmt
 		if(this.type == MethodHubType.CALLED_FORWARD || 
 				this.type == MethodHubType.CALLED_BACKWARD){
 			int startIndex = unitsOnPath.indexOf(activationUnit);
@@ -71,7 +74,13 @@ public class MethodPath {
 			ForwardsProblem fProblem = new ForwardsProblem(unitsOnPath, startIndex, stopIndex, this);
 			fProblem.solve();
 		}else if(this.type == MethodHubType.INVOKING_RETURN){
-			//TODO INVOKE_RETURN
+			//INVOKE_RETURN, there are two ways to initialize path states, one is initializing the 
+			//state at here, another is initializing at ForwardsProblem's 'handleInvokeExpr'.
+			//To be consistent, we adopt the second one.
+			int startIndex = unitsOnPath.indexOf(activationUnit);
+			int stopIndex = unitsOnPath.size();
+			ForwardsProblem fProblem = new ForwardsProblem(unitsOnPath, startIndex, stopIndex, this);
+			fProblem.solve();
 		}
 	}
 	
