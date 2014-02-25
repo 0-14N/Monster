@@ -50,12 +50,29 @@ public class TaintValue {
 		return this.dependence;
 	}
 	
-	public TaintValue getUltimateDependence(){
+	private TaintValue getUltimateDependence(){
 		TaintValue ultimateDependence = this;
 		while(ultimateDependence.getDependence() != null){
 			ultimateDependence = ultimateDependence.getDependence();
 		}
 		return ultimateDependence;
+	}
+	
+	public int getMaxIndexOnDependencePath(){
+		int maxIndex = this.getIndexOfActivation();
+		TaintValue tmpDependence = this.dependence;
+		while(tmpDependence != null){
+			int dependenceIndex = tmpDependence.getIndexOfActivation();
+			if(dependenceIndex > maxIndex){
+				maxIndex = dependenceIndex;
+			}
+			tmpDependence = tmpDependence.getDependence();
+		}
+		return maxIndex;
+	}
+	
+	public int getIndexOfActivation(){
+		return this.getFirstContext().getUnitsOnPath().indexOf(this.activationUnit);
 	}
 	
 	private boolean addSlave(TaintValue slave){
