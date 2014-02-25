@@ -124,7 +124,6 @@ public class ForwardsProblem {
 				}else if(rv instanceof ParameterRef){
 					//e.g. $r1 := @parameter1: type;
 					int argIndex = ((ParameterRef) rv).getIndex();
-					assert(argIndex > 0) : stmt;
 					ArrayList<TaintValue> paramTVs = initMethodState.getArgTVs(argIndex);
 					for(TaintValue tv : paramTVs){
 						TaintValue newTV = new TaintValue(TaintValueType.TAINT, lv, stmt, this.methodPath);
@@ -407,7 +406,7 @@ public class ForwardsProblem {
 				
 					//args
 					if(argsCount > 0){
-						assert(outThisTVs.size() == argsCount);
+						assert(outArgsTVs.size() == argsCount);
 						for(int i = 0; i < argsCount; i++){
 							Value argValue = args.get(i);
 							if(argValue instanceof Constant)
