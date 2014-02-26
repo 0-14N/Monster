@@ -31,6 +31,7 @@ import soot.jimple.ParameterRef;
 import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
 import soot.jimple.StaticFieldRef;
+import soot.jimple.Stmt;
 import soot.jimple.ThisRef;
 
 import com.monster.taint.MethodHub;
@@ -68,6 +69,7 @@ public class ForwardsProblem {
 		int currIndex = startIndex;
 		while(currIndex < stopIndex){
 			Unit currUnit = this.units.get(currIndex);
+			
 		
 			//at the beginning of method, assign parameters to
 			//local variables
@@ -311,6 +313,7 @@ public class ForwardsProblem {
 			return;
 		}
 		
+		
 		Value thisBase = null;
 		List<Value> args = invokeExpr.getArgs();
 		int argsCount = invokeExpr.getArgCount();
@@ -321,6 +324,13 @@ public class ForwardsProblem {
 		
 		SootMethod method = invokeExpr.getMethod();
 		SootMethodRef smr = invokeExpr.getMethodRef();
+		
+		
+		//check whether this is a sink invoking
+		if(Monster.v().isSink((Stmt) currUnit)){
+			logger.info("Oh, my God! We arrived at Sink!");
+			return;
+		}
 		
 		//method is null, do point to analysis 
 		if(method == null && invokeExpr instanceof InstanceInvokeExpr){
@@ -582,7 +592,7 @@ public class ForwardsProblem {
 	 * @return
 	 */
 	private ArrayList<TaintValue> addNewProducedTVs(Value base, TaintValueType type, ArrayList<TaintValue> newProduecedTVs, Unit currUnit){
-		assert(base instanceof Local);
+		assert(base instanceof Local || base == null);
 		ArrayList<TaintValue> result = new ArrayList<TaintValue>();
 		for(TaintValue tv : newProduecedTVs){
 			TaintValue newTV = new TaintValue(type, base, currUnit, this.methodPath);

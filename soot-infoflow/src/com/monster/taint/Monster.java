@@ -21,6 +21,7 @@ import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
 import soot.jimple.IdentityStmt;
+import soot.jimple.Stmt;
 import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.infoflow.source.ISourceSinkManager;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
@@ -249,5 +250,9 @@ public class Monster {
 	
 	public Set<SootField> getReachableStaticFields(SootMethod method){
 		return this.methodReachableSFsMap.get(method);
+	}
+
+	public boolean isSink(Stmt smt){
+		return this.sourcesSinks.isSink(smt, this.iCfg);
 	}
 }
