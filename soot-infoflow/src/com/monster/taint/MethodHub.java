@@ -83,7 +83,9 @@ public class MethodHub {
 	
 	public void start(){
 		//first, get all paths contain the activationUnit
+		logger.info("Start calculating paths of {} ", this.method.toString());
 		calculatePaths();
+		logger.info("{} has {} paths ", this.method.toString(), this.paths.size());
 	
 		//method contains source
 		if(this.type == MethodHubType.CALLED_FORWARD || 
@@ -113,6 +115,14 @@ public class MethodHub {
 	 */
 	private void calculatePaths(){
 		ArrayList<ArrayList<Block>> pathBlockLists = MethodPathCreator.v().getPaths(this.zonedBlockGraph);
+		
+		//for dummyMainMethod, because it is created randomly by FlowDroid, so we should resort its units
+		if(this.method.getSignature().equals(Monster.DUMMYMAIN_SIGNATURE)){
+			//TODO
+			logger.info("We have not handled dummyMainMethod yet!");
+			return;
+		}
+		
 		for(ArrayList<Block> blockList : pathBlockLists){
 			MethodPath methodPath = null;
 			if(this.activationUnit != null){

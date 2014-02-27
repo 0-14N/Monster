@@ -137,6 +137,8 @@
 
 <java.lang.String: java.lang.String replaceAll(java.lang.String,java.lang.String)>
 
+<java.lang.String: boolean equals(java.lang.Object)>
+
 <java.lang.Integer: java.lang.String toBinaryString(int)>
 <java.lang.Integer: java.lang.String toHexString(int)>
 <java.lang.Integer: java.lang.String toOctalString(int)>

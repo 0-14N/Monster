@@ -36,25 +36,6 @@ public class MethodPathCreator {
 		List<Block> tails = graph.getTails();
 		int i = 0;
 	
-		/*
-		HashMap<Unit, Block> tryCatchUnitMap = new HashMap<Unit, Block>();
-		Body body = graph.getBody();
-		Chain<Trap> traps = body.getTraps();
-		Iterator<Trap> trapIter = traps.iterator();
-		while(trapIter.hasNext()){
-			Trap trap = trapIter.next();
-			Unit tryEnd = trap.getEndUnit();
-			Unit handlerBegin = trap.getHandlerUnit();
-			for(i = 0; i < heads.size(); i++){
-				Block headBlk = heads.get(i);
-				Unit headU = headBlk.getHead();
-				if(headU.equals(handlerBegin)){
-					tryCatchUnitMap.put(tryEnd, headBlk);
-				}
-			}
-		}
-		*/
-	
 		ArrayList<Block> nonExceptionHeads = new ArrayList<Block>();
 		HashMap<String, Block> exceptionHandlers = new HashMap<String, Block>();
 		for(i = 0; i < heads.size(); i++){
@@ -97,13 +78,7 @@ public class MethodPathCreator {
 						if(handlerBlk != null){
 							blockList.add(handlerBlk);
 						}
-					}/*else{
-						Block handlerBlk = tryCatchUnitMap.get(tail);
-						if(handlerBlk != null){
-							blockList.add(handlerBlk);
-						}
 					}
-					*/
 				}
 				result.add(blockList);
 			}

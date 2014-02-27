@@ -445,9 +445,9 @@ public class ForwardsProblem {
 					ArrayList<TaintValue> argTVs = this.methodPath.getPathState().getTVsBasedOnLocal((Local) arg);
 					argsTVs.get(i).addAll(argTVs);
 				}
-				for(int i = 0; i < argsCount && !argsTainted; i++){
+				for(int i = 0; i < argsCount; i++){
 					ArrayList<TaintValue> argTVs = argsTVs.get(i);
-					for(int j = 0; j < argTVs.size() && !argsTainted; j++){
+					for(int j = 0; j < argTVs.size(); j++){
 						TaintValue argTV = argTVs.get(j);
 						if(argTV.getType() == TaintValueType.TAINT){
 							argsTainted = true;
@@ -478,7 +478,8 @@ public class ForwardsProblem {
 					ArrayList<ArrayList<TaintValue>> inArgsTVs = initState.getAllArgsTVs();
 					ArrayList<TaintValue> inStaticTVs = initState.getStaticTVs();
 					
-					
+					logger.info("Invoke {} with taint values: \n thisTVs: {} \n argsTVs: {} \n staticTVs: {} \n", 
+							method.toString(), thisTainted, argsTainted, staticFieldsReachable);
 					//start new method hub
 					MethodHub newHub = new MethodHub(method, null, MethodHubType.CALLED_FORWARD, 
 							false, this.methodPath.getMethodHub());
@@ -565,6 +566,7 @@ public class ForwardsProblem {
 					}
 					
 					//for the new produced taint values, start backwards problems if it is necessary
+					logger.info("{} return with {} new taint values: \n", method, newProducedTVs.size());
 					for(TaintValue tv : newProducedTVs){
 						if(tv.isStaticField() && tv.getAccessPath().size() > 1){
 							startBackwardsProblem(tv, currUnit);

@@ -41,6 +41,8 @@ public class Monster {
 	
 	private static Monster monster = null;
 	
+	public static String DUMMYMAIN_SIGNATURE = "<dummyMainClass: void dummyMainMethod()>";
+	
 	private IInfoflowCFG iCfg = null;
 	private ISourceSinkManager sourcesSinks = null;
 	private PointsToAnalysis pta = null;
@@ -139,7 +141,7 @@ public class Monster {
 
 	private void collectSourceSinkTriggerUnits(SootMethod smOnSourcePath, Unit u, 
 			SootMethodNode methodNode, ArrayList<Unit> collectedUnits){
-		if(smOnSourcePath.getName().equals("dummyMainMethod")){
+		if(smOnSourcePath.getSignature().equals(Monster.DUMMYMAIN_SIGNATURE)){
 			if(!collectedUnits.contains(u)){
 				collectedUnits.add(u);
 			}
@@ -209,8 +211,9 @@ public class Monster {
 	 * 					calling this method
 	 */
 	private void stepBackwards(MethodHub currHub){
-		if(currHub.getMethod().getName().equals("dummyMainMethod")){
-			logger.info("Arrived at dummyMainMethod");
+		if(currHub.getMethod().getSignature().equals(Monster.DUMMYMAIN_SIGNATURE)){
+			logger.info("Arrived at dummyMainMethod! Start analyzing \"dummyMainMethod\"");
+			currHub.start();
 		}else{
 			currHub.start();
 			currHub.mergePathStates();
