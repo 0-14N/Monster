@@ -166,7 +166,7 @@ public class TaintValue {
 			//if(!this.base.equals(other.getBase()))
 				//return false;
 			if(!(this.base.toString().equals(other.getBase().toString()) &&
-					this.base.getType().equals(other.getType()))){
+					this.base.getType().toString().equals(other.getType().toString()))){
 				return false;
 			}
 		}
@@ -175,11 +175,11 @@ public class TaintValue {
 			return false;
 		ArrayList<SootField> otherAccessPath = other.getAccessPath();
 		for(int i = 0; i < this.accessPath.size(); i++){
-			if(!this.accessPath.get(i).equals(otherAccessPath.get(i)))
+			if(!this.accessPath.get(i).toString().equals(otherAccessPath.get(i).toString()))
 				return false;
 		}
 		//activation unit
-		if(!this.activationUnit.equals(other.getActivationUnit())){
+		if(!this.activationUnit.toString().equals(other.getActivationUnit().toString())){
 			return false;
 		}
 		

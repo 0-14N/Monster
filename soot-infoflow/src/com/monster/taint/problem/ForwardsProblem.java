@@ -362,6 +362,18 @@ public class ForwardsProblem {
 			className = method.getDeclaringClass().getName();
 			subSignature = method.getSubSignature();
 		}
+		
+		if(method != null && method.getSignature().equals("<android.os.Bundle: java.lang.Object get(java.lang.String)>")){
+			logger.info("Break Point!");
+		}
+		
+		if(method != null && method.getSignature().equals("<android.telephony.SmsMessage: android.telephony.SmsMessage createFromPdu(byte[])>")){
+			logger.info("Break Point!");
+		}
+		
+		if(method != null && method.getSignature().equals("<android.content.ContentValues: void put(java.lang.String,java.lang.String)>")){
+			logger.info("Break Point!");
+		}
 	
 		boolean isInTaintWrapper = false;
 		//Regardless of method is null or not, check whether in taint wrapper
@@ -482,7 +494,7 @@ public class ForwardsProblem {
 				
 					//if method has no active body, just return
 					if(!method.hasActiveBody()){
-						logger.info("Try to invoke \"{}\" with taint values, but it has no active body, just return.", method.toString());
+						//logger.info("Try to invoke \"{}\" with taint values, but it has no active body, just return.", method.toString());
 						return;
 					}
 		
@@ -640,7 +652,6 @@ public class ForwardsProblem {
 	 */
 	private boolean handleRVLocal(Value lv, Local rv, Unit currUnit){
 		ArrayList<TaintValue> tvs = this.methodPath.getPathState().getTVsBasedOnLocal(rv);
-		boolean result = false;
 		for(TaintValue tv : tvs){
 			ArrayList<SootField> accessPath = tv.getAccessPath();
 			int currIndex = this.units.indexOf(currUnit);
@@ -653,7 +664,7 @@ public class ForwardsProblem {
 				taintLV(lv, currUnit, TaintValueType.ALIAS, tv, null, null, accessPath);
 			}
 		}
-		return result;
+		return tvs.size() > 0;
 	}
 
 
@@ -751,7 +762,13 @@ public class ForwardsProblem {
 	 * @return true if rv is tainted or its field is tainted before currUnit
 	 */
 	private boolean handleRVCastExpr(Value lv, CastExpr rv, Unit currUnit){
-		return handleRVLocal(lv, (Local) rv.getOp(), currUnit);
+		Value value = rv.getOp();
+		if(value instanceof Local){
+			return handleRVLocal(lv, (Local) value, currUnit);
+		}else{
+			//Constant, such as IntConstant
+			return false;
+		}
 	}
 	
 	/**

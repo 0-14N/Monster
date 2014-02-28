@@ -129,9 +129,11 @@ public class Monster {
 		createSourceMethodHubs();
 		
 		for(MethodHub methodHub : this.sourceMethodHubs){
+			logger.info("\nStart analyzing source {}", methodHub.getMethod().toString());
 			methodHub.start();
 			methodHub.mergePathStates();
 			MethodState exitState = methodHub.getExitState();
+			logger.info("Completed analyzing source {}\n", methodHub.getMethod().toString());
 			/*
 			logger.info("Analyzed source {}, begin backwards!", methodHub);
 			ArrayList<MethodHub> callerHubs = getCallerHubsOf(methodHub);
