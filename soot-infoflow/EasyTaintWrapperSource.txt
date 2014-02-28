@@ -3,6 +3,8 @@
 ^java.
 ^org.apache.http.
 
+<java.lang.Object: void <init>()>
+
 <java.util.Stack: java.lang.Object push(java.lang.Object)>
 
 <java.util.Map: java.lang.Object put(java.lang.Object,java.lang.Object)>
@@ -117,7 +119,6 @@
 <java.lang.String: void <init>(java.lang.String)>
 <java.lang.String: void <init>(java.lang.StringBuffer)>
 <java.lang.String: void <init>(java.lang.StringBuilder)>
-
 <java.lang.String: java.lang.String valueOf(boolean)>
 <java.lang.String: java.lang.String valueOf(char)>
 <java.lang.String: java.lang.String valueOf(char[])>
@@ -127,22 +128,19 @@
 <java.lang.String: java.lang.String valueOf(int)>
 <java.lang.String: java.lang.String valueOf(long)>
 <java.lang.String: java.lang.String valueOf(java.lang.Object)>
-
 <java.lang.String: java.lang.String concat(java.lang.String)>
-
 <java.lang.String: java.lang.String format(java.util.Locale,java.lang.String,java.lang.Object[])>
 <java.lang.String: java.lang.String format(java.lang.String,java.lang.Object[])>
-
 <java.lang.String: char[] toCharArray()>
-
+<java.lang.String: java.lang.String[] split(java.lang.String)>
 <java.lang.String: java.lang.String replaceAll(java.lang.String,java.lang.String)>
+~<java.lang.String: boolean equals(java.lang.Object)>
+~<java.lang.String: boolean contains(java.lang.CharSequence)>
 
-<java.lang.String: boolean equals(java.lang.Object)>
 
 <java.lang.Integer: java.lang.String toBinaryString(int)>
 <java.lang.Integer: java.lang.String toHexString(int)>
 <java.lang.Integer: java.lang.String toOctalString(int)>
-
 <java.lang.Integer: void <init>(int)>
 <java.lang.Integer: void <init>(java.lang.String)>
 <java.lang.Integer: int parseInt(java.lang.String)>
@@ -242,9 +240,38 @@
 <java.util.Collections: java.util.List singletonList(java.lang.Object)>
 <java.util.Collections: java.util.Map singletonMap(java.lang.Object,java.lang.Object)>
 
+-<android.content.ContentValues: void clear()>
+~<android.content.ContentValues: boolean containsKey(java.lang.String)>
+~<android.content.ContentValues: int describeContents()>
+~<android.content.ContentValues: boolean equals(java.lang.Object)>
+<android.content.ContentValues: java.lang.Object get(java.lang.String)>
+<android.content.ContentValues: java.lang.Boolean getAsBoolean(java.lang.String)>
+<android.content.ContentValues: java.lang.Byte getAsByte(java.lang.String)>
+<android.content.ContentValues: byte[] getAsByteArray(java.lang.String)>
+<android.content.ContentValues: java.lang.Double getAsDouble(java.lang.String)>
+<android.content.ContentValues: java.lang.Float getAsFloat(java.lang.String)>
+<android.content.ContentValues: java.lang.Integer getAsInteger(java.lang.String)>
+<android.content.ContentValues: java.lang.Long getAsLong(java.lang.String)>
+<android.content.ContentValues: java.lang.Short getAsShort(java.lang.String)>
+<android.content.ContentValues: java.lang.String getAsString(java.lang.String)>
+<android.content.ContentValues: java.util.Set<java.lang.String> keySet()>
+<android.content.ContentValues: java.util.Set<java.util.Map.Entry<java.lang.String,java.lang.Object>> valueSet()>
+<android.content.ContentValues: java.lang.String toString()>
+
+<android.content.ContentValues: void put(java.lang.String,java.lang.Byte)>
 <android.content.ContentValues: void put(java.lang.String,java.lang.Integer)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Float)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Short)>
+<android.content.ContentValues: void put(java.lang.String,byte[])>
+<android.content.ContentValues: void put(java.lang.String,java.lang.String)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Double)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Long)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Boolean)>
+<android.content.ContentValues: void putAll(android.content.ContentValues)>
+
 
 <android.content.Intent: void <init>(android.content.Context,java.lang.Class)>
+<android.content.Intent: void <init>(java.lang.String,android.net.Uri,android.content.Context,java.lang.Class)>
 <android.content.Intent: android.content.Intent addFlags(int)>
 <android.content.Intent: android.content.Intent setFlags(int)>
 <android.content.Intent: android.content.Intent putExtra(java.lang.String,boolean)>
@@ -375,3 +402,33 @@
 # Exclude the ServerSocket stuff
 # ~<java.net.ServerSocket: java.net.Socket accept()>
 # ~<java.net.Socket: java.io.InputStream getInputStream()>
+
+<android.net.Uri: java.lang.String decode(java.lang.String)>
+<android.net.Uri: java.lang.String encode(java.lang.String,java.lang.String)>
+<android.net.Uri: java.lang.String encode(java.lang.String)>
+<android.net.Uri: android.net.Uri fromFile(java.io.File)>
+<android.net.Uri: android.net.Uri fromParts(java.lang.String,java.lang.String,java.lang.String)>
+<android.net.Uri: java.lang.String getAuthority()>
+<android.net.Uri: java.lang.String getEncodedAuthority()>
+<android.net.Uri: java.lang.String getEncodedFragment()>
+<android.net.Uri: java.lang.String getEncodedPath()>
+<android.net.Uri: java.lang.String getEncodedQuery()>
+<android.net.Uri: java.lang.String getEncodedSchemeSpecificPart()>
+<android.net.Uri: java.lang.String getEncodedUserInfo()>
+<android.net.Uri: java.lang.String getFragment()>
+<android.net.Uri: java.lang.String getHost()>
+<android.net.Uri: java.lang.String getLastPathSegment()>
+<android.net.Uri: java.lang.String getPath()>
+<android.net.Uri: java.util.List<java.lang.String> getPathSegments()>
+<android.net.Uri: int getPort()>
+<android.net.Uri: java.lang.String getQuery()>
+<android.net.Uri: java.lang.String getQueryParameter(java.lang.String)>
+<android.net.Uri: java.util.Set<java.lang.String> getQueryParameterNames()>
+<android.net.Uri: java.util.List<java.lang.String> getQueryParameters(java.lang.String)>
+<android.net.Uri: java.lang.String getScheme()>
+<android.net.Uri: java.lang.String getSchemeSpecificPart()>
+<android.net.Uri: java.lang.String getUserInfo()>
+<android.net.Uri: java.net.Uri normalizeScheme()>
+<android.net.Uri: android.net.Uri parse(java.lang.String)>
+<android.net.Uri: java.lang.String toString()>
+<android.net.Uri: android.net.Uri withAppendedPath(android.net.Uri,java.lang.String)

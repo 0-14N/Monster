@@ -314,7 +314,6 @@ public class ForwardsProblem {
 			return;
 		}
 		
-		
 		Value thisBase = null;
 		List<Value> args = invokeExpr.getArgs();
 		int argsCount = invokeExpr.getArgCount();
@@ -325,13 +324,6 @@ public class ForwardsProblem {
 		
 		SootMethod method = invokeExpr.getMethod();
 		SootMethodRef smr = invokeExpr.getMethodRef();
-		
-		
-		//check whether this is a sink invoking
-		if(Monster.v().isSink((Stmt) currUnit)){
-			logger.info("Oh, my God! We arrived at Sink {}!", invokeExpr);
-			return;
-		}
 		
 		//method is null, do point to analysis 
 		if(method == null && invokeExpr instanceof InstanceInvokeExpr){
@@ -414,9 +406,9 @@ public class ForwardsProblem {
 			return;
 		}
 		
-		
-		if(!isInTaintWrapper && method != null &&  method.hasActiveBody() &&
+		if(!isInTaintWrapper && method != null &&
 				!method.isPhantom() && !InvokingHistoryPool.v().isInBlacklist(method)){
+				
 			//check looping first
 			if(!this.methodPath.getMethodHub().causeLoop(method)){
 				//initial method state
@@ -481,7 +473,20 @@ public class ForwardsProblem {
 					ArrayList<ArrayList<TaintValue>> inArgsTVs = initState.getAllArgsTVs();
 					ArrayList<TaintValue> inStaticTVs = initState.getStaticTVs();
 					
-					logger.info("Invoke {} with taint values: \n thisTVs: {} \n argsTVs: {} \n staticTVs: {} \n", 
+					//check whether this is a sink invoking
+					if(Monster.v().isSink((Stmt) currUnit)){
+						logger.info("Oh, my God! We arrived at Sink {}!", invokeExpr);
+						return;
+					}
+			
+				
+					//if method has no active body, just return
+					if(!method.hasActiveBody()){
+						logger.info("Try to invoke \"{}\" with taint values, but it has no active body, just return.", method.toString());
+						return;
+					}
+		
+					logger.info("Invoke {} with taint values: \n thisTVs: {} \n argsTVs: {} \n staticTVs: {}", 
 							method.toString(), thisTainted, argsTainted, staticFieldsReachable);
 					//start new method hub
 					MethodHub newHub = new MethodHub(method, null, MethodHubType.CALLED_FORWARD, 
@@ -569,7 +574,7 @@ public class ForwardsProblem {
 					}
 					
 					//for the new produced taint values, start backwards problems if it is necessary
-					logger.info("{} return with {} new taint values: \n", method, newProducedTVs.size());
+					logger.info("{} return with {} new taint values.", method, newProducedTVs.size());
 					if(newProducedStaticTVs.size() > 0){
 						for(TaintValue tv : newProducedTVs){
 							if(tv.isStaticField() && tv.getAccessPath().size() > 1){

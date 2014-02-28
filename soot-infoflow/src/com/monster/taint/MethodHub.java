@@ -87,7 +87,7 @@ public class MethodHub {
 		logger.info("Start calculating paths of {} ", this.method.toString());
 		calculatePaths();
 		logger.info("{} has {} paths ", this.method.toString(), this.paths.size());
-	
+		
 		//method contains source
 		if(this.type == MethodHubType.CALLED_FORWARD || 
 				this.type == MethodHubType.CALLED_BACKWARD){
