@@ -15,6 +15,7 @@ import com.monster.taint.state.MethodState;
 import com.monster.taint.state.PathState;
 import com.monster.taint.state.TaintValue;
 import com.monster.taint.state.TaintValueType;
+import com.monster.taint.wrapper.InvokingHistoryPool;
 import com.monster.taint.wrapper.MyWrapper;
 
 import soot.Local;
@@ -156,7 +157,11 @@ public class BackwardsProblem {
 			CastExpr ce = (CastExpr) value;
 			newTV = new TaintValue(type, ce.getOp(), activationUnit, this.methodPath);
 		}
-		assert(newTV != null);
+		
+		if(newTV == null){
+			return;
+		}
+		
 		newTV.setDependence(dependence);
 		newTV.appendAllSootField(appendFields);
 		if(this.methodPath.getPathState().addTaintValue(newTV)){
@@ -347,7 +352,8 @@ public class BackwardsProblem {
 			return;
 		}
 		
-		if(!isInTaintWrapper && method != null && !method.isPhantom()){
+		if(!isInTaintWrapper && method != null && method.hasActiveBody() &&
+				!method.isPhantom() && !InvokingHistoryPool.v().isInBlacklist(method)){
 			//check looping first
 			if(!this.methodPath.getMethodHub().causeLoop(method)){
 				//initial method state
@@ -434,7 +440,7 @@ public class BackwardsProblem {
 				
 					//args
 					if(argsCount > 0){
-						assert(outThisTVs.size() == argsCount);
+						assert(outArgsTVs.size() == argsCount);
 						for(int i = 0; i < argsCount; i++){
 							Value argValue = args.get(i);
 							if(argValue instanceof Constant) continue;
@@ -475,9 +481,13 @@ public class BackwardsProblem {
 						}
 					}
 					
-					//for the new produced taint values, start backwards problems if it is necessary
-					ForwardsProblem fP = new ForwardsProblem(this.units, this.currIndex + 1, this.startIndex, this.methodPath);
-					fP.solve();
+					if(newProducedTVs.size() > 0){
+						//for the new produced taint values, start backwards problems if it is necessary
+						ForwardsProblem fP = new ForwardsProblem(this.units, this.currIndex + 1, this.startIndex, this.methodPath);
+						fP.solve();
+					}else{
+						InvokingHistoryPool.v().addToBlocklist(method);
+					}
 				}
 			}
 		}

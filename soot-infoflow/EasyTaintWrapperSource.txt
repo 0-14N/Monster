@@ -285,7 +285,7 @@
 <android.content.Intent: java.lang.CharSequence[] getCharSequenceArrayExtra(java.lang.String)>
 <android.content.Intent: java.util.ArrayList<java.lang.CharSequence> getCharSequenceArrayListExtra(java.lang.String)>
 <android.content.Intent: java.lang.CharSequence getCharSequenceExtra(java.lang.String)>
-<android.content.Intent: java.net.URI getData()>
+<android.content.Intent: android.net.Uri getData()>
 <android.content.Intent: java.lang.String getDataString()>
 <android.content.Intent: double[] getDoubleArrayExtra(java.lang.String)>
 <android.content.Intent: double getDoubleExtra(java.lang.String,double)>

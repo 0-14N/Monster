@@ -42,6 +42,8 @@ public class Monster {
 	private static Monster monster = null;
 	
 	public static String DUMMYMAIN_SIGNATURE = "<dummyMainClass: void dummyMainMethod()>";
+	public static int LENGTH_THRESHOD_NUMERATOR = 2;
+	public static int LENGTH_THRESHOD_DENOMINATOR = 3;
 	
 	private IInfoflowCFG iCfg = null;
 	private ISourceSinkManager sourcesSinks = null;
@@ -212,8 +214,8 @@ public class Monster {
 	 */
 	private void stepBackwards(MethodHub currHub){
 		if(currHub.getMethod().getSignature().equals(Monster.DUMMYMAIN_SIGNATURE)){
-			logger.info("Arrived at dummyMainMethod! Start analyzing \"dummyMainMethod\"");
-			currHub.start();
+			//logger.info("Arrived at dummyMainMethod! Start analyzing \"dummyMainMethod\"");
+			//currHub.start();
 		}else{
 			currHub.start();
 			currHub.mergePathStates();
@@ -248,6 +250,10 @@ public class Monster {
 	
 	public PointsToAnalysis getPTA(){
 		return this.pta;
+	}
+	
+	public IInfoflowCFG getICFG(){
+		return this.iCfg;
 	}
 	
 	

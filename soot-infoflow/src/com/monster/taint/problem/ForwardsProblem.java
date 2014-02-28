@@ -42,6 +42,7 @@ import com.monster.taint.state.MethodState;
 import com.monster.taint.state.PathState;
 import com.monster.taint.state.TaintValue;
 import com.monster.taint.state.TaintValueType;
+import com.monster.taint.wrapper.InvokingHistoryPool;
 import com.monster.taint.wrapper.MyWrapper;
 
 public class ForwardsProblem {
@@ -328,7 +329,7 @@ public class ForwardsProblem {
 		
 		//check whether this is a sink invoking
 		if(Monster.v().isSink((Stmt) currUnit)){
-			logger.info("Oh, my God! We arrived at Sink!");
+			logger.info("Oh, my God! We arrived at Sink {}!", invokeExpr);
 			return;
 		}
 		
@@ -413,7 +414,9 @@ public class ForwardsProblem {
 			return;
 		}
 		
-		if(!isInTaintWrapper && method != null && !method.isPhantom()){
+		
+		if(!isInTaintWrapper && method != null &&  method.hasActiveBody() &&
+				!method.isPhantom() && !InvokingHistoryPool.v().isInBlacklist(method)){
 			//check looping first
 			if(!this.methodPath.getMethodHub().causeLoop(method)){
 				//initial method state
@@ -567,12 +570,16 @@ public class ForwardsProblem {
 					
 					//for the new produced taint values, start backwards problems if it is necessary
 					logger.info("{} return with {} new taint values: \n", method, newProducedTVs.size());
-					for(TaintValue tv : newProducedTVs){
-						if(tv.isStaticField() && tv.getAccessPath().size() > 1){
-							startBackwardsProblem(tv, currUnit);
-						}else if((!tv.isStaticField()) && tv.getAccessPath().size() > 0){
-							startBackwardsProblem(tv, currUnit);
+					if(newProducedStaticTVs.size() > 0){
+						for(TaintValue tv : newProducedTVs){
+							if(tv.isStaticField() && tv.getAccessPath().size() > 1){
+								startBackwardsProblem(tv, currUnit);
+							}else if((!tv.isStaticField()) && tv.getAccessPath().size() > 0){
+								startBackwardsProblem(tv, currUnit);
+							}
 						}
+					}else{
+						InvokingHistoryPool.v().addToBlocklist(method);
 					}
 				}
 			}
@@ -770,11 +777,14 @@ public class ForwardsProblem {
 		}else if(lv instanceof ArrayRef){
 			ArrayRef ar = (ArrayRef) lv;
 			newTV = new TaintValue(type, ar.getBase(), activationUnit, this.methodPath);
-		}else{
-			assert(lv instanceof Local);
+		}else if(lv instanceof Local){
 			newTV = new TaintValue(type, lv, activationUnit, this.methodPath);
 		}
-		assert(newTV != null);
+		
+		if(newTV == null){
+			return;
+		}
+		
 		newTV.appendAllSootField(rvAccessPath);
 		newTV.setDependence(dependence);
 		newTV.setInDependence(inDependence);

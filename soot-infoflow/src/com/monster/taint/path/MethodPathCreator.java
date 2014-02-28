@@ -3,6 +3,10 @@ package com.monster.taint.path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import com.monster.taint.Monster;
+
+import soot.Scene;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.CaughtExceptionRef;
@@ -35,7 +39,7 @@ public class MethodPathCreator {
 		List<Block> heads = graph.getHeads();
 		List<Block> tails = graph.getTails();
 		int i = 0;
-	
+		
 		ArrayList<Block> nonExceptionHeads = new ArrayList<Block>();
 		HashMap<String, Block> exceptionHandlers = new HashMap<String, Block>();
 		for(i = 0; i < heads.size(); i++){

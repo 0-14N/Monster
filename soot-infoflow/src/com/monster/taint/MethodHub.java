@@ -21,6 +21,7 @@ import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
+import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.Constant;
 import soot.jimple.InstanceFieldRef;
@@ -114,16 +115,21 @@ public class MethodHub {
 	 * calculated all the paths contain activationUnit
 	 */
 	private void calculatePaths(){
-		ArrayList<ArrayList<Block>> pathBlockLists = MethodPathCreator.v().getPaths(this.zonedBlockGraph);
-		
+		ArrayList<ArrayList<Block>> originalPathBlockLists = MethodPathCreator.v().getPaths(this.zonedBlockGraph);
+		/*ArrayList<ArrayList<Block>> filteredPathBlockLists = this.filterPathWithLength(originalPathBlockLists);
+		if(filteredPathBlockLists.size() == 0){
+			filteredPathBlockLists = originalPathBlockLists;
+		}
+		*/
+		ArrayList<ArrayList<Block>> filteredPathBlockLists = originalPathBlockLists;
+	
 		//for dummyMainMethod, because it is created randomly by FlowDroid, so we should resort its units
 		if(this.method.getSignature().equals(Monster.DUMMYMAIN_SIGNATURE)){
-			//TODO
 			logger.info("We have not handled dummyMainMethod yet!");
 			return;
 		}
 		
-		for(ArrayList<Block> blockList : pathBlockLists){
+		for(ArrayList<Block> blockList : filteredPathBlockLists){
 			MethodPath methodPath = null;
 			if(this.activationUnit != null){
 				if(containsUnit(blockList, activationUnit)){
@@ -136,6 +142,26 @@ public class MethodHub {
 				this.paths.add(methodPath);
 			}
 		}
+	}
+	
+	private ArrayList<ArrayList<Block>> filterPathWithLength(ArrayList<ArrayList<Block>> pathBlockLists){
+		int lengthThreshod = this.method.getActiveBody().getUnits().size()
+				*Monster.LENGTH_THRESHOD_NUMERATOR/Monster.LENGTH_THRESHOD_DENOMINATOR;
+		ArrayList<ArrayList<Block>> result = new ArrayList<ArrayList<Block>>();
+		for(ArrayList<Block> path : pathBlockLists){
+			int pathLength = 0;
+			for(Block block : path){
+				Iterator<Unit> iter = block.iterator();
+				while(iter.hasNext()){
+					iter.next();
+					pathLength++;
+				}
+			}
+			if(pathLength > lengthThreshod){
+				result.add(path);
+			}
+		}
+		return result;
 	}
 	
 	private boolean containsUnit(ArrayList<Block> blockList, Unit activationUnit){
