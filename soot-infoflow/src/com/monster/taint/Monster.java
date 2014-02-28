@@ -132,12 +132,14 @@ public class Monster {
 			methodHub.start();
 			methodHub.mergePathStates();
 			MethodState exitState = methodHub.getExitState();
+			/*
 			logger.info("Analyzed source {}, begin backwards!", methodHub);
 			ArrayList<MethodHub> callerHubs = getCallerHubsOf(methodHub);
 			for(MethodHub callerHub : callerHubs){
 				callerHub.setInitState(exitState);
 				stepBackwards(callerHub);
 			}
+			*/
 		}
 	}
 
