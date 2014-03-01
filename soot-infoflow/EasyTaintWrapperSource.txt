@@ -258,17 +258,6 @@
 <android.content.ContentValues: java.util.Set<java.util.Map.Entry<java.lang.String,java.lang.Object>> valueSet()>
 <android.content.ContentValues: java.lang.String toString()>
 
-<android.content.ContentValues: void put(java.lang.String,java.lang.Byte)>
-<android.content.ContentValues: void put(java.lang.String,java.lang.Integer)>
-<android.content.ContentValues: void put(java.lang.String,java.lang.Float)>
-<android.content.ContentValues: void put(java.lang.String,java.lang.Short)>
-<android.content.ContentValues: void put(java.lang.String,byte[])>
-<android.content.ContentValues: void put(java.lang.String,java.lang.String)>
-<android.content.ContentValues: void put(java.lang.String,java.lang.Double)>
-<android.content.ContentValues: void put(java.lang.String,java.lang.Long)>
-<android.content.ContentValues: void put(java.lang.String,java.lang.Boolean)>
-<android.content.ContentValues: void putAll(android.content.ContentValues)>
-
 
 <android.content.Intent: void <init>(android.content.Context,java.lang.Class)>
 <android.content.Intent: void <init>(java.lang.String,android.net.Uri,android.content.Context,java.lang.Class)>
@@ -446,3 +435,6 @@
 <android.telephony.SmsMessage: java.lang.String getPseudoSubject()>
 <android.telephony.SmsMessage: java.lang.String getServiceCenterAddress()>
 <android.telephony.SmsMessage: byte[] getUserData()>
+
+~<android.text.TextUtils: boolean isEmpty(java.lang.CharSequence)>
+~<java.lang.String: boolean startsWith(java.lang.String)>

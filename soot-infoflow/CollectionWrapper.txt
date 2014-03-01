@@ -1,0 +1,10 @@
+<android.content.ContentValues: void put(java.lang.String,java.lang.Byte)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Integer)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Float)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Short)>
+<android.content.ContentValues: void put(java.lang.String,byte[])>
+<android.content.ContentValues: void put(java.lang.String,java.lang.String)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Double)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Long)>
+<android.content.ContentValues: void put(java.lang.String,java.lang.Boolean)>
+<android.content.ContentValues: void putAll(android.content.ContentValues)>
