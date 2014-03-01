@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,11 +39,13 @@ import soot.jimple.ThisRef;
 import com.monster.taint.MethodHub;
 import com.monster.taint.MethodHubType;
 import com.monster.taint.Monster;
+import com.monster.taint.output.TaintOutput;
 import com.monster.taint.path.MethodPath;
 import com.monster.taint.state.MethodState;
 import com.monster.taint.state.PathState;
 import com.monster.taint.state.TaintValue;
 import com.monster.taint.state.TaintValueType;
+import com.monster.taint.target.TargetManager;
 import com.monster.taint.wrapper.InvokingHistoryPool;
 import com.monster.taint.wrapper.MyWrapper;
 
@@ -509,6 +513,19 @@ public class ForwardsProblem {
 					//check whether this is a sink invoking
 					if(Monster.v().isSink((Stmt) currUnit)){
 						logger.info("Oh, my God! We arrived at Sink {}!", invokeExpr);
+						//record the taint propagation
+						try {
+							TaintOutput.v().collectTaint(inThisTVs, inArgsTVs, inStaticTVs, currUnit, 
+									this.methodPath.getMethodHub().getMethod(), this.methodPath.getPathID());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						return;
+					}
+					
+					//check component invoking
+					if(TargetManager.v().isStartComponent(className, subSignature)){
+						logger.info("****Start another component****{}", currUnit);
 						return;
 					}
 			

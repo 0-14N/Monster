@@ -20,14 +20,16 @@ public class MethodPath {
 	private ArrayList<Unit> unitsOnPath = null;
 	private PathState pathState = null;
 	private Value retValue = null;
+	private int pathID = -1;
 	
 	public MethodPath(ArrayList<Block> blockList, MethodHub methodHub, 
-			MethodHubType type, Unit activationUnit){
+			MethodHubType type, Unit activationUnit, int pathID){
 		this.blockList = blockList;
 		this.methodHub = methodHub;
 		this.type = type;
 		this.activationUnit = activationUnit;
 		this.pathState = new PathState(this);
+		this.pathID = pathID;
 	}
 	
 	public MethodHub getMethodHub(){
@@ -48,6 +50,10 @@ public class MethodPath {
 	
 	public Value getRetValue(){
 		return this.retValue;
+	}
+	
+	public int getPathID(){
+		return this.pathID;
 	}
 	
 	private void init(){
@@ -87,4 +93,6 @@ public class MethodPath {
 	public ArrayList<Unit> getUnitsOnPath(){
 		return this.unitsOnPath;
 	}
+	
+	
 }

@@ -49,6 +49,14 @@ public class TaintValue {
 	public TaintValue getDependence(){
 		return this.dependence;
 	}
+	
+	public TaintValue getInDependence(){
+		return this.inDependence;
+	}
+	
+	public TaintValue getRetDependence(){
+		return this.retDependence;
+	}
 
 	/* not used yet
 	private TaintValue getUltimateDependence(){
@@ -223,10 +231,7 @@ public class TaintValue {
 	@Override
 	public String toString() {
 		return "TaintValue [type=" + type + ", base=" + base + ", accessPath="
-				+ accessPath + ", activationUnit=" + activationUnit
-				+ ", dependence=" + dependence + ", slaves=" + slaves
-				+ ", inDependence=" + inDependence + ", retDependence="
-				+ retDependence + "]";
+				+ accessPath + "]";
 	}
 	
 }

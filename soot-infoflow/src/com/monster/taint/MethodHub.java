@@ -133,10 +133,10 @@ public class MethodHub {
 			MethodPath methodPath = null;
 			if(this.activationUnit != null){
 				if(containsUnit(blockList, activationUnit)){
-					methodPath = new MethodPath(blockList, this, this.type, this.activationUnit);
+					methodPath = new MethodPath(blockList, this, this.type, this.activationUnit, this.paths.size());
 				}
 			}else{
-				methodPath = new MethodPath(blockList, this, this.type, this.activationUnit);
+				methodPath = new MethodPath(blockList, this, this.type, this.activationUnit, this.paths.size());
 			}
 			if(methodPath != null){
 				this.paths.add(methodPath);
