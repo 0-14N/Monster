@@ -54,7 +54,7 @@ public class MyWrapper {
 		try {
 			fr = new FileReader(COLLECTION_WRAPPER_FILE);
 			br = new BufferedReader(fr);
-		    while((line = br.readLine()) != null){
+		    while((line = br.readLine()) != null && !line.isEmpty()){
 		    	String[] tokens = line.split(":");
 		    	String className = tokens[0].substring(1);
 		    	String subSignature = tokens[1].substring(1, tokens[1].length()-1);

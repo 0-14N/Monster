@@ -355,9 +355,11 @@ public class Infoflow extends AbstractInfoflow {
         				Set<Unit> sourceUnits = sources.get(sm);
         				if(sourceUnits == null){
         					sourceUnits = new HashSet<Unit>();
+        					sourceUnits.add(u);
         					sources.put(sm, sourceUnits);
+        				}else{
+        					sourceUnits.add(u);
         				}
-        				sourceUnits.add(u);
         				if(debug)
         					logger.info("Found source :\n \t\t {}->{} : {}", 
         							sm.getDeclaringClass().getName(),sm.getName(), u);

@@ -102,7 +102,7 @@ public class Monster {
 	
 	public void start(){
 		
-		//collect source trigger units
+		//collect source trigger units in "dummyMainMethod"
 		Iterator<Entry<SootMethod, Set<Unit>>> sourceIter = this.sources.entrySet().iterator();
 		while(sourceIter.hasNext()){
 			Entry<SootMethod, Set<Unit>> entry = sourceIter.next();
@@ -113,8 +113,14 @@ public class Monster {
 				this.collectSourceSinkTriggerUnits(sourceContainer, sourceUnit, sourceNode, this.sourceTriggerUnits);
 			}
 		}
+	
+		logger.info("\n================Source Trigger Units in dummyMainMethod============");
+		for(Unit unit : this.sourceTriggerUnits){
+			logger.info(unit.toString());
+		}
+		logger.info("\n");
 		
-		//collect sink trigger units
+		//collect sink trigger units in "dummyMainMethod"
 		Iterator<Entry<SootMethod, Set<Unit>>> sinkIter = this.sinks.entrySet().iterator();
 		while(sinkIter.hasNext()){
 			Entry<SootMethod, Set<Unit>> entry = sinkIter.next();
@@ -125,6 +131,11 @@ public class Monster {
 				this.collectSourceSinkTriggerUnits(sinkContainer, sinkUnit, sinkNode, this.sinkTriggerUnits);
 			}
 		}
+		logger.info("\n================Sink Trigger Units in dummyMainMethod============");
+		for(Unit unit : this.sinkTriggerUnits){
+			logger.info(unit.toString());
+		}
+		logger.info("\n");
 		
 		createSourceMethodHubs();
 		
