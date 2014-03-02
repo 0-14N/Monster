@@ -173,9 +173,13 @@ public class TaintValue {
 			//base
 			//if(!this.base.equals(other.getBase()))
 				//return false;
+			try{
 			if(!(this.base.toString().equals(other.getBase().toString()) &&
 					this.base.getType().toString().equals(other.getType().toString()))){
 				return false;
+			}
+			}catch(NullPointerException npe){
+				npe.printStackTrace();
 			}
 		}
 		//accessPath
