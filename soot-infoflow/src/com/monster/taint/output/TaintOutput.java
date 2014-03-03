@@ -19,6 +19,7 @@ import org.w3c.dom.Element;
 import soot.SootMethod;
 import soot.Unit;
 
+import com.monster.taint.path.MethodPath;
 import com.monster.taint.state.TaintValue;
 
 public class TaintOutput {
@@ -59,7 +60,12 @@ public class TaintOutput {
 			if(argTVs.size() > 0){
 				for(int j = 0; j < argTVs.size(); j++){
 					TaintValue argTV = argTVs.get(j);
-					Element methodElement = getMethodElement(method, activationUnit, argTV, doc, "SinkTV");
+					//not initialized yet
+					PathChain pathChain = new PathChain();
+					Element methodElement = getMethodElement(method, activationUnit, argTV, doc,
+							"SinkTV", pathChain);
+					//handle path chain
+					PathOutput.v().handlePathChain(pathChain);
 					sinkElement.appendChild(methodElement);
 				}
 			}
@@ -71,26 +77,49 @@ public class TaintOutput {
 		StreamResult result = new StreamResult(new File("../monster-out/" + outputFileName));
 		transformer.transform(source, result);
 	}
-	
-	private Element getMethodElement(SootMethod method, Unit activationUnit, TaintValue tv, Document doc, String name){
+
+	/**
+	 * 
+	 * @param method
+	 * @param activationUnit
+	 * @param tv
+	 * @param doc
+	 * @param name : "SinkTV", "inDependence", "retDependence"
+	 * @param pathChain
+	 * @return
+	 */
+	private Element getMethodElement(SootMethod method, Unit activationUnit, TaintValue tv, 
+			Document doc, String name, PathChain pathChain){
 		//method
 		Element methodElement = doc.createElement(name);
 		methodElement.setAttribute("method-signature", method.getSignature());
 		methodElement.setAttribute("activation-stmt", activationUnit.toString());
 		methodElement.setAttribute("tainted-value", tv.toString());
-					
-		//path
-		Element pathElement = doc.createElement("path");
-		//stms
-		ArrayList<Unit> stmts = tv.getFirstContext().getUnitsOnPath();
-		for(int stmtIdx = 0; stmtIdx < stmts.size(); stmtIdx++){
-			Unit stmt = stmts.get(stmtIdx);
-			Element stmtElement = doc.createElement("stmt");
-			//stmtElement.appendChild(doc.createTextNode(stmt.toString()));
-			stmtElement.setAttribute("value", stmt.toString());
-			pathElement.appendChild(stmtElement);
+		
+		//for the inDependence or retDependence, there maybe more than
+		//one patt, paths elements
+		Element pathsElement = doc.createElement("paths");
+	
+		ArrayList<MethodPath> methodPaths = tv.getContexts();
+		//if this is the root pathchain, init it
+		if("SinkTV".equals(name)){
+			pathChain.init(methodPaths.get(0));
 		}
-		methodElement.appendChild(pathElement);
+		for(MethodPath methodPath : methodPaths){
+			//path
+			Element pathElement = doc.createElement("path");
+			//stms
+			ArrayList<Unit> stmts = methodPath.getUnitsOnPath();
+			for(int stmtIdx = 0; stmtIdx < stmts.size(); stmtIdx++){
+				Unit stmt = stmts.get(stmtIdx);
+				Element stmtElement = doc.createElement("stmt");
+				//stmtElement.appendChild(doc.createTextNode(stmt.toString()));
+				stmtElement.setAttribute("value", stmt.toString());
+				pathElement.appendChild(stmtElement);
+			}
+			pathsElement.appendChild(pathElement);
+		}
+		methodElement.appendChild(pathsElement);
 					
 		//taint propagation
 		Element propagationElement = doc.createElement("taint-propagation");
@@ -111,14 +140,18 @@ public class TaintOutput {
 		}
 		if(tmp.getInDependence() != null){
 			TaintValue inDep = tmp.getInDependence();
+			//set inDeps
+			pathChain.setInDepPaths(inDep.getContexts());
 			Element inDepElement = getMethodElement(inDep.getFirstContext().getMethodHub().getMethod(), 
-					inDep.getActivationUnit(), inDep, doc, "inDependence");
+					inDep.getActivationUnit(), inDep, doc, "inDependence", pathChain.getFirstInDepChain());
 			propagationElement.appendChild(inDepElement);
 		}
 		if(tmp.getRetDependence() != null){
 			TaintValue retDep = tmp.getRetDependence();
+			//set retDeps
+			pathChain.setRetDepPaths(retDep.getContexts());
 			Element retDepElement = getMethodElement(retDep.getFirstContext().getMethodHub().getMethod(), 
-					retDep.getActivationUnit(), retDep, doc, "retDependence");
+					retDep.getActivationUnit(), retDep, doc, "retDependence", pathChain.getFirstRetDepChain());
 			propagationElement.appendChild(retDepElement);
 		}
 		methodElement.appendChild(propagationElement);
