@@ -3,6 +3,7 @@ package com.monster.taint.output;
 import java.util.ArrayList;
 
 import com.monster.taint.path.MethodPath;
+import com.monster.taint.slice.ITESlice;
 
 public class PathOutput {
 	private static PathOutput instance = null;
@@ -18,6 +19,7 @@ public class PathOutput {
 	
 	public void handlePathChain(PathChain pathChain){
 		MethodPath methodPath = pathChain.getSinglePath();
+		ITESlice.v().slice(methodPath);
 		
 		if(pathChain.hasInDepPaths()){
 			ArrayList<PathChain> inDepPaths = pathChain.getInDepPaths();
