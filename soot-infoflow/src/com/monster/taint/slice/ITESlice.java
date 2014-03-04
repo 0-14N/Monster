@@ -8,7 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import soot.SootMethod;
 import soot.Unit;
+import soot.Value;
 import soot.ValueBox;
+import soot.jimple.ConditionExpr;
+import soot.jimple.IfStmt;
 
 import com.monster.taint.path.MethodPath;
 
@@ -31,15 +34,45 @@ public class ITESlice {
 		return instance;
 	}
 	
-	public void slice(MethodPath methodPath){
+	public List<UnitWrapper> slice(MethodPath methodPath){
 		ArrayList<Unit> unitsOnPath = methodPath.getUnitsOnPath();
-		SootMethod method = methodPath.getMethodHub().getMethod();
-		List<ValueBox> defBoxes = method.getActiveBody().getDefBoxes();
-		List<ValueBox> useBoxes = method.getActiveBody().getUseBoxes();
-		for(Unit unit : unitsOnPath){
-			List<ValueBox> tmpBoxes1 = unit.getDefBoxes();
-			List<ValueBox> tmpBoxes2 = unit.getUseBoxes();
-			logger.info("Break Point!");
+		ArrayList<UnitWrapper> unitWrappers = new ArrayList<UnitWrapper>();
+		
+		for(int i = 0; i < unitsOnPath.size(); i++){
+			Unit unit = unitsOnPath.get(i);
+			UnitWrapper wrapper = new UnitWrapper(unit, i);
+			unitWrappers.add(wrapper);
+			if(wrapper.isIfStmt()){
+				backwardsFromIfStmt(i-1, unitWrappers, (IfStmt) unit);
+			}
+		}
+		
+		ArrayList<UnitWrapper> slicedWrappers = new ArrayList<UnitWrapper>();
+		for(UnitWrapper unitWrapper : unitWrappers){
+			if(unitWrapper.isInSlice()){
+				slicedWrappers.add(unitWrapper);
+			}
+		}
+		
+		return slicedWrappers;
+	}
+	
+	private void backwardsFromIfStmt(int startIndex, ArrayList<UnitWrapper> unitWrappers, IfStmt ifStmt){
+		ConditionExpr conditionExpr = (ConditionExpr) ifStmt.getCondition();
+		Value lv = conditionExpr.getOp1();
+		Value rv = conditionExpr.getOp2();
+		
+		backwardsFromStmt(startIndex, unitWrappers, lv);
+		backwardsFromStmt(startIndex, unitWrappers, rv);
+	}
+	
+	private void backwardsFromStmt(int startIndex, ArrayList<UnitWrapper> unitWrappers, Value defValue){
+		for(int i = startIndex; i >= 0; i--){
+			UnitWrapper wrapper = unitWrappers.get(i);
+			List<Value> useValues = wrapper.getUsesOfDefs(defValue);
+			for(Value useValue : useValues){
+				this.backwardsFromStmt(i-1, unitWrappers, useValue);
+			}
 		}
 	}
 }

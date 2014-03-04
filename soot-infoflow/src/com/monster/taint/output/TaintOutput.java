@@ -65,7 +65,8 @@ public class TaintOutput {
 					Element methodElement = getMethodElement(method, activationUnit, argTV, doc,
 							"SinkTV", pathChain);
 					//handle path chain
-					PathOutput.v().handlePathChain(pathChain);
+					Element slicedPathElement = PathOutput.v().handlePathChain(pathChain, doc);
+					methodElement.appendChild(slicedPathElement);
 					sinkElement.appendChild(methodElement);
 				}
 			}
@@ -110,6 +111,7 @@ public class TaintOutput {
 			Element pathElement = doc.createElement("path");
 			//stms
 			ArrayList<Unit> stmts = methodPath.getUnitsOnPath();
+			pathElement.setAttribute("length", "" + stmts.size());
 			for(int stmtIdx = 0; stmtIdx < stmts.size(); stmtIdx++){
 				Unit stmt = stmts.get(stmtIdx);
 				Element stmtElement = doc.createElement("stmt");
