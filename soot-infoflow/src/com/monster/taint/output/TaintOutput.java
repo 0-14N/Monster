@@ -65,8 +65,7 @@ public class TaintOutput {
 					Element methodElement = getMethodElement(method, activationUnit, argTV, doc,
 							"SinkTV", pathChain);
 					//handle path chain
-					Element slicedPathElement = PathOutput.v().handlePathChain(pathChain, doc);
-					methodElement.appendChild(slicedPathElement);
+					PathOutput.v().handlePathChain(pathChain, doc, methodElement);
 					sinkElement.appendChild(methodElement);
 				}
 			}

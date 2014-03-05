@@ -23,7 +23,10 @@ public class UnitWrapper {
 	private List<ValueBox> defBoxes = null;
 	private List<ValueBox> useBoxes = null;
 	private boolean isIfStmt = false;
-	private boolean inSlice = false;
+	//indicate whether this unit is in ITE slice
+	private boolean inITESlice = false;
+	//indicate whether this unit is in Intent Source slice
+	private boolean inIntentSource = false;
 	
 	public UnitWrapper(Unit unit, int idx){
 		this.unit = unit;
@@ -32,7 +35,7 @@ public class UnitWrapper {
 		this.useBoxes = unit.getUseBoxes();
 		if(unit instanceof IfStmt){
 			this.isIfStmt = true;
-			this.inSlice = true;
+			this.inITESlice = true;
 		}
 	}
 	
@@ -40,8 +43,16 @@ public class UnitWrapper {
 		return this.isIfStmt;
 	}
 	
-	public boolean isInSlice(){
-		return this.inSlice;
+	public boolean isInITESlice(){
+		return this.inITESlice;
+	}
+	
+	public boolean isInIntentSourceSlice(){
+		return this.inIntentSource;
+	}
+	
+	public void addToIntentSourceSlice(){
+		this.inIntentSource = true;
 	}
 	
 	public List<ValueBox> getDefBoxes(){
@@ -56,20 +67,20 @@ public class UnitWrapper {
 		return this.unit;
 	}
 	
-	public List<Value> getUsesOfDefs(List<Value> defValues){
+	public List<Value> getITEUsesOfDefs(List<Value> defValues){
 		List<Value> useValues = new ArrayList<Value>();
 		
-		if(this.inSlice){
+		if(this.inITESlice){
 			return useValues;
 		}
 		
 		for(Value value : defValues){
 			if(isValueInDefBoxes(value) != null){
-				this.inSlice = true;
+				this.inITESlice = true;
 				break;
 			}
 		}
-		if(this.inSlice){
+		if(this.inITESlice){
 			for(ValueBox vb : this.useBoxes){
 				useValues.add(vb.getValue());
 			}
@@ -77,15 +88,15 @@ public class UnitWrapper {
 		return useValues;
 	}
 	
-	public List<Value> getUsesOfDefs(Value defValue){
+	public List<Value> getITEUsesOfDefs(Value defValue){
 		List<Value> useValues = new ArrayList<Value>();
 		
-		if(this.inSlice){
+		if(this.inITESlice){
 			return useValues;
 		}
 		
 		if(isValueInDefBoxes(defValue) != null){
-			this.inSlice = true;
+			this.inITESlice = true;
 			for(ValueBox vb : this.useBoxes){
 				useValues.add(vb.getValue());
 			}

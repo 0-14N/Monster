@@ -49,7 +49,7 @@ public class ITESlice {
 		
 		ArrayList<UnitWrapper> slicedWrappers = new ArrayList<UnitWrapper>();
 		for(UnitWrapper unitWrapper : unitWrappers){
-			if(unitWrapper.isInSlice()){
+			if(unitWrapper.isInITESlice()){
 				slicedWrappers.add(unitWrapper);
 			}
 		}
@@ -69,7 +69,7 @@ public class ITESlice {
 	private void backwardsFromStmt(int startIndex, ArrayList<UnitWrapper> unitWrappers, Value defValue){
 		for(int i = startIndex; i >= 0; i--){
 			UnitWrapper wrapper = unitWrappers.get(i);
-			List<Value> useValues = wrapper.getUsesOfDefs(defValue);
+			List<Value> useValues = wrapper.getITEUsesOfDefs(defValue);
 			for(Value useValue : useValues){
 				this.backwardsFromStmt(i-1, unitWrappers, useValue);
 			}

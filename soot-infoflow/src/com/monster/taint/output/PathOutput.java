@@ -8,6 +8,7 @@ import org.w3c.dom.Element;
 
 import com.monster.taint.path.MethodPath;
 import com.monster.taint.slice.ITESlice;
+import com.monster.taint.slice.IntentSourceSlice;
 import com.monster.taint.slice.UnitWrapper;
 
 public class PathOutput {
@@ -22,34 +23,45 @@ public class PathOutput {
 		return instance;
 	}
 	
-	public Element handlePathChain(PathChain pathChain, Document doc){
+	public void handlePathChain(PathChain pathChain, Document doc, Element parentElement){
 		MethodPath methodPath = pathChain.getSinglePath();
-		List<UnitWrapper> slicedPath = ITESlice.v().slice(methodPath);
-		Element slicedPathElement = doc.createElement("slicedPath");
-		slicedPathElement.setAttribute("length", "" + slicedPath.size());
+		
+		//the backwards slice start from "if ... "
+		List<UnitWrapper> iteSlicedPath = ITESlice.v().slice(methodPath);
+		//the forwards slice start from "rn := @parametern: android.content.Intent"
+		List<UnitWrapper> intentSlicedPath = IntentSourceSlice.v().slice(iteSlicedPath);
+		
+		handleSlice(pathChain, iteSlicedPath, doc, parentElement, "iteSlicedPath");
+		handleSlice(pathChain, intentSlicedPath, doc, parentElement, "intentSlicedPath");
+	}
+	
+	private void handleSlice(PathChain pathChain, List<UnitWrapper> slicedPath, 
+			Document doc, Element parentElement, String sliceName){
+		Element iteSlicedPathElement = doc.createElement(sliceName);
+		iteSlicedPathElement.setAttribute("length", "" + slicedPath.size());
 		for(UnitWrapper wrapper : slicedPath){
 			Element stmtElement = doc.createElement("stmt");
 			stmtElement.setAttribute("value", wrapper.getUnit().toString());
-			slicedPathElement.appendChild(stmtElement);
+			iteSlicedPathElement.appendChild(stmtElement);
 		}
 		
 		if(pathChain.hasInDepPaths()){
 			Element inDepsSlicedPathsElement = doc.createElement("inDepsSlicedPaths");
 			ArrayList<PathChain> inDepPaths = pathChain.getInDepPaths();
 			for(PathChain inDepPath : inDepPaths){
-				inDepsSlicedPathsElement.appendChild(handlePathChain(inDepPath, doc));
+				handlePathChain(inDepPath, doc, inDepsSlicedPathsElement);
 			}
-			slicedPathElement.appendChild(inDepsSlicedPathsElement);
+			iteSlicedPathElement.appendChild(inDepsSlicedPathsElement);
 		}
 		
 		if(pathChain.hasRetDepPaths()){
 			Element retDepsSlicedPathsElement = doc.createElement("retDepsSlicedPaths");
 			ArrayList<PathChain> retDepPaths = pathChain.getRetDepPaths();
 			for(PathChain retDepPath : retDepPaths){
-				retDepsSlicedPathsElement.appendChild(handlePathChain(retDepPath, doc));
+				handlePathChain(retDepPath, doc, retDepsSlicedPathsElement);
 			}
-			slicedPathElement.appendChild(retDepsSlicedPathsElement);
+			iteSlicedPathElement.appendChild(retDepsSlicedPathsElement);
 		}
-		return slicedPathElement;
+		parentElement.appendChild(iteSlicedPathElement);
 	}
 }
