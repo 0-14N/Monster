@@ -64,9 +64,12 @@ public class TaintOutput {
 					PathChain pathChain = new PathChain();
 					Element methodElement = getMethodElement(method, activationUnit, argTV, doc,
 							"SinkTV", pathChain);
-					//handle path chain
+					//handle path chain, do ITE and IntentSource slices 
 					PathOutput.v().handlePathChain(pathChain, doc, methodElement);
 					sinkElement.appendChild(methodElement);
+					
+					//extract the constraints
+					ConstraintOutput.v().extractConstraints(pathChain);
 				}
 			}
 		}
@@ -103,7 +106,7 @@ public class TaintOutput {
 		ArrayList<MethodPath> methodPaths = tv.getContexts();
 		//if this is the root pathchain, init it
 		if("SinkTV".equals(name)){
-			pathChain.init(methodPaths.get(0));
+			pathChain.init(methodPaths.get(0), activationUnit);
 		}
 		for(MethodPath methodPath : methodPaths){
 			//path
