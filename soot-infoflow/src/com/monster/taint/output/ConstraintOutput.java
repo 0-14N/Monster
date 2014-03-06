@@ -81,7 +81,7 @@ public class ConstraintOutput {
 			Unit unit = unitsOnPath.get(i);
 			if(unit instanceof IfStmt){
 				IfStmt ifStmt = (IfStmt) unit;
-				//inclue IfStmt
+				//include IfStmt
 				flagsArray[i] = 1;
 				boolean satisfied = false;
 				Stmt target = ifStmt.getTarget();

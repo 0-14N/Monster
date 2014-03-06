@@ -37,21 +37,28 @@ public class ITESlice {
 	public List<UnitWrapper> slice(MethodPath methodPath){
 		ArrayList<Unit> unitsOnPath = methodPath.getUnitsOnPath();
 		ArrayList<UnitWrapper> unitWrappers = new ArrayList<UnitWrapper>();
+		boolean containIfStmt = false;
 		
 		for(int i = 0; i < unitsOnPath.size(); i++){
 			Unit unit = unitsOnPath.get(i);
 			UnitWrapper wrapper = new UnitWrapper(unit, i);
 			unitWrappers.add(wrapper);
 			if(wrapper.isIfStmt()){
+				containIfStmt = true;
 				backwardsFromIfStmt(i-1, unitWrappers, (IfStmt) unit);
 			}
 		}
 		
 		ArrayList<UnitWrapper> slicedWrappers = new ArrayList<UnitWrapper>();
-		for(UnitWrapper unitWrapper : unitWrappers){
-			if(unitWrapper.isInITESlice()){
-				slicedWrappers.add(unitWrapper);
+		
+		if(containIfStmt){
+			for(UnitWrapper unitWrapper : unitWrappers){
+				if(unitWrapper.isInITESlice()){
+					slicedWrappers.add(unitWrapper);
+				}
 			}
+		}else{
+			slicedWrappers.addAll(unitWrappers);
 		}
 		
 		return slicedWrappers;
