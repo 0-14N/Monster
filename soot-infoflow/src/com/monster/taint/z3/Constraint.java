@@ -154,4 +154,8 @@ public class Constraint {
 	public int[] getFlagsArray(){
 		return this.flagsArray;
 	}
+	
+	public ArrayList<Unit> getRelatedUnits(){
+		return this.relatedUnits;
+	}
 }
