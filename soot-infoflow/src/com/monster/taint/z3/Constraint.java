@@ -1,9 +1,7 @@
 package com.monster.taint.z3;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -17,11 +15,12 @@ import soot.jimple.Constant;
 import soot.jimple.IfStmt;
 
 public class Constraint {
-	IfStmt ifStmt = null;
-	int ifStmtIdx = -1;
-	boolean satisfied = false;
-	ArrayList<Unit> unitsOnPath = null;
-	Set<Unit> relatedUnits = null;
+	private IfStmt ifStmt = null;
+	private int ifStmtIdx = -1;
+	private boolean satisfied = false;
+	private ArrayList<Unit> unitsOnPath = null;
+	private ArrayList<Unit> relatedUnits = null;
+	private int[] flagsArray = null;
 	
 	public Constraint(IfStmt ifStmt, boolean satisfied, int idx, 
 			ArrayList<Unit> unitsOnPath){
@@ -29,7 +28,8 @@ public class Constraint {
 		this.satisfied = satisfied;
 		this.ifStmtIdx = idx;
 		this.unitsOnPath = unitsOnPath;
-		this.relatedUnits = new HashSet<Unit>();
+		this.relatedUnits = new ArrayList<Unit>();
+		this.flagsArray = new int[unitsOnPath.size()];
 	}
 	
 	public void stepBackwrads(){
@@ -38,32 +38,36 @@ public class Constraint {
 		Value v2 = conditionExpr.getOp2();
 		
 		if(!(v1 instanceof Constant)){
-			relatedUnits.addAll(propagationOf(v1, ifStmtIdx - 1));
+			propagationOf(v1, ifStmtIdx - 1);
 		}
 		
 		if(!(v2 instanceof Constant)){
-			relatedUnits.addAll(propagationOf(v2, ifStmtIdx - 1));
+			propagationOf(v2, ifStmtIdx - 1);
+		}
+		
+		for(int i = 0; i < flagsArray.length; i++){
+			if(flagsArray[i] == 1){
+				relatedUnits.add(unitsOnPath.get(i));
+			}
 		}
 	}
 	
-	private Set<Unit> propagationOf(Value value, int startIndex){
-		Set<Unit> unitSet = new HashSet<Unit>();
+	private void propagationOf(Value value, int startIndex){
 		for(int i = startIndex; i >= 0; i--){
 			Unit unit = this.unitsOnPath.get(i);
 			List<ValueBox> defBoxes = unit.getDefBoxes();
 			List<ValueBox> useBoxes = unit.getUseBoxes();
 			if(containIn(defBoxes, value)){
-				unitSet.add(unit);
+				this.flagsArray[i] = 1;
 				for(ValueBox useBox : useBoxes){
 					Value  useValue = useBox.getValue();
 					if(useValue instanceof Local){
-						unitSet.addAll(propagationOf(useValue, i - 1));
+						propagationOf(useValue, i - 1);
 					}
 				}
 				break;
 			}
 		}
-		return unitSet;
 	}
 	
 	private boolean containIn(List<ValueBox> valueBoxes, Value value){
@@ -79,7 +83,20 @@ public class Constraint {
 		return contain;
 	}
 	
-	public Element getElement(Document doc){
-		return null;
+	public Element getConstraintElement(Document doc){
+		Element constraintElement = doc.createElement("Constraint");
+		constraintElement.setAttribute("IfStmt", this.ifStmt.toString());
+		constraintElement.setAttribute("Condition", "" + this.satisfied);
+		
+		Element relatedUnitsElement = doc.createElement("RelatedUnits");
+		relatedUnitsElement.setAttribute("size", "" + this.relatedUnits.size());
+		for(int i = 0; i < this.relatedUnits.size(); i++){
+			Element unitElement = doc.createElement("Stmt");
+			unitElement.setAttribute("value", this.relatedUnits.get(i).toString());
+			relatedUnitsElement.appendChild(unitElement);
+		}
+		
+		constraintElement.appendChild(relatedUnitsElement);
+		return constraintElement;
 	}
 }
