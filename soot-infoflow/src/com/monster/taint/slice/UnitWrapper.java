@@ -70,10 +70,6 @@ public class UnitWrapper {
 	public List<Value> getITEUsesOfDefs(List<Value> defValues){
 		List<Value> useValues = new ArrayList<Value>();
 		
-		if(this.inITESlice){
-			return useValues;
-		}
-		
 		for(Value value : defValues){
 			if(isValueInDefBoxes(value) != null){
 				this.inITESlice = true;
@@ -90,10 +86,6 @@ public class UnitWrapper {
 	
 	public List<Value> getITEUsesOfDefs(Value defValue){
 		List<Value> useValues = new ArrayList<Value>();
-		
-		if(this.inITESlice){
-			return useValues;
-		}
 		
 		if(isValueInDefBoxes(defValue) != null){
 			this.inITESlice = true;

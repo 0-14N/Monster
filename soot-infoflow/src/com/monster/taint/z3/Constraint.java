@@ -99,4 +99,8 @@ public class Constraint {
 		constraintElement.appendChild(relatedUnitsElement);
 		return constraintElement;
 	}
+	
+	public int[] getFlagsArray(){
+		return this.flagsArray;
+	}
 }

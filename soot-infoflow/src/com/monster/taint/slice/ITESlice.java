@@ -65,13 +65,22 @@ public class ITESlice {
 		backwardsFromStmt(startIndex, unitWrappers, lv);
 		backwardsFromStmt(startIndex, unitWrappers, rv);
 	}
-	
+
+	/**
+	 * 
+	 * @param startIndex
+	 * @param unitWrappers
+	 * @param defValue
+	 */
 	private void backwardsFromStmt(int startIndex, ArrayList<UnitWrapper> unitWrappers, Value defValue){
 		for(int i = startIndex; i >= 0; i--){
 			UnitWrapper wrapper = unitWrappers.get(i);
 			List<Value> useValues = wrapper.getITEUsesOfDefs(defValue);
 			for(Value useValue : useValues){
 				this.backwardsFromStmt(i-1, unitWrappers, useValue);
+			}
+			if(useValues.size() > 0){
+				break;
 			}
 		}
 	}
