@@ -12,6 +12,7 @@ import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ConditionExpr;
 import soot.jimple.Constant;
+import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 
 public class Constraint {
@@ -98,6 +99,56 @@ public class Constraint {
 		
 		constraintElement.appendChild(relatedUnitsElement);
 		return constraintElement;
+	}
+
+	/**
+	 * whether this constraint has values depend on
+	 * parameters passed in. 
+	 * @return
+	 */
+	public boolean dependOnParameters(){
+		for(Unit unit : this.relatedUnits){
+			if(unit instanceof IdentityStmt){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * whether this constraint has values depend on
+	 * Intent type parameters passed in.
+	 * @return
+	 */
+	public boolean dependOnIntentParameters(){
+		for(Unit unit : this.relatedUnits){
+			if(unit instanceof IdentityStmt){
+				IdentityStmt identityStmt = (IdentityStmt) unit;
+				Value rv = identityStmt.getRightOp();
+				if(rv.getType().toString().equals("android.content.Intent")){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * whether this constraint has values depend on
+	 * String type parameters passed in.
+	 * @return
+	 */
+	public boolean dependOnStringParameters(){
+		for(Unit unit : this.relatedUnits){
+			if(unit instanceof IdentityStmt){
+				IdentityStmt identityStmt = (IdentityStmt) unit;
+				Value rv = identityStmt.getRightOp();
+				if(rv.getType().toString().equals("java.lang.String")){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public int[] getFlagsArray(){

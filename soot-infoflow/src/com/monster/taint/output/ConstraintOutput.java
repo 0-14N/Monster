@@ -28,6 +28,10 @@ public class ConstraintOutput {
 	
 	private static ConstraintOutput instance = null;
 	
+	//the proportion for the sliced path of original path
+	private ArrayList<Float> slicedPathProportions = new ArrayList<Float>();
+	private int ORIGINAL_SIZE, SLICED_SIZE = 0;
+	
 	private ConstraintOutput(){}
 	
 	public static ConstraintOutput v(){
@@ -55,7 +59,11 @@ public class ConstraintOutput {
 		
 		Element rootElement = doc.createElement("RootElement");
 		doc.appendChild(rootElement);
-	
+
+		Element sinkContainerElement = doc.createElement("SinkContainer");
+		sinkContainerElement.setAttribute("MethodSignature", method.getSignature());
+		sinkContainerElement.setAttribute("Sink-Invoking", pathChain.getActivationUnit().toString());
+		rootElement.appendChild(sinkContainerElement);
 		
 		Unit activationUnit = pathChain.getActivationUnit();
 		ArrayList<Unit> unitsOnPath = pathChain.getSinglePath().getUnitsOnPath(); 
@@ -66,12 +74,13 @@ public class ConstraintOutput {
 		//original path
 		Element originalPathElement = doc.createElement("OriginalPath");
 		originalPathElement.setAttribute("size", "" + unitsOnPath.size());
+		ORIGINAL_SIZE = unitsOnPath.size();
 		for(int i = 0; i < unitsOnPath.size(); i++){
 			Element stmtElement = doc.createElement("Stmt");
 			stmtElement.setAttribute("value", unitsOnPath.get(i).toString());
 			originalPathElement.appendChild(stmtElement);
 		}
-		rootElement.appendChild(originalPathElement);
+		sinkContainerElement.appendChild(originalPathElement);
 
 		//constraints element
 		Element allConstaintsElement = doc.createElement("AllConstraints");
@@ -99,12 +108,17 @@ public class ConstraintOutput {
 			}
 		}
 		allConstaintsElement.setAttribute("size", "" + constraintList.size());
+		int filteredConstraintSize = 0;
 		for(int i = constraintList.size() - 1; i >= 0; i--){
 			Constraint constraint = constraintList.get(i);
-			unionTwoIntArray(flagsArray, constraint.getFlagsArray());
-			allConstaintsElement.appendChild(constraint.getConstraintElement(doc));
+			if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
+				filteredConstraintSize++;
+				unionTwoIntArray(flagsArray, constraint.getFlagsArray());
+				allConstaintsElement.appendChild(constraint.getConstraintElement(doc));
+			}
 		}
-		rootElement.appendChild(allConstaintsElement);
+		allConstaintsElement.setAttribute("filtered_size", "" + filteredConstraintSize);
+		sinkContainerElement.appendChild(allConstaintsElement);
 	
 		//path relevant to constraints
 		Element constraintRelatedPathElement = doc.createElement("ConstraintRelatedPath");
@@ -119,7 +133,11 @@ public class ConstraintOutput {
 			}
 		}
 		constraintRelatedPathElement.setAttribute("size", "" + size);
-		rootElement.appendChild(constraintRelatedPathElement);
+		SLICED_SIZE = size;
+		sinkContainerElement.appendChild(constraintRelatedPathElement);
+		
+		//record the slice efficiency
+		this.slicedPathProportions.add(new Float(((float) SLICED_SIZE)/((float) ORIGINAL_SIZE)));
 		
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();
@@ -134,4 +152,15 @@ public class ConstraintOutput {
 			dest[i] |= src[i];
 		}
 	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		float sum = 0f;
+		for(Float f : this.slicedPathProportions){
+			sum += f.floatValue();
+		}
+		logger.info("Average Constraint Related Slice Efficiency: {}", sum / (float) this.slicedPathProportions.size());
+		super.finalize();
+	}
+	
 }
