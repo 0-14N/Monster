@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.monster.taint.z3.Constraint;
+
 import soot.Unit;
 import soot.jimple.IfStmt;
 import soot.jimple.Stmt;
@@ -34,8 +36,17 @@ public class ConstraintOutput {
 			Unit unit = unitsOnPath.get(i);
 			if(unit instanceof IfStmt){
 				IfStmt ifStmt = (IfStmt) unit;
+				boolean satisfied = false;
 				Stmt target = ifStmt.getTarget();
-				if()
+				if(i + 1 < unitsOnPath.size()){
+					Stmt nextStmt = (Stmt) unitsOnPath.get(i + 1);
+					//warn: in most cases, using 'toString' to compare two stmt 
+					//has no problem
+					if(target.toString().equals(nextStmt.toString())){
+						satisfied = true;
+					}
+				}
+				Constraint constraint = new Constraint(ifStmt, satisfied, i, unitsOnPath);
 			}
 		}
 	}
