@@ -1,6 +1,7 @@
 package com.monster.taint.output;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -16,6 +17,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.monster.taint.z3.Constraint;
+import com.monster.taint.z3.SMT2FileGenerator;
 
 import soot.SootMethod;
 import soot.Unit;
@@ -62,7 +64,7 @@ public class ConstraintOutput {
 
 		Element sinkContainerElement = doc.createElement("SinkContainer");
 		sinkContainerElement.setAttribute("MethodSignature", method.getSignature());
-		sinkContainerElement.setAttribute("Sink-Invoking", pathChain.getActivationUnit().toString());
+		sinkContainerElement.setAttribute("SinkInvoking", pathChain.getActivationUnit().toString());
 		rootElement.appendChild(sinkContainerElement);
 		
 		Unit activationUnit = pathChain.getActivationUnit();
@@ -107,18 +109,21 @@ public class ConstraintOutput {
 				constraintList.add(constraint);
 			}
 		}
-		allConstaintsElement.setAttribute("size", "" + constraintList.size());
-		int filteredConstraintSize = 0;
+		
+		ArrayList<Constraint> filteredConstraints = new ArrayList<Constraint>();
 		for(int i = constraintList.size() - 1; i >= 0; i--){
 			Constraint constraint = constraintList.get(i);
 			if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
-				filteredConstraintSize++;
+				filteredConstraints.add(constraint);
 				unionTwoIntArray(flagsArray, constraint.getFlagsArray());
 				allConstaintsElement.appendChild(constraint.getConstraintElement(doc));
 			}
 		}
-		allConstaintsElement.setAttribute("filtered_size", "" + filteredConstraintSize);
+		allConstaintsElement.setAttribute("filtered_size", "" + filteredConstraints.size());
 		sinkContainerElement.appendChild(allConstaintsElement);
+		
+		//generate the SMT2 file according the constraints
+		SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath());
 	
 		//path relevant to constraints
 		Element constraintRelatedPathElement = doc.createElement("ConstraintRelatedPath");
@@ -136,6 +141,28 @@ public class ConstraintOutput {
 		SLICED_SIZE = size;
 		sinkContainerElement.appendChild(constraintRelatedPathElement);
 		
+		//handle the InDependence Chains
+		if(pathChain.hasInDepPaths()){
+			Element inDepsElement = doc.createElement("InDependencePaths");
+			ArrayList<PathChain> inDepChains = pathChain.getInDepPaths();
+			inDepsElement.setAttribute("size", "" + inDepChains.size());
+			for(PathChain inDepChain : inDepChains){
+				extractConstraintsOfPathChain(inDepChain, inDepsElement, doc, "InDepPath");
+			}
+			rootElement.appendChild(inDepsElement);
+		}
+		
+		//handle the RetDepdence Chains
+		if(pathChain.hasRetDepPaths()){
+			Element retDepsElement = doc.createElement("RetDependencePaths");
+			ArrayList<PathChain> retDepChains = pathChain.getRetDepPaths();
+			retDepsElement.setAttribute("size", "" + retDepChains.size());
+			for(PathChain retDeChain : retDepChains){
+				extractConstraintsOfPathChain(retDeChain, retDepsElement, doc, "RetDepPath");
+			}
+			rootElement.appendChild(retDepsElement);
+		}
+		
 		//record the slice efficiency
 		this.slicedPathProportions.add(new Float(((float) SLICED_SIZE)/((float) ORIGINAL_SIZE)));
 		
@@ -144,6 +171,128 @@ public class ConstraintOutput {
 		DOMSource source = new DOMSource(doc);
 		StreamResult result = new StreamResult(new File(CONSTRAINT_DIR + outputFileName));
 		transformer.transform(source, result);
+	}
+
+	/**
+	 * Improve: extract code from "extractConstraints" and reuse it.
+	 * 
+	 * @param pathChain
+	 * @param parentElement
+	 * @param doc
+	 */
+	private void extractConstraintsOfPathChain(PathChain pathChain, Element parentElement, 
+			Document doc, String elementName){
+		Unit activationUnit = pathChain.getActivationUnit();
+		ArrayList<Unit> unitsOnPath = pathChain.getSinglePath().getUnitsOnPath(); 
+		int[] flagsArray = new int[unitsOnPath.size()];
+		int activationIndex = unitsOnPath.indexOf(activationUnit);
+		SootMethod method = pathChain.getSinglePath().getMethodHub().getMethod();
+		assert(activationIndex >= 0 && activationIndex < unitsOnPath.size());
+		
+		Element pathChainElement = doc.createElement(elementName);
+		pathChainElement.setAttribute("MethodSignature", method.getSignature());
+		pathChainElement.setAttribute("Invoking", pathChain.getActivationUnit().toString());
+		parentElement.appendChild(pathChainElement);
+		
+		//original path
+		Element originalPathElement = doc.createElement("OriginalPath");
+		originalPathElement.setAttribute("size", "" + unitsOnPath.size());
+		ORIGINAL_SIZE = unitsOnPath.size();
+		for(int i = 0; i < unitsOnPath.size(); i++){
+			Element stmtElement = doc.createElement("Stmt");
+			stmtElement.setAttribute("value", unitsOnPath.get(i).toString());
+			originalPathElement.appendChild(stmtElement);
+		}
+		pathChainElement.appendChild(originalPathElement);
+
+		//constraints element
+		Element allConstaintsElement = doc.createElement("AllConstraints");
+		ArrayList<Constraint> constraintList = new ArrayList<Constraint>();
+		//backwards from 'activationUnit' and find all the IfStmt
+		for(int i = activationIndex; i >= 0; i--){
+			Unit unit = unitsOnPath.get(i);
+			if(unit instanceof IfStmt){
+				IfStmt ifStmt = (IfStmt) unit;
+				//include IfStmt
+				flagsArray[i] = 1;
+				boolean satisfied = false;
+				Stmt target = ifStmt.getTarget();
+				if(i + 1 < unitsOnPath.size()){
+					Stmt nextStmt = (Stmt) unitsOnPath.get(i + 1);
+					//warn: in most cases, using 'toString' to compare two stmt 
+					//has no problem
+					if(target.toString().equals(nextStmt.toString())){
+						satisfied = true;
+					}
+				}
+				Constraint constraint = new Constraint(ifStmt, satisfied, i, unitsOnPath);
+				constraint.stepBackwrads();
+				constraintList.add(constraint);
+			}
+		}
+		
+		ArrayList<Constraint> filteredConstraints = new ArrayList<Constraint>();
+		for(int i = constraintList.size() - 1; i >= 0; i--){
+			Constraint constraint = constraintList.get(i);
+			if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
+				filteredConstraints.add(constraint);
+				unionTwoIntArray(flagsArray, constraint.getFlagsArray());
+				allConstaintsElement.appendChild(constraint.getConstraintElement(doc));
+			}
+		}
+		allConstaintsElement.setAttribute("size", "" + filteredConstraints.size());
+		pathChainElement.appendChild(allConstaintsElement);
+
+		if(filteredConstraints.size() > 0){
+			//path relevant to constraints
+			Element constraintRelatedPathElement = doc.createElement("ConstraintRelatedPath");
+			int size = 0;
+			//merge each constraint's related stmts
+			for(int i = 0; i < flagsArray.length; i++){
+				if(flagsArray[i] == 1){
+					size++;
+					Element stmtElement = doc.createElement("Stmt");
+					stmtElement.setAttribute("value", unitsOnPath.get(i).toString());
+					constraintRelatedPathElement.appendChild(stmtElement);
+				}
+			}
+			constraintRelatedPathElement.setAttribute("size", "" + size);
+			SLICED_SIZE = size;
+			pathChainElement.appendChild(constraintRelatedPathElement);
+			
+			//generate SMT2 file
+			try {
+				SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		//handle the InDependence Chains
+		if(pathChain.hasInDepPaths()){
+			Element inDepsElement = doc.createElement("InDependencePaths");
+			ArrayList<PathChain> inDepChains = pathChain.getInDepPaths();
+			inDepsElement.setAttribute("size", "" + inDepChains.size());
+			for(PathChain inDepChain : inDepChains){
+				extractConstraintsOfPathChain(inDepChain, inDepsElement, doc, "InDepPath");
+			}
+			pathChainElement.appendChild(inDepsElement);
+		}
+		
+		//handle the RetDepdence Chains
+		if(pathChain.hasRetDepPaths()){
+			Element retDepsElement = doc.createElement("RetDependencePaths");
+			ArrayList<PathChain> retDepChains = pathChain.getRetDepPaths();
+			retDepsElement.setAttribute("size", "" + retDepChains.size());
+			for(PathChain retDeChain : retDepChains){
+				extractConstraintsOfPathChain(retDeChain, retDepsElement, doc, "RetDepPath");
+			}
+			pathChainElement.appendChild(retDepsElement);
+		}
+		
+		//record the slice efficiency
+		this.slicedPathProportions.add(new Float(((float) SLICED_SIZE)/((float) ORIGINAL_SIZE)));
+		
 	}
 	
 	private void unionTwoIntArray(int[] dest, int[] src){
