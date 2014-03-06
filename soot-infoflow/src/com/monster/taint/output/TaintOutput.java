@@ -25,6 +25,7 @@ import com.monster.taint.state.TaintValue;
 public class TaintOutput {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private static TaintOutput instance = null;
+	private final String PATH_DIR = "../monster-out/paths/";
 	
 	private TaintOutput(){}
 	
@@ -77,7 +78,7 @@ public class TaintOutput {
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();
 		DOMSource source = new DOMSource(doc);
-		StreamResult result = new StreamResult(new File("../monster-out/" + outputFileName));
+		StreamResult result = new StreamResult(new File(PATH_DIR + outputFileName));
 		transformer.transform(source, result);
 	}
 
