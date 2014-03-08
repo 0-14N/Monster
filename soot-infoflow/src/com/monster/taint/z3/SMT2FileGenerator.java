@@ -3,12 +3,20 @@ package com.monster.taint.z3;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
+import soot.Value;
+import soot.ValueBox;
+import soot.jimple.ArrayRef;
+import soot.jimple.AssignStmt;
+import soot.jimple.InstanceFieldRef;
+import soot.jimple.StaticFieldRef;
 
 import com.monster.taint.path.MethodPath;
 
@@ -53,6 +61,14 @@ import com.monster.taint.path.MethodPath;
  * @10 $i0 = 0
  * 		-- (declare-variable i0 Int)
  *		-- (assert (= i0 0) )
+ *
+ * @11 $i0 = $i0 + 1
+ * 	   $i0 = $i0 + 1
+ * 		-- (declare-variable i0_redefine_1 Int)
+ * 		-- (assert (= i0_redefine_1 (+ i0 1)) )
+ * 		-- (declare_variable i0_redefine_2 Int)
+ * 		-- (assert (= i0_redefine_2 (+ i0_redefine_1 1)) )
+ * 
  * 
  * @author chenxiong
  *
@@ -79,7 +95,13 @@ public class SMT2FileGenerator {
 	 * @param methodPath
 	 * @throws IOException
 	 */
-	public void generateSMT2File(ArrayList<Constraint> constraintList, MethodPath methodPath) throws IOException{
+	public void generateSMT2File(ArrayList<Constraint> constraintList, MethodPath methodPath,
+			ArrayList<Unit> allRelatedUnits) throws IOException{
+		
+		//first, we should handle the case (e.g.'i0 = i0 + 1') in which the
+		//defboxes and useboxes share certain same values
+		handleRedefinedValues(allRelatedUnits);
+		
 		SootMethod method = methodPath.getMethodHub().getMethod();
 		String fileName = method.getDeclaringClass().getName() + "-" + method.getName() + 
 				"-" + methodPath.getPathID() + ".smt";
@@ -103,6 +125,51 @@ public class SMT2FileGenerator {
 	private void writeRelatedUnitsComment(ArrayList<Unit> units, PrintWriter writer){
 		for(Unit unit : units){
 			writer.println(";" + unit.toString());
+		}
+	}
+
+	/**
+	 * iterate 'units' and handle the pattern @11 -- refer comment of this class 
+	 * @param units
+	 */
+	private void handleRedefinedValues(ArrayList<Unit> units){
+		for(int i = 0; i < units.size(); i++){
+			Unit unit = units.get(i);
+			/* "assign_stmt = variable "=" rvalue;"
+			 * -- we only handle the assign_stmt
+			 */
+			if(unit instanceof AssignStmt){
+				AssignStmt assignStmt = (AssignStmt) unit;
+				Value lvalue = assignStmt.getLeftOp();
+				/*
+				 * variable = array_ref | instance_field_ref | static_field_ref | local;
+				 */
+				if(lvalue instanceof ArrayRef){
+					/*
+					 * (declare-const a1 (Array Int Int))
+					 * (declare-const i Int)
+					 * ;a[i] = a[i] + 42
+					 * (declare-const b1 (Array Int Int))
+					 * (assert (= (select b1 i) (+ (select a1 i) 42)))
+					 * (check-sat)
+					 * (get-model)
+					 * ;a[i] = a[i+1] + 3
+					 * (assert (= (select a1 i) (+ (select a1 (+ 1 i)) 3)))
+					 * (check-sat)
+					 * (get-model)
+					 * -- If the array ref's base and 
+					 */
+					ArrayRef aRef = (ArrayRef) lvalue;
+					Value aBase = aRef.getBase();
+					Value aIndex = aRef.getIndex();
+				}else if(lvalue instanceof InstanceFieldRef){
+					
+				}else if(lvalue instanceof StaticFieldRef){
+					
+				}else if(lvalue instanceof Local){
+					
+				}
+			}
 		}
 	}
 }

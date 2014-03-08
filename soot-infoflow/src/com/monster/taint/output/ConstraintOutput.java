@@ -122,11 +122,10 @@ public class ConstraintOutput {
 		allConstaintsElement.setAttribute("filtered_size", "" + filteredConstraints.size());
 		sinkContainerElement.appendChild(allConstaintsElement);
 		
-		//generate the SMT2 file according the constraints
-		SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath());
 	
 		//path relevant to constraints
 		Element constraintRelatedPathElement = doc.createElement("ConstraintRelatedPath");
+		ArrayList<Unit> allRelatedUnits = new ArrayList<Unit>();
 		int size = 0;
 		//merge each constraint's related stmts
 		for(int i = 0; i < flagsArray.length; i++){
@@ -135,11 +134,15 @@ public class ConstraintOutput {
 				Element stmtElement = doc.createElement("Stmt");
 				stmtElement.setAttribute("value", unitsOnPath.get(i).toString());
 				constraintRelatedPathElement.appendChild(stmtElement);
+				allRelatedUnits.add(unitsOnPath.get(i));
 			}
 		}
 		constraintRelatedPathElement.setAttribute("size", "" + size);
 		SLICED_SIZE = size;
 		sinkContainerElement.appendChild(constraintRelatedPathElement);
+		
+		//generate the SMT2 file according the constraints
+		SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath(), allRelatedUnits);
 		
 		//handle the InDependence Chains
 		if(pathChain.hasInDepPaths()){
@@ -231,6 +234,7 @@ public class ConstraintOutput {
 			}
 		}
 		
+		//add the constraints elements
 		ArrayList<Constraint> filteredConstraints = new ArrayList<Constraint>();
 		for(int i = constraintList.size() - 1; i >= 0; i--){
 			Constraint constraint = constraintList.get(i);
@@ -246,6 +250,7 @@ public class ConstraintOutput {
 		if(filteredConstraints.size() > 0){
 			//path relevant to constraints
 			Element constraintRelatedPathElement = doc.createElement("ConstraintRelatedPath");
+			ArrayList<Unit> allRelatedUnits = new ArrayList<Unit>();
 			int size = 0;
 			//merge each constraint's related stmts
 			for(int i = 0; i < flagsArray.length; i++){
@@ -254,6 +259,7 @@ public class ConstraintOutput {
 					Element stmtElement = doc.createElement("Stmt");
 					stmtElement.setAttribute("value", unitsOnPath.get(i).toString());
 					constraintRelatedPathElement.appendChild(stmtElement);
+					allRelatedUnits.add(unitsOnPath.get(i));
 				}
 			}
 			constraintRelatedPathElement.setAttribute("size", "" + size);
@@ -262,7 +268,7 @@ public class ConstraintOutput {
 			
 			//generate SMT2 file
 			try {
-				SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath());
+				SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath(), allRelatedUnits);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
