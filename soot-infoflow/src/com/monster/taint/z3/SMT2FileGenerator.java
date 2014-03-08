@@ -3,7 +3,10 @@ package com.monster.taint.z3;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +78,7 @@ import com.monster.taint.path.MethodPath;
  */
 public class SMT2FileGenerator {
 	private Logger logger = LoggerFactory.getLogger(getClass());
+	private final boolean debug = false;
 	private final String SMT2_DIR = "../monster-out/smt2/";
 	
 	private static SMT2FileGenerator instance = null;
@@ -97,16 +101,72 @@ public class SMT2FileGenerator {
 	 */
 	public void generateSMT2File(ArrayList<Constraint> constraintList, MethodPath methodPath,
 			ArrayList<Unit> allRelatedUnits) throws IOException{
-		
-		//first, we should handle the case (e.g.'i0 = i0 + 1') in which the
-		//defboxes and useboxes share certain same values
-		handleRedefinedValues(allRelatedUnits);
-		
 		SootMethod method = methodPath.getMethodHub().getMethod();
 		String fileName = method.getDeclaringClass().getName() + "-" + method.getName() + 
 				"-" + methodPath.getPathID() + ".smt";
 		PrintWriter smt2Writer = new PrintWriter(SMT2_DIR + fileName, "UTF-8");
 		
+		//first, we should handle the case (e.g.'i0 = i0 + 1') in which the
+		//defboxes and useboxes share certain same values
+		renamesMap.clear();//important!
+		handleRedefinedValues(allRelatedUnits);
+	
+		//test
+		if(debug){
+			smt2Writer.println("***********************");
+			Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
+			while(iter.hasNext()){
+				Entry<Value, ArrayList<Integer>> entry = iter.next();
+				Value kValue = entry.getKey();
+				ArrayList<Integer> vLineNumbers = entry.getValue();
+				smt2Writer.print(kValue.toString() + ": ");
+				for(Integer lineNumber : vLineNumbers){
+					smt2Writer.print(" " + lineNumber);
+				}
+				smt2Writer.println();
+			}
+			smt2Writer.println("***********************");
+			
+			for(int i = 0; i < allRelatedUnits.size(); i++){
+				Unit unit = allRelatedUnits.get(i);
+				smt2Writer.println();
+				smt2Writer.println(unit.toString());
+				if(unit instanceof AssignStmt){
+					AssignStmt assignStmt = (AssignStmt) unit;
+					List<ValueBox> defBoxes = assignStmt.getDefBoxes();
+					List<ValueBox> useBoxes = assignStmt.getUseBoxes();
+					
+					for(ValueBox defBox : defBoxes){
+						Value defValue = defBox.getValue();
+						ArrayList<Integer> defineLineNumbers = getDefineLineNumbers(defValue); 
+						if(defineLineNumbers != null){
+							int redefineTimes = SSAMiscFunctions.v().getDefRedefineTimes(defineLineNumbers, i);
+							if(redefineTimes > 0){
+								smt2Writer.print(defValue.toString() + "_redefine_" + redefineTimes);
+							}else{
+								smt2Writer.print(defValue.toString());
+							}
+						}
+					}
+					smt2Writer.print(" = ");
+					for(ValueBox useBox : useBoxes){
+						Value useValue = useBox.getValue();
+						ArrayList<Integer> defineLineNumbers = getDefineLineNumbers(useValue);
+						if(defineLineNumbers != null){
+							int redefineTimes = SSAMiscFunctions.v().getUseRedefineTimes(defineLineNumbers, i);
+							if(redefineTimes > 0){
+								smt2Writer.print(useValue.toString() + "_redefine_" + redefineTimes);
+							}else{
+								smt2Writer.print(useValue.toString());
+							}
+						}
+					}
+					smt2Writer.println();
+				}
+			}
+		}
+	
+		/*
 		smt2Writer.println(";this path has " + constraintList.size() + " constraints");
 		
 		for(Constraint constraint : constraintList){
@@ -118,6 +178,7 @@ public class SMT2FileGenerator {
 			
 			//
 		}
+		*/
 		
 		smt2Writer.close();
 	}
@@ -128,6 +189,51 @@ public class SMT2FileGenerator {
 		}
 	}
 
+	//we use a map to record the variables need to rename, key is the variable and
+	//value is a list of unit indexes at which the variable should be renamed
+	HashMap<Value, ArrayList<Integer>> renamesMap = new HashMap<Value, ArrayList<Integer>>();
+	private void recordValueInRenameMap(Value value, int index){
+		Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
+		boolean valueExist = false;
+		while(iter.hasNext()){
+			Entry<Value, ArrayList<Integer>> entry = iter.next();
+			Value kValue = entry.getKey();
+			if(SSAMiscFunctions.v().twoValueEquals(value, kValue)){
+				addIntegerToList(entry.getValue(), index);
+				valueExist = true;
+				break;
+			}
+		}
+		if(!valueExist){
+			ArrayList<Integer> lineNumbersList = new ArrayList<Integer>();
+			lineNumbersList.add(new Integer(index));
+			renamesMap.put(value, lineNumbersList);
+		}
+	}
+	private void addIntegerToList(ArrayList<Integer> integerList, int n){
+		boolean exist = false;
+		for(Integer integer : integerList){
+			if(integer.intValue() == n){
+				exist = true;
+				break;
+			}
+		}
+		if(!exist){
+			integerList.add(new Integer(n));
+		}
+	}
+	private ArrayList<Integer> getDefineLineNumbers(Value value){
+		Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
+		while(iter.hasNext()){
+			Entry<Value, ArrayList<Integer>> entry = iter.next();
+			Value kValue = entry.getKey();
+			if(SSAMiscFunctions.v().twoValueEquals(value, kValue)){
+				return entry.getValue();
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * iterate 'units' and handle the pattern @11 -- refer comment of this class 
 	 * @param units
@@ -141,6 +247,8 @@ public class SMT2FileGenerator {
 			if(unit instanceof AssignStmt){
 				AssignStmt assignStmt = (AssignStmt) unit;
 				Value lvalue = assignStmt.getLeftOp();
+				Value rvalue = assignStmt.getRightOp();
+				List<ValueBox> rUseBoxes = rvalue.getUseBoxes();
 				/*
 				 * variable = array_ref | instance_field_ref | static_field_ref | local;
 				 */
@@ -157,17 +265,29 @@ public class SMT2FileGenerator {
 					 * (assert (= (select a1 i) (+ (select a1 (+ 1 i)) 3)))
 					 * (check-sat)
 					 * (get-model)
-					 * -- If the array ref's base and 
+					 * -- If the array ref's base and index are both the same as one of the
+					 * 	  right value's useboxes.
 					 */
 					ArrayRef aRef = (ArrayRef) lvalue;
-					Value aBase = aRef.getBase();
-					Value aIndex = aRef.getIndex();
+					if(SSAMiscFunctions.v().arrayRefRedefined(aRef, rUseBoxes)){
+						recordValueInRenameMap(aRef, i);
+					}
 				}else if(lvalue instanceof InstanceFieldRef){
-					
+					//b.f = b.f + 42
+					InstanceFieldRef iFieldRef = (InstanceFieldRef) lvalue;
+					if(SSAMiscFunctions.v().instanceFieldRefRedefined(iFieldRef, rUseBoxes)){
+						recordValueInRenameMap(iFieldRef, i);
+					}
 				}else if(lvalue instanceof StaticFieldRef){
-					
+					StaticFieldRef sFieldRef = (StaticFieldRef) lvalue;
+					if(SSAMiscFunctions.v().staticFieldRefRedefined(sFieldRef, rUseBoxes)){
+						recordValueInRenameMap(sFieldRef, i);
+					}
 				}else if(lvalue instanceof Local){
-					
+					Local local = (Local) lvalue;
+					if(SSAMiscFunctions.v().localRedefined(local, rUseBoxes)){
+						recordValueInRenameMap(local, i);
+					}
 				}
 			}
 		}
