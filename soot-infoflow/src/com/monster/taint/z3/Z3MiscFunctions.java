@@ -3,6 +3,8 @@ package com.monster.taint.z3;
 import java.util.HashMap;
 
 import soot.Type;
+import soot.jimple.Constant;
+import soot.jimple.NullConstant;
 
 /**
  * 
@@ -32,7 +34,7 @@ public class Z3MiscFunctions {
 		Z3Int,
 		Z3Real,
 		Z3String,
-		Z3Unkonwn
+		Z3Unknown
 	}
 
 	//should I ignore this warning?
@@ -81,18 +83,98 @@ public class Z3MiscFunctions {
 		String typeStr = type.toString();
 		Z3Type z3Type = strToZ3TypeMap.get(typeStr);
 		if(z3Type == null){
-			z3Type = Z3Type.Z3Unkonwn;
+			z3Type = Z3Type.Z3Unknown;
 		}
 		return z3Type;
 	}
-	
-	public String getDeclareStmt(String name, Z3Type z3Type){
+
+	/**
+	 * (declare-variable a Int)
+	 * (declare-variable a Bool)
+	 * (declare-variable a String)
+	 * (declare-variable a Real)
+	 * @param name
+	 * @param z3Type
+	 * @return
+	 */
+	public String getPrimeTypeDeclareStmt(String name, Z3Type z3Type){
 		StringBuilder sb = new StringBuilder();
 		sb.append("(declare-variable ");
 		sb.append(name);
 		sb.append(" ");
 		sb.append(z3TypeToStringMap.get(z3Type));
 		sb.append(")");
+		return sb.toString();
+	}
+
+	/**
+	 * (declare-variable a (Array Int String))
+	 * @param name
+	 * @param z3Type
+	 * @return
+	 */
+	public String getArrayDeclareStmt(String name, Z3Type z3Type){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(declare-variable ");
+		sb.append(name);
+		sb.append(" ");
+		sb.append("(Array Int ");
+		sb.append(z3TypeToStringMap.get(z3Type));
+		sb.append("))");
+		return sb.toString();
+	}
+
+	/**
+	 * (assert (= a 42))
+	 * (assert (= a true))
+	 * (assert (= a "415"))
+	 * @param varName
+	 * @param type
+	 * @param constant
+	 * @return
+	 */
+	public String getAssertLocalEqualConst(String varName, Z3Type type, Constant constant){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(assert (= ");
+		sb.append(varName);
+		sb.append(" ");
+		String conStr = null;
+		switch(type){
+			case Z3Boolean:
+				conStr = constant.toString();
+				assert(conStr.equals("true") || conStr.equals("false"));
+				break;
+			case Z3Int:
+			case Z3Real:
+				conStr = constant.toString();
+				break;
+			case Z3String:
+				if(constant instanceof NullConstant){
+					conStr = "\"\"";
+				}else{
+					conStr = constant.toString();
+				}
+				break;
+		}
+		assert(conStr != null);
+		sb.append(conStr);
+		sb.append("))");
+		return sb.toString();
+	}
+
+	/**
+	 * (assert (= r1 r2))
+	 * @param varName1
+	 * @param varName2
+	 * @return
+	 */
+	public String getAssertLocalEqualLocal(String varName1, String varName2){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(assert (= ");
+		sb.append(varName1);
+		sb.append(" ");
+		sb.append(varName2);
+		sb.append("))");
 		return sb.toString();
 	}
 
