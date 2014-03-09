@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import soot.Local;
 import soot.SootMethod;
+import soot.Type;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
@@ -24,6 +25,7 @@ import soot.jimple.InvokeStmt;
 import soot.jimple.StaticFieldRef;
 
 import com.monster.taint.path.MethodPath;
+import com.monster.taint.z3.Z3MiscFunctions.Z3Type;
 
 /**
  * The patterns we can handle currently:
@@ -88,6 +90,8 @@ public class SMT2FileGenerator {
 	//we use a map to record the variables need to rename, key is the variable andk
 	//value is a list of unit indexes at which the variable should be renamed
 	HashMap<Value, ArrayList<Integer>> renamesMap = new HashMap<Value, ArrayList<Integer>>();
+	//the defined variables names
+	ArrayList<String> definedVariables = new ArrayList<String>();
 	
 	private SMT2FileGenerator(){}
 	
@@ -115,6 +119,7 @@ public class SMT2FileGenerator {
 		//first, we should handle the case (e.g.'i0 = i0 + 1') in which the
 		//defboxes and useboxes share certain same values
 		renamesMap.clear();//important!
+		definedVariables.clear();
 		handleRedefinedValues(allRelatedUnits);
 	
 		//test
@@ -173,38 +178,41 @@ public class SMT2FileGenerator {
 		}
 	
 		smt2Writer.println(";this path has " + constraintList.size() + " constraints");
+		smt2Writer.println();
 		
-		for(Constraint constraint : constraintList){
-			smt2Writer.println();
-			ArrayList<Unit> relatedUnits = constraint.getRelatedUnits();
 			
-			//first add the related units as comment
-			writeRelatedUnitsComment(relatedUnits, smt2Writer);
 			
-			//convert unit to smt2 format statement
-			for(Unit unit : relatedUnits){
-				//we only care about AssignStmt, IfStmt and InvokeStmt
-				if(unit instanceof AssignStmt){
-					AssignStmt assignStmt = (AssignStmt) unit;
-					parseAssignStmt(assignStmt);
-				}else if(unit instanceof InvokeStmt){
+		//convert unit to smt2 format statement
+		for(Unit unit : allRelatedUnits){
+			smt2Writer.println(";" + unit.toString());
+			//we only care about AssignStmt, IfStmt and InvokeStmt
+			if(unit instanceof AssignStmt){
+				AssignStmt assignStmt = (AssignStmt) unit;
+				parseAssignStmt(assignStmt, allRelatedUnits.indexOf(unit), smt2Writer);
+			}else if(unit instanceof InvokeStmt){
 					
-				}else if(unit instanceof IfStmt){
-					
-				}
+			}else if(unit instanceof IfStmt){
+				smt2Writer.println();	
 			}
 		}
 		
 		smt2Writer.close();
 	}
 	
-	private void parseAssignStmt(AssignStmt assignStmt){
+	private void parseAssignStmt(AssignStmt assignStmt, int stmtIdx, PrintWriter writer){
 		Value lvalue = assignStmt.getLeftOp();
 		Value rvalue = assignStmt.getRightOp();
 		//assign_stmt = variable "=" rvalue;
 		//variable = array_ref | instance_field_ref | static_field_ref | local;
 		if(lvalue instanceof Local){
 			Local lLocal = (Local) lvalue;
+			String lLocalName = getRenameOf(lvalue, true, stmtIdx);
+			Type type = lLocal.getType();
+			Z3Type z3Type = Z3MiscFunctions.v().z3Type(type);
+			if(!this.definedVariables.contains(lLocalName) && z3Type != Z3Type.Z3Unkonwn){
+				writer.println(Z3MiscFunctions.v().getDeclareStmt(lLocalName, z3Type));
+				this.definedVariables.add(lLocalName);
+			}
 		}else if(lvalue instanceof InstanceFieldRef){
 			
 		}else if(lvalue instanceof StaticFieldRef){
@@ -214,12 +222,6 @@ public class SMT2FileGenerator {
 		}
 	}
 	
-	private void writeRelatedUnitsComment(ArrayList<Unit> units, PrintWriter writer){
-		for(Unit unit : units){
-			writer.println(";" + unit.toString());
-		}
-	}
-
 	private void recordValueInRenameMap(Value value, int index){
 		Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
 		boolean valueExist = false;
@@ -260,6 +262,23 @@ public class SMT2FileGenerator {
 			}
 		}
 		return null;
+	}
+	
+	private String getRenameOf(Value value, boolean defValue, int index){
+		ArrayList<Integer> lineNumbers = getDefineLineNumbers(value);
+		int redefineTimes = 0;
+		if(lineNumbers != null){
+			if(defValue){
+				redefineTimes = SSAMiscFunctions.v().getDefRedefineTimes(lineNumbers, index);
+			}else{
+				redefineTimes = SSAMiscFunctions.v().getUseRedefineTimes(lineNumbers, index);
+			}
+		}
+		if(redefineTimes > 0){
+			return value.toString() + "_redefine_" + redefineTimes;
+		}else{
+			return value.toString();
+		}
 	}
 	
 	/**
