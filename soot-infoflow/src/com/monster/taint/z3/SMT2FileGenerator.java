@@ -18,7 +18,9 @@ import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
+import soot.jimple.IfStmt;
 import soot.jimple.InstanceFieldRef;
+import soot.jimple.InvokeStmt;
 import soot.jimple.StaticFieldRef;
 
 import com.monster.taint.path.MethodPath;
@@ -82,6 +84,10 @@ public class SMT2FileGenerator {
 	private final String SMT2_DIR = "../monster-out/smt2/";
 	
 	private static SMT2FileGenerator instance = null;
+	
+	//we use a map to record the variables need to rename, key is the variable andk
+	//value is a list of unit indexes at which the variable should be renamed
+	HashMap<Value, ArrayList<Integer>> renamesMap = new HashMap<Value, ArrayList<Integer>>();
 	
 	private SMT2FileGenerator(){}
 	
@@ -166,7 +172,6 @@ public class SMT2FileGenerator {
 			}
 		}
 	
-		/*
 		smt2Writer.println(";this path has " + constraintList.size() + " constraints");
 		
 		for(Constraint constraint : constraintList){
@@ -176,11 +181,37 @@ public class SMT2FileGenerator {
 			//first add the related units as comment
 			writeRelatedUnitsComment(relatedUnits, smt2Writer);
 			
-			//
+			//convert unit to smt2 format statement
+			for(Unit unit : relatedUnits){
+				//we only care about AssignStmt, IfStmt and InvokeStmt
+				if(unit instanceof AssignStmt){
+					AssignStmt assignStmt = (AssignStmt) unit;
+					parseAssignStmt(assignStmt);
+				}else if(unit instanceof InvokeStmt){
+					
+				}else if(unit instanceof IfStmt){
+					
+				}
+			}
 		}
-		*/
 		
 		smt2Writer.close();
+	}
+	
+	private void parseAssignStmt(AssignStmt assignStmt){
+		Value lvalue = assignStmt.getLeftOp();
+		Value rvalue = assignStmt.getRightOp();
+		//assign_stmt = variable "=" rvalue;
+		//variable = array_ref | instance_field_ref | static_field_ref | local;
+		if(lvalue instanceof Local){
+			Local lLocal = (Local) lvalue;
+		}else if(lvalue instanceof InstanceFieldRef){
+			
+		}else if(lvalue instanceof StaticFieldRef){
+			
+		}else if(lvalue instanceof ArrayRef){
+			
+		}
 	}
 	
 	private void writeRelatedUnitsComment(ArrayList<Unit> units, PrintWriter writer){
@@ -189,9 +220,6 @@ public class SMT2FileGenerator {
 		}
 	}
 
-	//we use a map to record the variables need to rename, key is the variable and
-	//value is a list of unit indexes at which the variable should be renamed
-	HashMap<Value, ArrayList<Integer>> renamesMap = new HashMap<Value, ArrayList<Integer>>();
 	private void recordValueInRenameMap(Value value, int index){
 		Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
 		boolean valueExist = false;
