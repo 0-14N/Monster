@@ -23,4 +23,8 @@ public class ASRExpr {
 	public void jet(){
 		
 	}
+	
+	public Expr getRExpr(){
+		return this.rExpr;
+	}
 }

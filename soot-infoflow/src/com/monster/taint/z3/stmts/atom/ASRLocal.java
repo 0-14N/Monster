@@ -37,4 +37,16 @@ public class ASRLocal {
 			fileGenerator.getDeclaredVariables().add(rLocalName);
 		}
 	}
+
+	public String getRLocalName(){
+		return this.rLocalName;
+	}
+	
+	public Local getRLocal(){
+		return this.rLocal;
+	}
+	
+	public Z3Type getZ3Type(){
+		return this.rZ3Type;
+	}
 }

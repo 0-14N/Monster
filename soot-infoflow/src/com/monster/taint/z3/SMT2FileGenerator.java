@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import soot.Local;
 import soot.SootMethod;
-import soot.Type;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;

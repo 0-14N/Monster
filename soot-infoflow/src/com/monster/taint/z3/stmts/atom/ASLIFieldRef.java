@@ -34,4 +34,16 @@ public class ASLIFieldRef {
 			fileGenerator.getDeclaredVariables().add(iFieldRefName);
 		}
 	}
+	
+	public InstanceFieldRef getLIFieldRef(){
+		return this.lIFieldRef;
+	}
+	
+	public Z3Type getLZ3Type(){
+		return this.lZ3Type;
+	}
+	
+	public String getIFieldRefName(){
+		return this.iFieldRefName;
+	}
 }

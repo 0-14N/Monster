@@ -34,4 +34,16 @@ public class ASLSFieldRef {
 					fileGenerator.getDeclaredVariables().add(sFieldRefName);
 		}
 	}
+	
+	public StaticFieldRef getLSFieldRef(){
+		return this.lSFieldRef;
+	}
+	
+	public Z3Type getLZ3Type(){
+		return this.lZ3Type;
+	}
+	
+	public String getsFieldRefName(){
+		return this.sFieldRefName;
+	}
 }

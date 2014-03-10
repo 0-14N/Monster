@@ -23,4 +23,8 @@ public class ASRConstant {
 	public void jet(){
 		
 	}
+	
+	public Constant getConstant(){
+		return this.rConstant;
+	}
 }

@@ -34,4 +34,16 @@ public class ASRIFieldRef {
 			fileGenerator.getDeclaredVariables().add(iFieldRefName);
 		}
 	}
+
+	public Z3Type getRZ3Type(){
+		return this.rZ3Type;
+	}
+	
+	public String getIFieldRefName() {
+		return iFieldRefName;
+	}
+
+	public InstanceFieldRef getRIFieldRef(){
+		return this.rIFieldRef;
+	}
 }

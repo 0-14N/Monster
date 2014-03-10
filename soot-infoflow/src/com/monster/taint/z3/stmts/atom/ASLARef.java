@@ -34,4 +34,16 @@ public class ASLARef {
 			fileGenerator.getDeclaredVariables().add(aRefName);
 		}
 	}
+
+	public Z3Type getLZ3Type(){
+		return this.lZ3Type;
+	}
+	
+	public String getARefName(){
+		return this.aRefName;
+	}
+	
+	public ArrayRef getLARef(){
+		return this.lARef;
+	}
 }

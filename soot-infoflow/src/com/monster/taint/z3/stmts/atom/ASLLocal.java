@@ -37,4 +37,16 @@ public class ASLLocal {
 			fileGenerator.getDeclaredVariables().add(lLocalName);
 		}
 	}
+
+	public Local getLLocal(){
+		return this.lLocal;
+	}
+	
+	public String getLLocalName(){
+		return this.lLocalName;
+	}
+	
+	public Z3Type getZ3Type(){
+		return this.lZ3Type;
+	}
 }
