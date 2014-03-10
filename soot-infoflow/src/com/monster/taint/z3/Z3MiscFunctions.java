@@ -42,18 +42,6 @@ public class Z3MiscFunctions {
 					    z3StringArrayStr = "Array Int String";
 					    
 	
-	enum Z3Type {
-		Z3Boolean,
-		Z3BooleanArray,
-		Z3Int,
-		Z3IntArray,
-		Z3Real,
-		Z3RealArray,
-		Z3String,
-		Z3StringArray,
-		Z3Unknown
-	}
-
 	private final HashMap<String, Z3Type> strToZ3TypeMap = new HashMap<String, Z3Type>(){
 		private static final long serialVersionUID = 1L;
 
