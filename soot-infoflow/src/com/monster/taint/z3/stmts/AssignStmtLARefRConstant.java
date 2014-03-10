@@ -1,5 +1,26 @@
 package com.monster.taint.z3.stmts;
 
-public class AssignStmtLARefRConstant extends AssignStmtLARef{
+import java.io.PrintWriter;
 
+import soot.jimple.ArrayRef;
+import soot.jimple.Constant;
+
+import com.monster.taint.z3.SMT2FileGenerator;
+import com.monster.taint.z3.stmts.atom.ASLARef;
+import com.monster.taint.z3.stmts.atom.ASRConstant;
+
+public class AssignStmtLARefRConstant{
+	private ASLARef lARef = null;
+	private ASRConstant rConstant = null;
+	
+	public AssignStmtLARefRConstant(PrintWriter writer, SMT2FileGenerator fileGenerator,
+			int stmtIdx, ArrayRef lARef, Constant rConstant){
+		this.lARef = new ASLARef(writer, fileGenerator, stmtIdx, lARef);
+		this.rConstant = new ASRConstant(writer, fileGenerator, stmtIdx, rConstant);
+	}
+	
+	public void jet(){
+		this.lARef.jet();
+		this.rConstant.jet();
+	}
 }

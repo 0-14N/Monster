@@ -2,10 +2,42 @@ package com.monster.taint.z3;
 
 import java.util.HashMap;
 
+import com.monster.taint.z3.stmts.atom.BinopExprType;
+import com.monster.taint.z3.stmts.atom.ExprType;
+
 import soot.Type;
 import soot.Value;
+import soot.JastAddJ.SubExpr;
+import soot.jimple.AddExpr;
+import soot.jimple.AndExpr;
+import soot.jimple.BinopExpr;
+import soot.jimple.CastExpr;
+import soot.jimple.CmpExpr;
+import soot.jimple.CmpgExpr;
+import soot.jimple.CmplExpr;
 import soot.jimple.Constant;
+import soot.jimple.DivExpr;
+import soot.jimple.EqExpr;
+import soot.jimple.Expr;
+import soot.jimple.GeExpr;
+import soot.jimple.GtExpr;
+import soot.jimple.InstanceOfExpr;
+import soot.jimple.InvokeExpr;
+import soot.jimple.LeExpr;
+import soot.jimple.LtExpr;
+import soot.jimple.MulExpr;
+import soot.jimple.NeExpr;
+import soot.jimple.NewArrayExpr;
+import soot.jimple.NewExpr;
+import soot.jimple.NewMultiArrayExpr;
 import soot.jimple.NullConstant;
+import soot.jimple.OrExpr;
+import soot.jimple.RemExpr;
+import soot.jimple.ShlExpr;
+import soot.jimple.ShrExpr;
+import soot.jimple.UnopExpr;
+import soot.jimple.UshrExpr;
+import soot.jimple.XorExpr;
 
 /**
  * 
@@ -209,6 +241,76 @@ public class Z3MiscFunctions {
 		sb.append(aIndex.toString());
 		sb.append(")))");
 		return sb.toString();
+	}
+	
+	public ExprType getExprType(Expr expr){
+		ExprType type = null;
+		if(expr instanceof BinopExpr){
+			type = ExprType.BINOP;
+		}else if(expr instanceof CastExpr){
+			type = ExprType.CAST;
+		}else if(expr instanceof InstanceOfExpr){
+			type = ExprType.INSTANCEOF;
+		}else if(expr instanceof InvokeExpr){
+			type = ExprType.INVOKE;
+		}else if(expr instanceof NewArrayExpr){
+			type = ExprType.NEWARRAY;
+		}else if(expr instanceof NewExpr){
+			type = ExprType.NEWEXPR;
+		}else if(expr instanceof NewMultiArrayExpr){
+			type = ExprType.NEWMULIARRAY;
+		}else if(expr instanceof UnopExpr){
+			type = ExprType.UNOP;
+		}
+		assert(type != null);
+		return type;
+	}
+	
+	public BinopExprType getBinopExprType(BinopExpr binopExpr){
+		BinopExprType type = null;
+		if(binopExpr instanceof AddExpr){
+			type = BinopExprType.ADD;
+		}else if(binopExpr instanceof AndExpr){
+			type = BinopExprType.AND;
+		}else if(binopExpr instanceof CmpExpr){
+			type = BinopExprType.CMP;
+		}else if(binopExpr instanceof CmpgExpr){
+			type = BinopExprType.CMPG;
+		}else if(binopExpr instanceof CmplExpr){
+			type = BinopExprType.CMPL;
+		}else if(binopExpr instanceof DivExpr){
+			type = BinopExprType.DIV;
+		}else if(binopExpr instanceof EqExpr){
+			type = BinopExprType.EQ;
+		}else if(binopExpr instanceof GeExpr){
+			type = BinopExprType.GE;
+		}else if(binopExpr instanceof GtExpr){
+			type = BinopExprType.GT;
+		}else if(binopExpr instanceof LeExpr){
+			type = BinopExprType.LE;
+		}else if(binopExpr instanceof LtExpr){
+			type = BinopExprType.LT;
+		}else if(binopExpr instanceof MulExpr){
+			type = BinopExprType.MUL;
+		}else if(binopExpr instanceof NeExpr){
+			type = BinopExprType.NE;
+		}else if(binopExpr instanceof OrExpr){
+			type = BinopExprType.OR;
+		}else if(binopExpr instanceof RemExpr){
+			type = BinopExprType.REM;
+		}else if(binopExpr instanceof ShlExpr){
+			type = BinopExprType.SHL;
+		}else if(binopExpr instanceof ShrExpr){
+			type = BinopExprType.SHR;
+		}else if(binopExpr instanceof SubExpr){
+			type = BinopExprType.SUB;
+		}else if(binopExpr instanceof UshrExpr){
+			type = BinopExprType.USHR;
+		}else if(binopExpr instanceof XorExpr){
+			type = BinopExprType.XOR;
+		}
+		assert(type != null);
+		return type;
 	}
 
 }

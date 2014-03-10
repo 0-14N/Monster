@@ -6,24 +6,27 @@ import soot.Local;
 import soot.jimple.Constant;
 
 import com.monster.taint.z3.SMT2FileGenerator;
-import com.monster.taint.z3.Z3Type;
-import com.monster.taint.z3.Z3MiscFunctions;
+import com.monster.taint.z3.stmts.atom.ASLLocal;
+import com.monster.taint.z3.stmts.atom.ASRConstant;
 
-public class AssignStmtLLocalRConstant extends AssignStmtLLocal{
-	private Constant constant = null;
-	private Z3Type rZ3Type = null;
+public class AssignStmtLLocalRConstant{
+	private ASLLocal lLocal = null;
+	private ASRConstant rConstant = null;
 	
 	public AssignStmtLLocalRConstant (PrintWriter writer, SMT2FileGenerator fileGenerator, 
-			int stmtIdx, Local lLocal, Constant constant){
-		super(writer, fileGenerator, stmtIdx, lLocal);
-		this.constant = constant;
+			int stmtIdx, Local lLocal, Constant rConstant){
+		this.lLocal = new ASLLocal(writer, fileGenerator, stmtIdx, lLocal);
+		this.rConstant = new ASRConstant(writer, fileGenerator, stmtIdx, rConstant);
 	}
 	
 	public void jet(){
-		super.jet();
+		this.lLocal.jet();
+		this.rConstant.jet();
+		/*
 		rZ3Type = Z3MiscFunctions.v().z3Type(constant.getType());
 		if(rZ3Type != Z3Type.Z3Unknown){
 			writer.println(Z3MiscFunctions.v().getAssertLocalEqualConst(lLocalName, rZ3Type, constant));
 		}
+		*/
 	}
 }

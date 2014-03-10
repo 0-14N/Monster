@@ -252,37 +252,8 @@ public class SMT2FileGenerator {
 				lLocalRExpr.jet();
 			}
 		}else if(lvalue instanceof InstanceFieldRef){
-			InstanceFieldRef lIFieldRef = (InstanceFieldRef) lvalue;
-			String lIFieldRefName = getRenameOf(lvalue, true, stmtIdx);
-			Type type = lIFieldRef.getType();
-			Z3Type z3Type = Z3MiscFunctions.v().z3Type(type);
-			if(!this.declaredVariables.contains(lIFieldRefName)
-					&& z3Type != Z3Type.Z3Unknown){
-				writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(lIFieldRefName, z3Type));
-				this.declaredVariables.add(lIFieldRefName);
-			}
 		}else if(lvalue instanceof StaticFieldRef){
-			StaticFieldRef lSFieldRef = (StaticFieldRef) lvalue;
-			String lSfieldRefName = getRenameOf(lvalue, true, stmtIdx);
-			Type type = lSFieldRef.getType();
-			Z3Type z3Type = Z3MiscFunctions.v().z3Type(type);
-			if(!this.declaredVariables.contains(lSFieldRef) 
-					&& z3Type != Z3Type.Z3Unknown){
-				writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(lSfieldRefName, z3Type));
-				this.declaredVariables.add(lSfieldRefName);
-			}
 		}else if(lvalue instanceof ArrayRef){
-			ArrayRef lARef = (ArrayRef) lvalue;
-			Value lARefBase = lARef.getBase();
-			String lARefName = getRenameOf(lvalue, true, stmtIdx);
-			Value lARefIdx = lARef.getIndex();
-			Type lBaseType = lARefBase.getType();
-			Z3Type z3Type = Z3MiscFunctions.v().z3Type(lBaseType);
-			if(!this.declaredVariables.contains(lARefName) 
-					&& z3Type != Z3Type.Z3Unknown){
-				writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(lARefName, z3Type));
-				this.declaredVariables.add(lARefName);
-			}
 		}
 	}
 	

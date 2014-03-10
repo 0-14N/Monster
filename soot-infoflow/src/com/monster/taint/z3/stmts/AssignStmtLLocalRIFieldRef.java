@@ -6,22 +6,23 @@ import soot.Local;
 import soot.jimple.InstanceFieldRef;
 
 import com.monster.taint.z3.SMT2FileGenerator;
-import com.monster.taint.z3.Z3Type;
-import com.monster.taint.z3.Z3MiscFunctions;
+import com.monster.taint.z3.stmts.atom.ASLLocal;
+import com.monster.taint.z3.stmts.atom.ASRIFieldRef;
 
-public class AssignStmtLLocalRIFieldRef extends AssignStmtLLocal{
-	private InstanceFieldRef iFieldRef = null;
-	private Z3Type rZ3Type = null;
-	private String iFieldRefName = null;
+public class AssignStmtLLocalRIFieldRef{
+	private ASLLocal lLocal = null;
+	private ASRIFieldRef rIFieldRef = null;
 	
 	public AssignStmtLLocalRIFieldRef(PrintWriter writer, SMT2FileGenerator fileGenerator, 
-			int stmtIdx, Local lLocal, InstanceFieldRef iFieldRef){
-		super(writer, fileGenerator, stmtIdx, lLocal);
-		this.iFieldRef = iFieldRef;
+			int stmtIdx, Local lLocal, InstanceFieldRef rIFieldRef){
+		this.lLocal = new ASLLocal(writer, fileGenerator, stmtIdx, lLocal);
+		this.rIFieldRef = new ASRIFieldRef(writer, fileGenerator, stmtIdx, rIFieldRef);
 	}
 	
 	public void jet(){
-		super.jet();
+		this.lLocal.jet();
+		this.rIFieldRef.jet();
+		/*
 		rZ3Type = Z3MiscFunctions.v().z3Type(iFieldRef.getField().getType());
 		iFieldRefName = fileGenerator.getRenameOf(iFieldRef, false, stmtIdx);
 		if(!fileGenerator.getDeclaredVariables().contains(iFieldRefName)
@@ -32,5 +33,6 @@ public class AssignStmtLLocalRIFieldRef extends AssignStmtLLocal{
 		if(rZ3Type != Z3Type.Z3Unknown){
 			writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocalName, iFieldRefName));
 		}
+		*/
 	}
 }
