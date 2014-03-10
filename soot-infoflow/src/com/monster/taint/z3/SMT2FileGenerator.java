@@ -225,24 +225,57 @@ public class SMT2FileGenerator {
 			//next_next_stmt_address | static_field_ref
 			if(rvalue instanceof Constant){
 				Constant constant = (Constant) rvalue;
-				writer.println(Z3MiscFunctions.v().getAssertLocalEqualConst(lLocalName, z3Type, constant));
+				Z3Type rZ3Type = Z3MiscFunctions.v().z3Type(constant.getType());
+				if(rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getAssertLocalEqualConst(lLocalName, z3Type, constant));
+				}
 			}else if(rvalue instanceof Local){
-				Local rLocal = (Local) rvalue;
 				String rLocalName = getRenameOf(rvalue, false, stmtIdx);
-				Type rType = rLocal.getType();
-				assert(type.equals(rType));
+				Z3Type rZ3Type = Z3MiscFunctions.v().z3Type(rvalue.getType());
 				if(!this.declaredVariables.contains(rLocalName) 
-						&& z3Type != Z3Type.Z3Unknown){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rLocalName, z3Type));
+						&& rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rLocalName, rZ3Type));
 					this.declaredVariables.add(rLocalName);
 				}
-				writer.println(Z3MiscFunctions.v().getAssertLocalEqualLocal(lLocalName, rLocalName));
+				if(rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocalName, rLocalName));
+				}
 			}else if(rvalue instanceof InstanceFieldRef){
-				
+				InstanceFieldRef rIFieldRef = (InstanceFieldRef) rvalue;
+				Z3Type rZ3Type = Z3MiscFunctions.v().z3Type(rIFieldRef.getField().getType());
+				String rIFieldRefName = getRenameOf(rvalue, false, stmtIdx);
+				if(!this.declaredVariables.contains(rIFieldRefName)
+						&& rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rIFieldRefName, rZ3Type));
+					this.declaredVariables.add(rIFieldRefName);
+				}
+				if(rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocalName, rIFieldRefName));
+				}
 			}else if(rvalue instanceof StaticFieldRef){
-				
+				StaticFieldRef rSFieldRef = (StaticFieldRef) rvalue;
+				String rSFieldRefName = getRenameOf(rvalue, false, stmtIdx);
+				Z3Type rZ3Type = Z3MiscFunctions.v().z3Type(rSFieldRef.getField().getType());
+				if(!this.declaredVariables.contains(rSFieldRefName)
+						&& rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rSFieldRefName, rZ3Type));
+					this.declaredVariables.add(rSFieldRefName);
+				}
+				if(rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocalName, rSFieldRefName));
+				}
 			}else if(rvalue instanceof ArrayRef){
-				
+				ArrayRef rARef = (ArrayRef) rvalue;
+				String rARefName = getRenameOf(rvalue, false, stmtIdx);
+				Z3Type rZ3Type = Z3MiscFunctions.v().z3Type(rARef.getBase().getType());
+				if(!this.declaredVariables.contains(rARefName) 
+						&& rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(rARefName, rZ3Type));
+					this.declaredVariables.add(rARefName);
+				}
+				if(rZ3Type != Z3Type.Z3Unknown){
+					writer.println(Z3MiscFunctions.v().getAssertLocalEqualArrayRef(lLocalName, rARefName, rARef.getIndex()));
+				}
 			}else if(rvalue instanceof Expr){
 				
 			}
