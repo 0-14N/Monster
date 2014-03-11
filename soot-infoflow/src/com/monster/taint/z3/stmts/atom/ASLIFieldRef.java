@@ -32,6 +32,10 @@ public class ASLIFieldRef {
 				&& lZ3Type != Z3Type.Z3Unknown){
 			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(iFieldRefName, lZ3Type));
 			fileGenerator.getDeclaredVariables().add(iFieldRefName);
+		}else if(!fileGenerator.getDeclaredVariables().contains(iFieldRefName)
+				&& lZ3Type == Z3Type.Z3Unknown){
+			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(iFieldRefName, Z3Type.Z3String));
+			fileGenerator.getDeclaredVariables().add(iFieldRefName);
 		}
 	}
 	

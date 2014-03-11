@@ -21,5 +21,7 @@ public class AssignStmtLARefRARef{
 	public void jet(){
 		this.lARef.jet();
 		this.rARef.jet();
+		
+		
 	}
 }

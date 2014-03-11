@@ -32,6 +32,10 @@ public class ASLARef {
 				&& lZ3Type != Z3Type.Z3Unknown){
 			writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(aRefName, lZ3Type));
 			fileGenerator.getDeclaredVariables().add(aRefName);
+		}else if(!fileGenerator.getDeclaredVariables().contains(aRefName)
+				&& lZ3Type == Z3Type.Z3Unknown){
+			writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(aRefName, Z3Type.Z3StringArray));
+			fileGenerator.getDeclaredVariables().add(aRefName);
 		}
 	}
 

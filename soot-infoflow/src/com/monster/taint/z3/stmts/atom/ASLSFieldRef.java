@@ -31,7 +31,11 @@ public class ASLSFieldRef {
 		if(!fileGenerator.getDeclaredVariables().contains(sFieldRefName)
 				&& lZ3Type != Z3Type.Z3Unknown){
 			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(sFieldRefName, lZ3Type));
-					fileGenerator.getDeclaredVariables().add(sFieldRefName);
+			fileGenerator.getDeclaredVariables().add(sFieldRefName);
+		}else if(!fileGenerator.getDeclaredVariables().contains(sFieldRefName)
+				&& lZ3Type == Z3Type.Z3Unknown){
+			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(sFieldRefName, Z3Type.Z3String));
+			fileGenerator.getDeclaredVariables().add(sFieldRefName);
 		}
 	}
 	

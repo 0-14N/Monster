@@ -1,6 +1,7 @@
 package com.monster.taint.z3;
 
 import java.util.HashMap;
+import java.util.List;
 
 import com.monster.taint.z3.stmts.atom.BinopExprType;
 import com.monster.taint.z3.stmts.atom.ExprType;
@@ -240,6 +241,42 @@ public class Z3MiscFunctions {
 		sb.append(" ");
 		sb.append(aIndex.toString());
 		sb.append(")))");
+		return sb.toString();
+	}
+
+	/**
+	 * (declare-fun funName (paramType1 paramType2 ...) retType)
+	 * @param funName
+	 * @param paramTypes
+	 * @param retType
+	 * @return
+	 */
+	public String getFuncDeclareStmt(String funName, List<Type> paramTypes, Type retType){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(declare-fun ");
+		sb.append(funName);
+		sb.append(" ");
+		sb.append("(");
+		for(Type paramType : paramTypes){
+			Z3Type z3Type = this.z3Type(paramType);
+			if(z3Type != Z3Type.Z3Unknown){
+				sb.append(z3TypeToStringMap.get(z3Type));
+			}else{
+				sb.append(z3TypeToStringMap.get(Z3Type.Z3String));
+			}
+			sb.append(" ");
+		}
+		sb.append(")");
+		sb.append(" ");
+		if(!retType.toString().equals("void")){
+			Z3Type z3Type = this.z3Type(retType);
+			if(z3Type != Z3Type.Z3Unknown){
+				sb.append(z3TypeToStringMap.get(z3Type));
+			}else{
+				sb.append(z3TypeToStringMap.get(Z3Type.Z3String));
+			}
+		}
+		sb.append(")");
 		return sb.toString();
 	}
 	

@@ -35,6 +35,10 @@ public class ASRLocal {
 				&& rZ3Type != Z3Type.Z3Unknown){
 			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rLocalName, rZ3Type));
 			fileGenerator.getDeclaredVariables().add(rLocalName);
+		}else if(!fileGenerator.getDeclaredVariables().contains(rLocalName) 
+				&& rZ3Type == Z3Type.Z3Unknown){
+			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rLocalName, Z3Type.Z3String));
+			fileGenerator.getDeclaredVariables().add(rLocalName);
 		}
 	}
 

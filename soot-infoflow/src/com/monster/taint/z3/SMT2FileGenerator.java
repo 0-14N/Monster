@@ -193,12 +193,13 @@ public class SMT2FileGenerator {
 			
 			
 		//convert unit to smt2 format statement
-		for(Unit unit : allRelatedUnits){
+		for(int i = 0; i < allRelatedUnits.size(); i++){
+			Unit unit = allRelatedUnits.get(i);
 			smt2Writer.println(";" + unit.toString());
 			//we only care about AssignStmt, IfStmt and InvokeStmt
 			if(unit instanceof AssignStmt){
 				AssignStmt assignStmt = (AssignStmt) unit;
-				parseAssignStmt(assignStmt, allRelatedUnits.indexOf(unit), smt2Writer);
+				parseAssignStmt(assignStmt, i, smt2Writer);
 			}else if(unit instanceof InvokeStmt){
 					
 			}else if(unit instanceof IfStmt){
@@ -300,6 +301,10 @@ public class SMT2FileGenerator {
 	
 	public ArrayList<String> getDeclaredVariables(){
 		return this.declaredVariables;
+	}
+	
+	public ArrayList<String> getDeclaredFunctions(){
+		return this.declaredFunctions;
 	}
 	
 	public String getRenameOf(Value value, boolean defValue, int index){

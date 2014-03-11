@@ -35,6 +35,10 @@ public class ASLLocal {
 				&& lZ3Type != Z3Type.Z3Unknown){
 			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(lLocalName, lZ3Type));
 			fileGenerator.getDeclaredVariables().add(lLocalName);
+		}else if(!fileGenerator.getDeclaredVariables().contains(lLocalName)
+				&& lZ3Type == Z3Type.Z3Unknown){
+			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(lLocalName, Z3Type.Z3String));
+			fileGenerator.getDeclaredVariables().add(lLocalName);
 		}
 	}
 
