@@ -31,39 +31,6 @@ public class AssignStmtLLocalRExpr{
 	public void jet(){
 		this.lLocal.jet();
 		this.rExpr.jet();
-		/*
-		exprType = Z3MiscFunctions.v().getExprType(expr);
-		switch(exprType){
-			case BINOP:
-				break;
-			case CAST:
-				break;
-			case INVOKE:
-				break;
-			case NEWARRAY:
-				break;
-			case NEWEXPR:
-				break;
-			case UNOP:
-				break;
-		}
-		*/
 	}
 
-	/**
-	 * binop_expr = add_expr* | and_expr* | cmp_expr | cmpg_expr | cmpl_expr | div_expr * 
-	 * | eq_expr* | ge_expr* | gt_expr* | le_expr* | lt_expr* | mul_expr* | ne_expr* 
-	 * | or_expr* | rem_expr* | shl_expr | shr_expr | sub_expr* | ushr_expr | xor_expr;
-	 * 
-	 * the starred are concerned
-	 */
-	//private void parseBinop(){
-		/*
-		BinopExpr binopExpr = (BinopExpr) expr;
-		Value op1 = binopExpr.getOp1();
-		Value op2 = binopExpr.getOp2();
-		BinopExprType binopType = Z3MiscFunctions.v().getBinopExprType(binopExpr);
-		*/
-		
-	//}
 }

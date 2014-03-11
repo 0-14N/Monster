@@ -6,6 +6,8 @@ import com.monster.taint.z3.SMT2FileGenerator;
 import com.monster.taint.z3.Z3Type;
 import com.monster.taint.z3.Z3MiscFunctions;
 
+import soot.Local;
+import soot.Value;
 import soot.jimple.ArrayRef;
 
 public class ASLARef {
@@ -16,6 +18,7 @@ public class ASLARef {
 	
 	private String aRefName = null;
 	private Z3Type lZ3Type = null;
+	private String idxName = null;
 	
 	public ASLARef(PrintWriter writer, SMT2FileGenerator fileGenerator,
 			int stmtIdx, ArrayRef lARef){
@@ -37,6 +40,21 @@ public class ASLARef {
 			writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(aRefName, Z3Type.Z3StringArray));
 			fileGenerator.getDeclaredVariables().add(aRefName);
 		}
+		
+		Value idxValue = lARef.getIndex();
+		//array_ref = immediate "[" immediate "]";
+		//immediate = constant | local;
+		if(idxValue instanceof Local){
+			idxName = fileGenerator.getRenameOf(idxValue, true, stmtIdx);
+			Z3Type idxZ3Type = Z3MiscFunctions.v().z3Type(idxValue.getType());
+			assert(idxZ3Type == Z3Type.Z3Int);
+			if(!fileGenerator.getDeclaredVariables().contains(idxName)){
+				writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(idxName, idxZ3Type));
+				fileGenerator.getDeclaredVariables().add(idxName);
+			}
+		}else{
+			idxName = idxValue.toString();
+		}
 	}
 
 	public Z3Type getLZ3Type(){
@@ -45,6 +63,10 @@ public class ASLARef {
 	
 	public String getARefName(){
 		return this.aRefName;
+	}
+	
+	public String getIdxName(){
+		return this.idxName;
 	}
 	
 	public ArrayRef getLARef(){
