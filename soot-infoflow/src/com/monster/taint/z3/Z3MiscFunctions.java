@@ -245,18 +245,28 @@ public class Z3MiscFunctions {
 	}
 
 	/**
-	 * (declare-fun funName (paramType1 paramType2 ...) retType)
+	 * (declare-fun funName (thisType paramType1 paramType2 ...) retType)
 	 * @param funName
 	 * @param paramTypes
 	 * @param retType
 	 * @return
 	 */
-	public String getFuncDeclareStmt(String funName, List<Type> paramTypes, Type retType){
+	public String getFuncDeclareStmt(String funName, Type thisType, List<Type> paramTypes, Type retType){
 		StringBuilder sb = new StringBuilder();
 		sb.append("(declare-fun ");
 		sb.append(funName);
 		sb.append(" ");
 		sb.append("(");
+		
+		if(thisType != null){
+			Z3Type z3Type = this.z3Type(thisType);
+			if(z3Type != Z3Type.Z3Unknown){
+				sb.append(z3TypeToStringMap.get(z3Type));
+			}else{
+				sb.append(z3TypeToStringMap.get(Z3Type.Z3String));
+			}
+			sb.append(" ");
+		}
 		for(Type paramType : paramTypes){
 			Z3Type z3Type = this.z3Type(paramType);
 			if(z3Type != Z3Type.Z3Unknown){

@@ -10,10 +10,15 @@ import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.BinopExpr;
+import soot.jimple.CastExpr;
 import soot.jimple.Expr;
 import soot.jimple.InstanceFieldRef;
+import soot.jimple.InterfaceInvokeExpr;
 import soot.jimple.InvokeExpr;
+import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticFieldRef;
+import soot.jimple.StaticInvokeExpr;
+import soot.jimple.VirtualInvokeExpr;
 
 import com.monster.taint.z3.SMT2FileGenerator;
 import com.monster.taint.z3.Z3Type;
@@ -103,7 +108,10 @@ public class ASRExpr {
 
 	/**
 	 * <android.content.Intent: java.lang.String getAction()>
-	 * (declare-fun android_content_Intent$$java_lang_String$$void$$getAction () String)
+	 * r5 = r2.getAction()
+	 * (declare-variable r2 String)
+	 * (declare-fun android_content_Intent$$java_lang_String$$void$$getAction (String) String)
+	 * (assert (= r5 f...$$getAction(r2)))
 	 */
 	private void jetFunctions(){
 		InvokeExpr invokeExpr = (InvokeExpr) rExpr;
@@ -121,9 +129,22 @@ public class ASRExpr {
 		funSB.append(methodRef.name());
 		
 		String funStr = funSB.toString();
+		Type thisType = null;
 		if(!fileGenerator.getDeclaredFunctions().contains(funStr)){
-			writer.println(Z3MiscFunctions.v().getFuncDeclareStmt(funStr, 
-					methodRef.parameterTypes(), methodRef.returnType()));
+			if(invokeExpr instanceof StaticInvokeExpr){
+				writer.println(Z3MiscFunctions.v().getFuncDeclareStmt(funStr, thisType,
+						methodRef.parameterTypes(), methodRef.returnType()));
+			}else{
+				if(invokeExpr instanceof InterfaceInvokeExpr){
+					thisType = ((InterfaceInvokeExpr) invokeExpr).getBase().getType();
+				}else if(invokeExpr instanceof SpecialInvokeExpr){
+					thisType = ((SpecialInvokeExpr) invokeExpr).getBase().getType();
+				}else if(invokeExpr instanceof VirtualInvokeExpr){
+					thisType = ((VirtualInvokeExpr) invokeExpr).getBase().getType();
+				}
+				writer.println(Z3MiscFunctions.v().getFuncDeclareStmt(funStr, thisType,
+						methodRef.parameterTypes(), methodRef.returnType()));
+			}
 			fileGenerator.getDeclaredFunctions().add(funStr);
 		}
 	}
@@ -141,8 +162,10 @@ public class ASRExpr {
 				jetBinopExprStr();
 				break;
 			case CAST:
+				jetCastExprStr();
 				break;
 			case INVOKE:
+				jetInvokeExpr();
 				break;
 			case NEWARRAY:
 				break;
@@ -156,8 +179,37 @@ public class ASRExpr {
 	public String getExprStr(){
 		return this.exprStr;
 	}
-	
 
+	/*
+	 * 1. we model java.lang.String's methods
+	 * 2. for other methods, just call them
+	 * 
+	 * for examples: 
+	 * 1. b = s1.contains(s2)
+	 * 	(assert (= b (Contains s1 s2)))
+	 * 
+	 * 2. b = r2.get(s)
+	 *	see this.jetFunctions for more 
+	 * 
+	 */
+	private void jetInvokeExpr(){
+		
+	}
+
+	/**
+	 *	cast_expr = "(" type ")" immediate; 
+	 *  a = (type) b
+	 *  (assert (= a b))
+	 */
+	private void jetCastExprStr(){
+		CastExpr castExpr = (CastExpr) rExpr;
+		Value immValue = castExpr.getOp();
+		if(immValue instanceof Local){
+			this.exprStr = fileGenerator.getRenameOf(immValue, false, this.stmtIdx);
+		}else{
+			this.exprStr = immValue.toString();
+		}
+	}
 	
 	/**
 	 * binop_expr = add_expr* | and_expr* | cmp_expr | cmpg_expr | cmpl_expr | div_expr * 
@@ -236,6 +288,7 @@ public class ASRExpr {
 			this.exprStr = sb.toString();
 			break;
 		//[end] DIV
+		//[start] EQ
 		case EQ:
 			//eq_expr = immediate "==" immediate;
 			//b = r1 == r2
@@ -255,6 +308,8 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] EQ
+		//[start] GE
 		case GE:
 			//ge_expr = immediate ">=" immediate;
 			//b = r1 >= r2
@@ -274,6 +329,8 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] GE
+		//[start] GT
 		case GT:
 			//gt_expr = immediate ">" immediate;
 			//b = r1 > r2
@@ -293,6 +350,8 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] GT
+		//[start] LE
 		case LE:
 			//le_expr = immediate "<=" immediate;
 			//b = r1 <= r2
@@ -312,6 +371,8 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] LE
+		//[start] LT
 		case LT:
 			//lt_expr = immediate "<" immediate;
 			//b = r1 < r2
@@ -331,6 +392,8 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] LT
+		//[start] MUL
 		case MUL:
 			//mul_expr = immediate "*" immediate;
 			//(* op1 op2)
@@ -349,6 +412,8 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] MUL
+		//[start] NE
 		case NE:
 			//ne_expr = immediate "!=" immediate;
 			//(not (= op1 op2))
@@ -367,11 +432,13 @@ public class ASRExpr {
 			sb.append("))");
 			this.exprStr = sb.toString();
 			break;
+		//[end] NE
 		case OR:
 			//or_expr = immediate "|" immediate;
 			//TODO
 			assert(false) : "OR Expr";
 			break;
+		//[start] REM
 		case REM:
 			//rem_expr = immediate "%" immediate;
 			//(rem op1 op2)
@@ -390,6 +457,8 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] REM
+		//[start] SUB
 		case SUB:
 			//sub_expr = immediate "-" immediate;
 			//(- op1 op2)
@@ -408,6 +477,7 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 			break;
+		//[end] SUB
 		}
 	}
 }
