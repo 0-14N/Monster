@@ -11,6 +11,7 @@ import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.BinopExpr;
 import soot.jimple.CastExpr;
+import soot.jimple.Constant;
 import soot.jimple.Expr;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.InterfaceInvokeExpr;
@@ -25,6 +26,7 @@ import com.monster.taint.z3.Z3Type;
 import com.monster.taint.z3.Z3MiscFunctions;
 
 public class ASRExpr {
+	private final String STRING_CLASS = "java.lang.String";
 	private PrintWriter writer = null;
 	private SMT2FileGenerator fileGenerator = null;
 	private int stmtIdx;
@@ -115,20 +117,14 @@ public class ASRExpr {
 	 */
 	private void jetFunctions(){
 		InvokeExpr invokeExpr = (InvokeExpr) rExpr;
-		StringBuilder funSB = new StringBuilder();	
 		SootMethodRef methodRef = invokeExpr.getMethodRef();
 		
-		funSB.append(methodRef.declaringClass().getName().replace(".", "_"));
-		funSB.append("$$");
-		funSB.append(methodRef.returnType().toString().replace(".", "_"));
-		funSB.append("$$");
-		for(Type paramType : methodRef.parameterTypes()){
-			funSB.append(paramType.toString().replace(".", "_"));
-			funSB.append("$");
+		//if this is a java.lang.String.func, we don't need to declare it
+		if(methodRef.declaringClass().getName().equals(STRING_CLASS)){
+			return;
 		}
-		funSB.append(methodRef.name());
 		
-		String funStr = funSB.toString();
+		String funStr = constructFunStr(invokeExpr);
 		Type thisType = null;
 		if(!fileGenerator.getDeclaredFunctions().contains(funStr)){
 			if(invokeExpr instanceof StaticInvokeExpr){
@@ -147,6 +143,39 @@ public class ASRExpr {
 			}
 			fileGenerator.getDeclaredFunctions().add(funStr);
 		}
+	}
+	
+	private String constructFunStr(InvokeExpr invokeExpr){
+		StringBuilder funSB = new StringBuilder();
+		SootMethodRef methodRef = invokeExpr.getMethodRef();
+		Type thisType = null;
+		
+		if(invokeExpr instanceof InterfaceInvokeExpr){
+			thisType = ((InterfaceInvokeExpr) invokeExpr).getBase().getType();
+		}else if(invokeExpr instanceof SpecialInvokeExpr){
+			thisType = ((SpecialInvokeExpr) invokeExpr).getBase().getType();
+		}else if(invokeExpr instanceof VirtualInvokeExpr){
+			thisType = ((VirtualInvokeExpr) invokeExpr).getBase().getType();
+		}
+	
+		//class name
+		funSB.append(methodRef.declaringClass().getName().replace(".", "_"));
+		funSB.append("$$");
+		//return type
+		funSB.append(methodRef.returnType().toString().replace(".", "_"));
+		//parameter and this types
+		funSB.append("$$");
+		//this type
+		if(thisType != null){
+			funSB.append(thisType.toString().replace(".", "_"));
+			funSB.append("$");
+		}
+		for(Type paramType : methodRef.parameterTypes()){
+			funSB.append(paramType.toString().replace(".", "_"));
+			funSB.append("$");
+		}
+		funSB.append(methodRef.name());
+		return funSB.toString();
 	}
 	
 	public Expr getRExpr(){
@@ -168,6 +197,7 @@ public class ASRExpr {
 				jetInvokeExpr();
 				break;
 			case NEWARRAY:
+				jetNewArrayExpr();
 				break;
 			case NEWEXPR:
 				break;
@@ -180,6 +210,14 @@ public class ASRExpr {
 		return this.exprStr;
 	}
 
+	/**
+	 * new_array_expr = "new" type "[" immediate "]"; 
+	 * 
+	 */
+	private void jetNewArrayExpr(){
+		
+	}
+
 	/*
 	 * 1. we model java.lang.String's methods
 	 * 2. for other methods, just call them
@@ -189,11 +227,50 @@ public class ASRExpr {
 	 * 	(assert (= b (Contains s1 s2)))
 	 * 
 	 * 2. b = r2.get(s)
+	 *  (assert (= b get(r2 s)))
 	 *	see this.jetFunctions for more 
-	 * 
+	 *	
+	 * invoke_expr = interface_invoke_expr | special_invoke_expr | static_invoke_expr |
+     * virtual_invoke_expr; 
 	 */
 	private void jetInvokeExpr(){
-		
+		InvokeExpr invokeExpr = (InvokeExpr) rExpr;
+		SootMethodRef methodRef = invokeExpr.getMethodRef();
+		if(methodRef.declaringClass().getName().equals(STRING_CLASS)){
+			//TODO
+		}else{
+			Value thisBase = null;
+			if(invokeExpr instanceof InterfaceInvokeExpr){
+				thisBase = ((InterfaceInvokeExpr) invokeExpr).getBase();
+			}else if(invokeExpr instanceof SpecialInvokeExpr){
+				thisBase = ((SpecialInvokeExpr) invokeExpr).getBase();
+			}else if(invokeExpr instanceof VirtualInvokeExpr){
+				thisBase = ((VirtualInvokeExpr) invokeExpr).getBase();
+			}
+			String funStr = constructFunStr(invokeExpr);
+			StringBuilder sb = new StringBuilder();
+			sb.append(funStr);
+			sb.append("(");
+			
+			if(thisBase != null){
+				String thisBaseName = fileGenerator.getRenameOf(thisBase, false, this.stmtIdx);
+				sb.append(thisBaseName);
+				sb.append(" ");
+			}
+			
+			for(Value param : invokeExpr.getArgs()){
+				if(param instanceof Constant){
+					sb.append(param.toString());
+				}else{
+					String paramName = fileGenerator.getRenameOf(param, false, this.stmtIdx);
+					sb.append(paramName);
+				}
+				sb.append(" ");
+			}
+			
+			sb.append(")");
+			this.exprStr = sb.toString();
+		}
 	}
 
 	/**
