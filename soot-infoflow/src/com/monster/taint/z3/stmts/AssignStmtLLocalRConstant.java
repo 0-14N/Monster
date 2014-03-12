@@ -27,9 +27,7 @@ public class AssignStmtLLocalRConstant{
 		this.lLocal.jet();
 		this.rConstant.jet();
 		Z3Type rZ3Type = Z3MiscFunctions.v().z3Type(rConstant.getConstant().getType());
-		if(rZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getAssertLocalEqualConst(lLocal.getLLocalName(), 
+		writer.println(Z3MiscFunctions.v().getAssertLocalEqualConst(lLocal.getLLocalName(), 
 					rZ3Type, rConstant.getConstant()));
-		}
 	}
 }

@@ -9,5 +9,6 @@ public enum Z3Type {
 		Z3RealArray,
 		Z3String,
 		Z3StringArray,
-		Z3Unknown
+		Z3Unknown,
+		Z3UnKnownArray,
 }

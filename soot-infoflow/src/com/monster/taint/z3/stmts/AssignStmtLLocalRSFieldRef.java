@@ -26,10 +26,6 @@ public class AssignStmtLLocalRSFieldRef{
 	public void jet(){
 		this.lLocal.jet();
 		this.rSFieldRef.jet();
-		Z3Type lZ3Type = lLocal.getZ3Type();
-		Z3Type rZ3Type = rSFieldRef.getRZ3Type();
-		if(lZ3Type != Z3Type.Z3Unknown && rZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocal.getLLocalName(), rSFieldRef.getSFieldRefName()));
-		}
+		writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocal.getLLocalName(), rSFieldRef.getSFieldRefName()));
 	}
 }

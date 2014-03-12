@@ -66,13 +66,13 @@ public class Z3MiscFunctions {
 						 aStringStr = "java.lang.String[]";
 	
 	public static final String z3BoolStr = "Bool",
-						z3BoolArrayStr = "Array Int Bool",
+						z3BoolArrayStr = "(Array Int Bool)",
 					    z3IntStr = "Int",
-					    z3IntArrayStr = "Array Int Int",
+					    z3IntArrayStr = "(Array Int Int)",
 					    z3RealStr = "Real",
-					    z3RealArrayStr = "Array Int Real",
+					    z3RealArrayStr = "(Array Int Real)",
 					    z3StringStr = "String",
-					    z3StringArrayStr = "Array Int String";
+					    z3StringArrayStr = "(Array Int String)";
 					    
 	
 	private final HashMap<String, Z3Type> strToZ3TypeMap = new HashMap<String, Z3Type>(){
@@ -113,6 +113,8 @@ public class Z3MiscFunctions {
 			put(Z3Type.Z3RealArray, z3RealArrayStr);
 			put(Z3Type.Z3String, z3StringStr);
 			put(Z3Type.Z3StringArray, z3StringArrayStr);
+			put(Z3Type.Z3Unknown, z3StringStr);
+			put(Z3Type.Z3UnKnownArray, z3StringArrayStr);
 		}
 	};
 	
@@ -129,7 +131,11 @@ public class Z3MiscFunctions {
 		String typeStr = type.toString();
 		Z3Type z3Type = strToZ3TypeMap.get(typeStr);
 		if(z3Type == null){
-			z3Type = Z3Type.Z3Unknown;
+			if(typeStr.endsWith("]")){
+				z3Type = Z3Type.Z3UnKnownArray;
+			}else{
+				z3Type = Z3Type.Z3Unknown;
+			}
 		}
 		return z3Type;
 	}
@@ -143,30 +149,13 @@ public class Z3MiscFunctions {
 	 * @param z3Type
 	 * @return
 	 */
-	public String getPrimeTypeDeclareStmt(String name, Z3Type z3Type){
+	public String getVariableDeclareStmt(String name, Z3Type z3Type){
 		StringBuilder sb = new StringBuilder();
 		sb.append("(declare-variable ");
 		sb.append(name);
 		sb.append(" ");
 		sb.append(z3TypeToStringMap.get(z3Type));
 		sb.append(")");
-		return sb.toString();
-	}
-
-	/**
-	 * (declare-variable a (Array Int String))
-	 * @param name
-	 * @param z3Type
-	 * @return
-	 */
-	public String getArrayDeclareStmt(String name, Z3Type z3Type){
-		StringBuilder sb = new StringBuilder();
-		sb.append("(declare-variable ");
-		sb.append(name);
-		sb.append(" ");
-		sb.append("(");
-		sb.append(z3TypeToStringMap.get(z3Type));
-		sb.append("))");
 		return sb.toString();
 	}
 
@@ -194,7 +183,7 @@ public class Z3MiscFunctions {
 			case Z3Real:
 				conStr = constant.toString();
 				break;
-			case Z3String:
+			default:
 				if(constant instanceof NullConstant){
 					conStr = "\"\"";
 				}else{
@@ -231,7 +220,7 @@ public class Z3MiscFunctions {
 	 * @param aIndex TODO: parse aIndex?
 	 * @return
 	 */
-	public String getAssertLocalEqualArrayRef(String localName, String aBaseName, Value aIndex){
+	public String getAssertLocalEqualArrayRef(String localName, String aBaseName, String aIndex){
 		StringBuilder sb = new StringBuilder();
 		sb.append("(assert (= ");
 		sb.append(localName);
@@ -239,7 +228,7 @@ public class Z3MiscFunctions {
 		sb.append("(select ");
 		sb.append(aBaseName);
 		sb.append(" ");
-		sb.append(aIndex.toString());
+		sb.append(aIndex);
 		sb.append(")))");
 		return sb.toString();
 	}
@@ -260,31 +249,19 @@ public class Z3MiscFunctions {
 		
 		if(thisType != null){
 			Z3Type z3Type = this.z3Type(thisType);
-			if(z3Type != Z3Type.Z3Unknown){
-				sb.append(z3TypeToStringMap.get(z3Type));
-			}else{
-				sb.append(z3TypeToStringMap.get(Z3Type.Z3String));
-			}
+			sb.append(z3TypeToStringMap.get(z3Type));
 			sb.append(" ");
 		}
 		for(Type paramType : paramTypes){
 			Z3Type z3Type = this.z3Type(paramType);
-			if(z3Type != Z3Type.Z3Unknown){
-				sb.append(z3TypeToStringMap.get(z3Type));
-			}else{
-				sb.append(z3TypeToStringMap.get(Z3Type.Z3String));
-			}
+			sb.append(z3TypeToStringMap.get(z3Type));
 			sb.append(" ");
 		}
 		sb.append(")");
 		sb.append(" ");
 		if(!retType.toString().equals("void")){
 			Z3Type z3Type = this.z3Type(retType);
-			if(z3Type != Z3Type.Z3Unknown){
-				sb.append(z3TypeToStringMap.get(z3Type));
-			}else{
-				sb.append(z3TypeToStringMap.get(Z3Type.Z3String));
-			}
+			sb.append(z3TypeToStringMap.get(z3Type));
 		}
 		sb.append(")");
 		return sb.toString();

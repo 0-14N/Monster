@@ -27,10 +27,6 @@ public class AssignStmtLLocalRLocal{
 		this.lLocal.jet();
 		this.rLocal.jet();
 		
-		Z3Type lZ3Type = lLocal.getZ3Type();
-		Z3Type rZ3Type = rLocal.getZ3Type();
-		if(rZ3Type != Z3Type.Z3Unknown && lZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocal.getLLocalName(), rLocal.getRLocalName()));
-		}
+		writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocal.getLLocalName(), rLocal.getRLocalName()));
 	}
 }

@@ -9,10 +9,14 @@ import com.monster.taint.z3.stmts.atom.ASLLocal;
 import com.monster.taint.z3.stmts.atom.ASRARef;
 
 import soot.Local;
+import soot.Value;
 import soot.jimple.ArrayRef;
+import soot.jimple.Constant;
 
 public class AssignStmtLLocalRARef{
 	private PrintWriter writer = null;
+	private SMT2FileGenerator fileGenerator = null;
+	private int stmtIdx = 0;
 	private ASLLocal lLocal = null;
 	private ASRARef rARef = null;
 	
@@ -20,6 +24,8 @@ public class AssignStmtLLocalRARef{
 	public AssignStmtLLocalRARef(PrintWriter writer, SMT2FileGenerator fileGenerator,
 			int stmtIdx, Local lLocal, ArrayRef rARef){
 		this.writer = writer;
+		this.fileGenerator = fileGenerator;
+		this.stmtIdx = stmtIdx;
 		this.lLocal = new ASLLocal(writer, fileGenerator, stmtIdx, lLocal);
 		this.rARef = new ASRARef(writer, fileGenerator, stmtIdx, rARef);
 	}
@@ -28,13 +34,15 @@ public class AssignStmtLLocalRARef{
 		this.lLocal.jet();
 		this.rARef.jet();
 		
-		Z3Type lZ3Type = lLocal.getZ3Type();
-		Z3Type rZ3Type = rARef.getRZ3Type();
-		
-		if(lZ3Type != Z3Type.Z3Unknown && rZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getAssertLocalEqualArrayRef(lLocal.getLLocalName(), 
-					rARef.getARefName(), rARef.getRARef().getIndex()));
+		Value arrayIndex = rARef.getRARef().getIndex();
+		String arrayIndexStr = null;
+		if(arrayIndex instanceof Constant){
+			arrayIndexStr = arrayIndex.toString();
+		}else{
+			arrayIndexStr = fileGenerator.getRenameOf(arrayIndex, false, this.stmtIdx);
 		}
+		writer.println(Z3MiscFunctions.v().getAssertLocalEqualArrayRef(lLocal.getLLocalName(), 
+				rARef.getARefName(), arrayIndexStr));
 	}
 	
 }

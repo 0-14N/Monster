@@ -100,6 +100,8 @@ public class SMT2FileGenerator {
 	ArrayList<String> declaredVariables = null;
 	//the declared functions
 	ArrayList<String> declaredFunctions = null;
+	//array size map
+	HashMap<String, String> arraySizeMap = null;
 	
 	private SMT2FileGenerator(){}
 	
@@ -127,6 +129,7 @@ public class SMT2FileGenerator {
 		renamesMap = new HashMap<Value, ArrayList<Integer>>();
 		declaredVariables = new ArrayList<String>();
 		declaredFunctions = new ArrayList<String>();
+		arraySizeMap = new HashMap<String, String>();
 		
 		//first, we should handle the case (e.g.'i0 = i0 + 1') in which the
 		//defboxes and useboxes share certain same values
@@ -305,6 +308,10 @@ public class SMT2FileGenerator {
 	
 	public ArrayList<String> getDeclaredFunctions(){
 		return this.declaredFunctions;
+	}
+	
+	public HashMap<String, String> getArraySizeMap(){
+		return this.arraySizeMap;
 	}
 	
 	public String getRenameOf(Value value, boolean defValue, int index){

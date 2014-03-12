@@ -16,9 +16,13 @@ import soot.jimple.Expr;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.InterfaceInvokeExpr;
 import soot.jimple.InvokeExpr;
+import soot.jimple.LengthExpr;
+import soot.jimple.NegExpr;
+import soot.jimple.NewArrayExpr;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.StaticInvokeExpr;
+import soot.jimple.UnopExpr;
 import soot.jimple.VirtualInvokeExpr;
 
 import com.monster.taint.z3.SMT2FileGenerator;
@@ -51,49 +55,29 @@ public class ASRExpr {
 			String varStr = fileGenerator.getRenameOf(value, false, stmtIdx);
 			if(value instanceof Local){
 				z3Type = Z3MiscFunctions.v().z3Type(value.getType());
-				if(z3Type != Z3Type.Z3Unknown && 
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(varStr, z3Type));
-					fileGenerator.getDeclaredVariables().add(varStr);
-				}else if(z3Type == Z3Type.Z3Unknown && 
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(varStr, Z3Type.Z3String));
+				if(!fileGenerator.getDeclaredVariables().contains(varStr)){
+					writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(varStr, z3Type));
 					fileGenerator.getDeclaredVariables().add(varStr);
 				}
 			}else if(value instanceof InstanceFieldRef){
 				InstanceFieldRef iFRef = (InstanceFieldRef) value;
 				z3Type = Z3MiscFunctions.v().z3Type(iFRef.getField().getType());
-				if(z3Type != Z3Type.Z3Unknown &&
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(varStr, z3Type));
-					fileGenerator.getDeclaredVariables().add(varStr);
-				}else if(z3Type == Z3Type.Z3Unknown && 
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(varStr, Z3Type.Z3String));
+				if(!fileGenerator.getDeclaredVariables().contains(varStr)){
+					writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(varStr, z3Type));
 					fileGenerator.getDeclaredVariables().add(varStr);
 				}
 			}else if(value instanceof StaticFieldRef){
 				StaticFieldRef sFRef = (StaticFieldRef) value;
 				z3Type = Z3MiscFunctions.v().z3Type(sFRef.getField().getType());
-				if(z3Type != Z3Type.Z3Unknown &&
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(varStr, z3Type));
-					fileGenerator.getDeclaredVariables().add(varStr);
-				}else if(z3Type == Z3Type.Z3Unknown && 
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(varStr, Z3Type.Z3String));
+				if(!fileGenerator.getDeclaredVariables().contains(varStr)){
+					writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(varStr, z3Type));
 					fileGenerator.getDeclaredVariables().add(varStr);
 				}
 			}else if(value instanceof ArrayRef){
 				ArrayRef aRef = (ArrayRef) value;
 				z3Type = Z3MiscFunctions.v().z3Type(aRef.getBase().getType());
-				if(z3Type != Z3Type.Z3Unknown &&
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(varStr, z3Type));
-					fileGenerator.getDeclaredVariables().add(varStr);
-				}else if(z3Type == Z3Type.Z3Unknown && 
-						!fileGenerator.getDeclaredVariables().contains(varStr)){
-					writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(varStr, Z3Type.Z3String));
+				if(!fileGenerator.getDeclaredVariables().contains(varStr)){
+					writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(varStr, z3Type));
 					fileGenerator.getDeclaredVariables().add(varStr);
 				}
 			}
@@ -200,8 +184,10 @@ public class ASRExpr {
 				jetNewArrayExpr();
 				break;
 			case NEWEXPR:
+				jetNewExpr();
 				break;
 			case UNOP:
+				jetUnopExpr();
 				break;
 		}
 	}
@@ -211,11 +197,59 @@ public class ASRExpr {
 	}
 
 	/**
+	 * unop_expr = length_expr | neg_expr;
+	 */
+	private void jetUnopExpr(){
+		UnopExpr unopExpr = (UnopExpr) rExpr;
+		if(unopExpr instanceof LengthExpr){
+			//length_expr = "length" immediate;
+			//$i1 = lengthof $r10
+			//(assert (= $i1 lengthMap.get($r10)))
+			LengthExpr lengthExpr = (LengthExpr) unopExpr;
+			Value immediate = lengthExpr.getOp();
+			if(immediate instanceof Constant){
+				this.exprStr = immediate.toString();
+			}else{
+				this.exprStr = fileGenerator.getRenameOf(immediate, false, this.stmtIdx);
+			}
+		}else if(unopExpr instanceof NegExpr){
+			//neg_expr = "-" immediate;
+			//a = -b
+			//(assert (= a (- 0 b))))
+			NegExpr negExpr = (NegExpr) unopExpr;
+			Value immediate = negExpr.getOp();
+			StringBuilder sb = new StringBuilder();
+			sb.append("(- 0 ");
+			if(immediate instanceof Constant){
+				sb.append(immediate.toString());
+			}else{
+				sb.append(fileGenerator.getRenameOf(immediate, false, this.stmtIdx));
+			}
+			sb.append(")");
+			this.exprStr = sb.toString();
+		}
+	}
+
+	/**
+	 * new_expr = "new" ref_type "()"; 
+	 */
+	private void jetNewExpr(){
+		//do nothing 
+	}
+
+	/**
 	 * new_array_expr = "new" type "[" immediate "]"; 
 	 * 
 	 */
 	private void jetNewArrayExpr(){
-		
+		//put the length of array into exprStr
+		NewArrayExpr newArrayExpr = (NewArrayExpr) rExpr;
+		Value sizeValue = newArrayExpr.getSize();
+		if(sizeValue instanceof Constant){
+			this.exprStr = sizeValue.toString();
+		}else{
+			this.exprStr = fileGenerator.getRenameOf(sizeValue, false, this.stmtIdx);
+		}
 	}
 
 	/*

@@ -31,13 +31,8 @@ public class ASLLocal {
 		lLocalName = fileGenerator.getRenameOf(lLocal, true, stmtIdx);
 		lType = lLocal.getType();
 		lZ3Type = Z3MiscFunctions.v().z3Type(lType);
-		if(!fileGenerator.getDeclaredVariables().contains(lLocalName) 
-				&& lZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(lLocalName, lZ3Type));
-			fileGenerator.getDeclaredVariables().add(lLocalName);
-		}else if(!fileGenerator.getDeclaredVariables().contains(lLocalName)
-				&& lZ3Type == Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(lLocalName, Z3Type.Z3String));
+		if(!fileGenerator.getDeclaredVariables().contains(lLocalName)){
+			writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(lLocalName, lZ3Type));
 			fileGenerator.getDeclaredVariables().add(lLocalName);
 		}
 	}

@@ -31,13 +31,8 @@ public class ASRLocal {
 		rLocalName = fileGenerator.getRenameOf(rLocal, false, stmtIdx);
 		rType = rLocal.getType();
 		rZ3Type = Z3MiscFunctions.v().z3Type(rType);
-		if(!fileGenerator.getDeclaredVariables().contains(rLocalName) 
-				&& rZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rLocalName, rZ3Type));
-			fileGenerator.getDeclaredVariables().add(rLocalName);
-		}else if(!fileGenerator.getDeclaredVariables().contains(rLocalName) 
-				&& rZ3Type == Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(rLocalName, Z3Type.Z3String));
+		if(!fileGenerator.getDeclaredVariables().contains(rLocalName) ){
+			writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(rLocalName, rZ3Type));
 			fileGenerator.getDeclaredVariables().add(rLocalName);
 		}
 	}

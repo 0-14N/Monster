@@ -31,13 +31,8 @@ public class ASLARef {
 	public void jet(){
 		aRefName = fileGenerator.getRenameOf(lARef, true, stmtIdx);
 		lZ3Type = Z3MiscFunctions.v().z3Type(lARef.getBase().getType());
-		if(!fileGenerator.getDeclaredVariables().contains(aRefName) 
-				&& lZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(aRefName, lZ3Type));
-			fileGenerator.getDeclaredVariables().add(aRefName);
-		}else if(!fileGenerator.getDeclaredVariables().contains(aRefName)
-				&& lZ3Type == Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getArrayDeclareStmt(aRefName, Z3Type.Z3StringArray));
+		if(!fileGenerator.getDeclaredVariables().contains(aRefName)){
+			writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(aRefName, lZ3Type));
 			fileGenerator.getDeclaredVariables().add(aRefName);
 		}
 		
@@ -49,7 +44,7 @@ public class ASLARef {
 			Z3Type idxZ3Type = Z3MiscFunctions.v().z3Type(idxValue.getType());
 			assert(idxZ3Type == Z3Type.Z3Int);
 			if(!fileGenerator.getDeclaredVariables().contains(idxName)){
-				writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(idxName, idxZ3Type));
+				writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(idxName, idxZ3Type));
 				fileGenerator.getDeclaredVariables().add(idxName);
 			}
 		}else{

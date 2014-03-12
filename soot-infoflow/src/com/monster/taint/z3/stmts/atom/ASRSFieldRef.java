@@ -28,13 +28,8 @@ public class ASRSFieldRef {
 	public void jet(){
 		sFieldRefName = fileGenerator.getRenameOf(rSFieldRef, false, stmtIdx);
 		rZ3Type = Z3MiscFunctions.v().z3Type(rSFieldRef.getField().getType());
-		if(!fileGenerator.getDeclaredVariables().contains(sFieldRefName)
-				&& rZ3Type != Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(sFieldRefName, rZ3Type));
-			fileGenerator.getDeclaredVariables().add(sFieldRefName);
-		}else if(!fileGenerator.getDeclaredVariables().contains(sFieldRefName)
-				&& rZ3Type == Z3Type.Z3Unknown){
-			writer.println(Z3MiscFunctions.v().getPrimeTypeDeclareStmt(sFieldRefName, Z3Type.Z3String));
+		if(!fileGenerator.getDeclaredVariables().contains(sFieldRefName)){
+			writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(sFieldRefName, rZ3Type));
 			fileGenerator.getDeclaredVariables().add(sFieldRefName);
 		}
 	}
