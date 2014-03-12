@@ -67,4 +67,19 @@ public class ASLARef {
 	public ArrayRef getLARef(){
 		return this.lARef;
 	}
+
+	/**
+	 * a[i] = t
+	 * (assert (= (select a i) ()))
+	 * @return
+	 */
+	public String getLARefStr(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(select ");
+		sb.append(this.aRefName);
+		sb.append(" ");
+		sb.append(this.idxName);
+		sb.append(")");
+		return sb.toString();
+	}
 }

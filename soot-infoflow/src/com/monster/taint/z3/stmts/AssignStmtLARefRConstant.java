@@ -37,11 +37,8 @@ public class AssignStmtLARefRConstant{
 	 */
 	private String getAssertStr(){
 		StringBuilder sb = new StringBuilder();
-		sb.append("(assert (= (select ");
-		sb.append(lARef.getARefName());
-		sb.append(" ");
-		sb.append(lARef.getIdxName());
-		sb.append(")");
+		sb.append("(assert (= ");
+		sb.append(lARef.getLARefStr());
 		sb.append(" ");
 		sb.append(rConstant.getConstStr());
 		sb.append("))");

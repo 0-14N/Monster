@@ -35,17 +35,11 @@ public class AssignStmtLARefRARef{
 	 */
 	private String getAssertStr(){
 		StringBuilder sb = new StringBuilder();
-		sb.append("(assert (= (select ");
-		sb.append(lARef.getARefName());
+		sb.append("(assert (= ");
+		sb.append(lARef.getLARefStr());
 		sb.append(" ");
-		sb.append(lARef.getIdxName());
-		sb.append(")");
-		sb.append(" ");
-		sb.append("(select ");
-		sb.append(rARef.getARefName());
-		sb.append(" ");
-		sb.append(rARef.getIdxName());
-		sb.append(")))");
+		sb.append(rARef.getRARefStr());
+		sb.append("))");
 		return sb.toString();
 	}
 }

@@ -6,8 +6,6 @@ import soot.Local;
 import soot.jimple.InstanceFieldRef;
 
 import com.monster.taint.z3.SMT2FileGenerator;
-import com.monster.taint.z3.Z3Type;
-import com.monster.taint.z3.Z3MiscFunctions;
 import com.monster.taint.z3.stmts.atom.ASLLocal;
 import com.monster.taint.z3.stmts.atom.ASRIFieldRef;
 
@@ -27,6 +25,21 @@ public class AssignStmtLLocalRIFieldRef{
 		this.lLocal.jet();
 		this.rIFieldRef.jet();
 		
-		writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocal.getLLocalName(), rIFieldRef.getIFieldRefName()));
+		writer.println(getAssertStr());
+	}
+
+	/**
+	 * r = a.f
+	 * (assert (= r a_f))
+	 * @return
+	 */
+	private String getAssertStr(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(assert (= ");
+		sb.append(lLocal.getLLocalName());
+		sb.append(" ");
+		sb.append(rIFieldRef.getIFieldRefName());
+		sb.append("))");
+		return sb.toString();
 	}
 }

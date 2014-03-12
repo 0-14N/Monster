@@ -3,8 +3,6 @@ package com.monster.taint.z3.stmts;
 import java.io.PrintWriter;
 
 import com.monster.taint.z3.SMT2FileGenerator;
-import com.monster.taint.z3.Z3Type;
-import com.monster.taint.z3.Z3MiscFunctions;
 import com.monster.taint.z3.stmts.atom.ASLLocal;
 import com.monster.taint.z3.stmts.atom.ASRLocal;
 
@@ -27,6 +25,21 @@ public class AssignStmtLLocalRLocal{
 		this.lLocal.jet();
 		this.rLocal.jet();
 		
-		writer.println(Z3MiscFunctions.v().getCommonAssertEqual(lLocal.getLLocalName(), rLocal.getRLocalName()));
+		writer.println(getAssertStr());
+	}
+
+	/**
+	 * r1 = r2
+	 * (assert (= r1 r2))
+	 * @return
+	 */
+	private String getAssertStr(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(assert (= ");
+		sb.append(lLocal.getLLocalName());
+		sb.append(" ");
+		sb.append(rLocal.getRLocalName());
+		sb.append("))");
+		return sb.toString();
 	}
 }

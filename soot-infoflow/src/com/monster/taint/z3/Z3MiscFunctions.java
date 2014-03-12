@@ -336,5 +336,17 @@ public class Z3MiscFunctions {
 		assert(type != null);
 		return type;
 	}
+	
+	public boolean isArrayType(Type type){
+		Z3Type z3Type = this.z3Type(type);
+		if(z3Type == Z3Type.Z3BooleanArray || 
+				z3Type == Z3Type.Z3IntArray ||
+				z3Type == Z3Type.Z3RealArray ||
+				z3Type == Z3Type.Z3StringArray ||
+				z3Type == Z3Type.Z3UnKnownArray){
+			return true;
+		}
+		return false;
+	}
 
 }

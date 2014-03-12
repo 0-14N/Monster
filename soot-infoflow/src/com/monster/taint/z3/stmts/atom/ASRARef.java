@@ -67,4 +67,20 @@ public class ASRARef {
 	public String getIdxName(){
 		return this.idxName;
 	}
+
+	/**
+	 * t = a[i]
+	 * 
+	 * (assert (= t (select a i)))
+	 * @return
+	 */
+	public String getRARefStr(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("(select ");
+		sb.append(this.aRefName);
+		sb.append(" ");
+		sb.append(this.idxName);
+		sb.append(")");
+		return sb.toString();
+	}
 }

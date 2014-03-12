@@ -42,7 +42,7 @@ public class ASLSFieldRef {
 		return this.lZ3Type;
 	}
 	
-	public String getsFieldRefName(){
+	public String getSFieldRefName(){
 		return this.sFieldRefName;
 	}
 }

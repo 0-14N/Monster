@@ -189,6 +189,14 @@ public class ASRExpr {
 			case UNOP:
 				jetUnopExpr();
 				break;
+			case INSTANCEOF:
+				//TODO
+				assert(false);
+				break;
+			case NEWMULIARRAY:
+				//TODO
+				assert(false);
+				break;
 		}
 	}
 	
