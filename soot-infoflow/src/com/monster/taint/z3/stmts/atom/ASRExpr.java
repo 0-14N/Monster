@@ -279,7 +279,7 @@ public class ASRExpr {
 		InvokeExpr invokeExpr = (InvokeExpr) rExpr;
 		SootMethodRef methodRef = invokeExpr.getMethodRef();
 		if(methodRef.declaringClass().getName().equals(STRING_CLASS)){
-			//TODO
+			jetStringOperation(invokeExpr);
 		}else{
 			Value thisBase = null;
 			if(invokeExpr instanceof InterfaceInvokeExpr){
@@ -313,6 +313,17 @@ public class ASRExpr {
 			sb.append(")");
 			this.exprStr = sb.toString();
 		}
+	}
+
+	/**
+	 * Modeling String operations:
+	 * concat, contains, endswith, indexof, length, replace, startswith, substring
+	 * 
+	 * 
+	 * @param invokeExpr
+	 */
+	private void jetStringOperation(InvokeExpr invokeExpr){
+		
 	}
 
 	/**

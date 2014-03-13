@@ -52,6 +52,8 @@ public class Z3MiscFunctions {
 						 aBooleanStr = "boolean[]",
 						 byteStr = "byte",
 						 aByteStr = "byte[]",
+						 charStr = "char",
+						 aCharStr = "char[]",
 						 shortStr = "short",
 						 aShortStr = "short[]",
 						 intStr = "int",
@@ -83,6 +85,8 @@ public class Z3MiscFunctions {
 			put(aBooleanStr, Z3Type.Z3BooleanArray);
 			put(byteStr, Z3Type.Z3Int);
 			put(aByteStr, Z3Type.Z3IntArray);
+			put(charStr, Z3Type.Z3Int);
+			put(aCharStr, Z3Type.Z3IntArray);
 			put(shortStr, Z3Type.Z3Int);
 			put(aShortStr, Z3Type.Z3IntArray);
 			put(intStr, Z3Type.Z3Int);
