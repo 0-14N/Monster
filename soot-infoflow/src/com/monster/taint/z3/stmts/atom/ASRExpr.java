@@ -30,7 +30,6 @@ import com.monster.taint.z3.Z3Type;
 import com.monster.taint.z3.Z3MiscFunctions;
 
 public class ASRExpr {
-	private final String STRING_CLASS = "java.lang.String";
 	private PrintWriter writer = null;
 	private SMT2FileGenerator fileGenerator = null;
 	private int stmtIdx;
@@ -104,7 +103,7 @@ public class ASRExpr {
 		SootMethodRef methodRef = invokeExpr.getMethodRef();
 		
 		//if this is a java.lang.String.func, we don't need to declare it
-		if(methodRef.declaringClass().getName().equals(STRING_CLASS)){
+		if(StringModeling.stringMethods.contains(methodRef.getSignature())){
 			return;
 		}
 		
@@ -278,7 +277,7 @@ public class ASRExpr {
 	private void jetInvokeExpr(){
 		InvokeExpr invokeExpr = (InvokeExpr) rExpr;
 		SootMethodRef methodRef = invokeExpr.getMethodRef();
-		if(methodRef.declaringClass().getName().equals(STRING_CLASS)){
+		if(StringModeling.stringMethods.contains(methodRef.getSignature())){
 			jetStringOperation(invokeExpr);
 		}else{
 			Value thisBase = null;
@@ -319,11 +318,56 @@ public class ASRExpr {
 	 * Modeling String operations:
 	 * concat, contains, endswith, indexof, length, replace, startswith, substring
 	 * 
+	 * The methods modeled:
+	 * 1. String concat(String string)  -- Concat
+	 * 	  <java.lang.String: java.lang.String concat(java.lang.String)> 
+	 * 2. boolean contains(CharSequence cs)  -- Contains
+	 *    <java.lang.String: boolean contains(java.lang.CharSequence)>
+	 * 3. boolean contentEquals(CharSequence cs) -- =
+	 * 	  <java.lang.String: boolean contentEquals(java.lang.CharSequence)>
+	 * 4. boolean contentEquals(StringBuffer strbuf) -- =
+	 * 	  <java.lang.String: boolean contentEquals(java.lang.StringBuffer)>
+	 * 5. boolean endsWith(String suffix) -- EndsWith
+	 * 	  <java.lang.String: boolean endsWith(java.lang.String)>
+	 * 6. boolean equals(Object object) -- =
+	 * 	  <java.lang.String: boolean equals(java.lang.Object)>
+	 * 7. boolean equalsIgnoreCase(String string) -- =
+	 * 	  <java.lang.String: boolean equalsIgnoreCase(java.lang.String)>
+	 * 8. int indexOf(String subString, int start) -- IndexOf
+	 *    <java.lang.String: int indexOf(java.lang.String,int)>
+	 * 9. int indexOf(String string) -- IndexOf
+	 *    <java.lang.String: int indexOf(java.lang.String)>
+	 * 10. String intern() -- =
+	 *    <java.lang.String: java.lang.String intern()>
+	 * 11. boolean isEmpty() -- =
+	 * 	  <java.lang.String: boolean isEmpty()>
+	 * 12. int lastIndexOf(String string) -- IndexOf
+	 *    <java.lang.String: int lastIndexOf(java.lang.String)>
+	 * 13. int lastIndexOf(String subString, int start) -- IndexOf
+	 *    <java.lang.String: int lastIndexOf(java.lang.String,int)>
+	 * 14. int length() -- Length
+	 *    <java.lang.String: int length()>
+	 * 15. String replace(CharSequence target, CharSequence replacement) -- Replace
+	 *    <java.lang.String: java.lang.String replace(java.lang.CharSequence,java.lang.CharSequence)>
+	 * 16. boolean startsWith(String prefix) -- StartsWith
+	 *    <java.lang.String: boolean startsWith(java.lang.String)>
+	 * 17. boolean startsWith(String prefix, int start) -- StartsWith
+	 *    <java.lang.String: boolean startsWith(java.lang.String,int)>
+	 * 18. CharSequence	subSequence(int start, int end) --SubString
+	 *    <java.lang.String: java.lang.CharSequence subSequence(int,int)>
+	 * 19. String substring(int start) -- SubString
+	 *    <java.lang.String: java.lang.String substring(int)>
+	 * 20. String substring(int start, int end) -- SubString
+	 *    <java.lang.String: java.lang.String substring(int,int)>
+	 * 21. String toString() -- =
+	 *    <java.lang.String: java.lang.String toString()>
+	 * 22. static String valueOf(Object value) -- =
+	 *    <java.lang.String: java.lang.String valueOf(java.lang.Object)>
 	 * 
 	 * @param invokeExpr
 	 */
 	private void jetStringOperation(InvokeExpr invokeExpr){
-		
+		this.exprStr = StringModeling.modelMethod(invokeExpr, fileGenerator);
 	}
 
 	/**
