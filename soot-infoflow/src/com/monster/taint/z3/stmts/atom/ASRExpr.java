@@ -367,7 +367,7 @@ public class ASRExpr {
 	 * @param invokeExpr
 	 */
 	private void jetStringOperation(InvokeExpr invokeExpr){
-		this.exprStr = StringModeling.modelMethod(invokeExpr, fileGenerator);
+		this.exprStr = StringModeling.modelMethod(invokeExpr, fileGenerator, stmtIdx);
 	}
 
 	/**

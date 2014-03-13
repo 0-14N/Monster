@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import soot.SootMethodRef;
+import soot.Value;
 import soot.jimple.InvokeExpr;
+import soot.jimple.StaticInvokeExpr;
+import soot.jimple.VirtualInvokeExpr;
 
 import com.monster.taint.z3.SMT2FileGenerator;
 
@@ -147,166 +150,495 @@ public class StringModeling {
 		}
 	};
 	
-	public static String modelMethod(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+	public static String modelMethod(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
 		SootMethodRef methodRef = invokeExpr.getMethodRef();
 		switch(stringMethodsEnumMap.get(methodRef.getSignature())){
 		case Concat:
-			return mConcat(invokeExpr, fileGenerator);
+			return mConcat(invokeExpr, fileGenerator, stmtIdx);
 		case Contains:
-			return mContains(invokeExpr, fileGenerator);
+			return mContains(invokeExpr, fileGenerator, stmtIdx);
 		case ContentEquals:
-			return mContentEquals(invokeExpr, fileGenerator);
+			return mContentEquals(invokeExpr, fileGenerator, stmtIdx);
 		case ContentEquals2:
-			return mContentEquals2(invokeExpr, fileGenerator);
+			return mContentEquals(invokeExpr, fileGenerator, stmtIdx);
 		case EndsWith:
-			return mEndsWith(invokeExpr, fileGenerator);
+			return mEndsWith(invokeExpr, fileGenerator, stmtIdx);
 		case Equals:
-			return mEquals(invokeExpr, fileGenerator);
+			return mEquals(invokeExpr, fileGenerator, stmtIdx);
 		case EqualsIgnore:
-			return mEqualsIgnore(invokeExpr, fileGenerator);
+			return mEqualsIgnore(invokeExpr, fileGenerator, stmtIdx);
 		case IndexOf:
-			return mIndexOf(invokeExpr, fileGenerator);
+			return mIndexOf(invokeExpr, fileGenerator, stmtIdx);
 		case IndexOf2:
-			return mIndexOf2(invokeExpr, fileGenerator);
+			return mIndexOf(invokeExpr, fileGenerator, stmtIdx);
 		case Intern:
-			return mIntern(invokeExpr, fileGenerator);
+			return mIntern(invokeExpr, fileGenerator, stmtIdx);
 		case IsEmpty:
-			return mIsEmpty(invokeExpr, fileGenerator);
+			return mIsEmpty(invokeExpr, fileGenerator, stmtIdx);
 		case LastIndexOf:
-			return mLastIndexOf(invokeExpr, fileGenerator);
+			return mLastIndexOf(invokeExpr, fileGenerator, stmtIdx);
 		case LastIndexOf2:
-			return mLastIndexOf2(invokeExpr, fileGenerator);
+			return mLastIndexOf(invokeExpr, fileGenerator, stmtIdx);
 		case Length:
-			return mLength(invokeExpr, fileGenerator);
+			return mLength(invokeExpr, fileGenerator, stmtIdx);
 		case Replace:
-			return mReplace(invokeExpr, fileGenerator);
+			return mReplace(invokeExpr, fileGenerator, stmtIdx);
 		case StartsWith:
-			return mStartsWith(invokeExpr, fileGenerator);
+			return mStartsWith(invokeExpr, fileGenerator, stmtIdx);
 		case StartsWith2:
-			return mStartsWith2(invokeExpr, fileGenerator);
+			return mStartsWith(invokeExpr, fileGenerator, stmtIdx);
 		case SubSequence:
-			return mSubSequence(invokeExpr, fileGenerator);
+			return mSubSequence(invokeExpr, fileGenerator, stmtIdx);
 		case SubString:
-			return mSubString(invokeExpr, fileGenerator);
+			return mSubString(invokeExpr, fileGenerator, stmtIdx);
 		case SubString2:
-			return mSubString2(invokeExpr, fileGenerator);
+			return mSubString2(invokeExpr, fileGenerator, stmtIdx);
 		case ToString:
-			return mToString(invokeExpr, fileGenerator);
+			return mToString(invokeExpr, fileGenerator, stmtIdx);
 		case ValueOf:
-			mValueOf(invokeExpr, fileGenerator);
+			return mValueOf(invokeExpr, fileGenerator, stmtIdx);
 			default:
 				assert(false);
 				return null;
 		}
 	}
-	
-	private static String mConcat(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
-		StringBuilder sb = new StringBuilder();
-		return sb.toString();
+
+	private static VirtualInvokeExpr convertToVirtualInvokeExpr(InvokeExpr invokeExpr){
+		assert(invokeExpr instanceof VirtualInvokeExpr);
+		return (VirtualInvokeExpr) invokeExpr;
 	}
 	
-	private static String mContains(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+	/**
+	 * a = b.concat(c)
+	 * (assert (= a (Concat b c)))
+	 * 
+	 * @param invokeExpr
+	 * @param stmtIdx 
+	 * @param fileGenerator
+	 * @return
+	 */
+	private static String mConcat(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Concat ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mContentEquals(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.contains(c)
+	 * (assert (= a (Contains b c)))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mContains(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Contains ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mContentEquals2(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.contentEquals(c)
+	 * (assert (= a (= b c)))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mContentEquals(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(= ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mEndsWith(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.endsWith(c)
+	 * (assert (= a (EndsWith b c)))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mEndsWith(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(EndsWith ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mEquals(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.equals(c)
+	 * (assert (= a (= b c))) 
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mEquals(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(= ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mEqualsIgnore(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.equalsIgnore(c)
+	 * (assert (= a (= b c))) 
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mEqualsIgnore(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(= ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mIndexOf(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.indexof(c)
+	 * a = b.indexof(c, 42)
+	 * (assert (= a (Indexof b c)))
+	 * 
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mIndexOf(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Indexof ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mIndexOf2(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.intern()
+	 * (assert (= a b))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mIntern(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append(thisBaseName);
 		return sb.toString();
 	}
-	
-	private static String mIntern(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.isEmpty()
+	 * (assert (= a (= b "")))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mIsEmpty(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(= ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append("\"\"");
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mIsEmpty(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.lastIndexOf(c)
+	 * a = b.lastIndexOf(c, 42)
+	 * (assert (= a (Indexof b c)))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mLastIndexOf(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Indexof ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mLastIndexOf(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.length()
+	 * (assert (= a (Length b)))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mLength(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Length ");
+		sb.append(thisBaseName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mLastIndexOf2(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.replace(c , d)
+	 * (assert (= a (Replace b c d)))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mReplace(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		Value secondParam = vInvokeExpr.getArg(1);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		String secondParamName = fileGenerator.getRenameOf(secondParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Replace ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(" ");
+		sb.append(secondParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mLength(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.startsWith(c)
+	 * a = b.startsWith(c, 42)
+	 * (assert (= a (StartsWith b c)))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mStartsWith(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(StartsWith ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mReplace(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.subSequence(int start, int end)
+	 * (assert (= a (Substring b start (- end 1)))) 
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mSubSequence(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		Value secondParam = vInvokeExpr.getArg(1);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		String secondParamName = fileGenerator.getRenameOf(secondParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Substring ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(" ");
+		sb.append("(- ");
+		sb.append(secondParamName);
+		sb.append(" 1)");
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mStartsWith(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * substring(int start)
+	 * a = b.substring(c)
+	 * (assert (= a (Substring b c (- (Length b) 1))))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mSubString(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Substring ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(" (- (Length ");
+		sb.append(thisBaseName);
+		sb.append(") 1)");
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mStartsWith2(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * substring(int start, int end)
+	 * a = b.substring(c, d)
+	 * (assert (= a (Substring b c (- d 1))))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mSubString2(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		Value firstParam = vInvokeExpr.getArg(0);
+		Value secondParam = vInvokeExpr.getArg(1);
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		String secondParamName = fileGenerator.getRenameOf(secondParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append("(Substring ");
+		sb.append(thisBaseName);
+		sb.append(" ");
+		sb.append(firstParamName);
+		sb.append(" ");
+		sb.append("(- ");
+		sb.append(secondParamName);
+		sb.append(" 1)");
+		sb.append(")");
 		return sb.toString();
 	}
-	
-	private static String mSubSequence(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = b.toString()
+	 * (assert (= a b))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mToString(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		VirtualInvokeExpr vInvokeExpr = convertToVirtualInvokeExpr(invokeExpr);
+		Value thisBase = vInvokeExpr.getBase();
+		String thisBaseName = fileGenerator.getRenameOf(thisBase, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
+		sb.append(thisBaseName);
 		return sb.toString();
 	}
-	
-	private static String mSubString(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
+
+	/**
+	 * a = String.valueOf(b)
+	 * (assert (= a b))
+	 * @param invokeExpr
+	 * @param fileGenerator
+	 * @param stmtIdx
+	 * @return
+	 */
+	private static String mValueOf(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator, int stmtIdx){
+		StaticInvokeExpr sInvokeExpr = (StaticInvokeExpr) invokeExpr;
+		Value firstParam = sInvokeExpr.getArg(0);
+		String firstParamName = fileGenerator.getRenameOf(firstParam, false, stmtIdx);
+		
 		StringBuilder sb = new StringBuilder();
-		return sb.toString();
-	}
-	
-	private static String mSubString2(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
-		StringBuilder sb = new StringBuilder();
-		return sb.toString();
-	}
-	
-	private static String mToString(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
-		StringBuilder sb = new StringBuilder();
-		return sb.toString();
-	}
-	
-	private static String mValueOf(InvokeExpr invokeExpr, SMT2FileGenerator fileGenerator){
-		StringBuilder sb = new StringBuilder();
+		sb.append(firstParamName);
 		return sb.toString();
 	}
 }
