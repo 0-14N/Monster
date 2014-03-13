@@ -31,6 +31,10 @@ public class AssignStmtLARefRExpr{
 	public void jet(){
 		this.lARef.jet();
 		this.rExpr.jet();
+	
+		if(rExpr.isNewExpr()){
+			return;
+		}
 		
 		writer.println(getAssertStr());
 	}

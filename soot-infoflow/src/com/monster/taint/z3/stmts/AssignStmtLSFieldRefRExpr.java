@@ -32,6 +32,10 @@ public class AssignStmtLSFieldRefRExpr{
 		this.lSFieldRef.jet();
 		this.rExpr.jet();
 		
+		if(rExpr.isNewExpr()){
+			return;
+		}
+		
 		writer.println(getAssertStr());
 	}
 	

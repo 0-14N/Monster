@@ -40,6 +40,10 @@ public class AssignStmtLLocalRExpr{
 		this.lLocal.jet();
 		this.rExpr.jet();
 		
+		if(rExpr.isNewExpr()){
+			return;
+		}
+		
 		writer.println(getAssertStr());
 	}
 	

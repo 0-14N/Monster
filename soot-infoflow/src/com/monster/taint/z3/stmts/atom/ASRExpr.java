@@ -37,6 +37,9 @@ public class ASRExpr {
 	private String exprStr = null;
 	private ExprType exprType = null;
 	
+	//exceptional case, new expr
+	private boolean isNewExpr = false;
+	
 	public ASRExpr(PrintWriter writer, SMT2FileGenerator fileGenerator, 
 			int stmtIdx, Expr rExpr){
 		this.writer = writer;
@@ -241,7 +244,11 @@ public class ASRExpr {
 	 * new_expr = "new" ref_type "()"; 
 	 */
 	private void jetNewExpr(){
-		//do nothing 
+		this.isNewExpr = true;
+	}
+	
+	public boolean isNewExpr(){
+		return this.isNewExpr;
 	}
 
 	/**

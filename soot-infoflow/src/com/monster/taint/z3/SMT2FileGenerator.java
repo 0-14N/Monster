@@ -319,6 +319,11 @@ public class SMT2FileGenerator {
 		int redefineTimes = 0;
 		String valueStr = null;
 		
+		//constant
+		if(value instanceof Constant){
+			return value.toString();
+		}
+		
 		if(value instanceof Local){
 			valueStr = ((Local) value).getName();
 		}else if(value instanceof InstanceFieldRef){

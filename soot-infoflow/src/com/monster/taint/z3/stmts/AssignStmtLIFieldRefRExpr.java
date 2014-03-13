@@ -30,6 +30,10 @@ public class AssignStmtLIFieldRefRExpr{
 	public void jet(){
 		this.lIFieldRef.jet();
 		this.rExpr.jet();
+	
+		if(rExpr.isNewExpr()){
+			return;
+		}
 		
 		writer.println(getAssertStr());
 	}
