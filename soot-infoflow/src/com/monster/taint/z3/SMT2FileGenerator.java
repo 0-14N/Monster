@@ -28,12 +28,30 @@ import soot.jimple.NullConstant;
 import soot.jimple.StaticFieldRef;
 
 import com.monster.taint.path.MethodPath;
+import com.monster.taint.z3.stmts.AssignStmtLARefRARef;
+import com.monster.taint.z3.stmts.AssignStmtLARefRConstant;
+import com.monster.taint.z3.stmts.AssignStmtLARefRExpr;
+import com.monster.taint.z3.stmts.AssignStmtLARefRIFieldRef;
+import com.monster.taint.z3.stmts.AssignStmtLARefRLocal;
+import com.monster.taint.z3.stmts.AssignStmtLARefRSFieldRef;
+import com.monster.taint.z3.stmts.AssignStmtLIFieldRefRARef;
+import com.monster.taint.z3.stmts.AssignStmtLIFieldRefRConstant;
+import com.monster.taint.z3.stmts.AssignStmtLIFieldRefRExpr;
+import com.monster.taint.z3.stmts.AssignStmtLIFieldRefRIFieldRef;
+import com.monster.taint.z3.stmts.AssignStmtLIFieldRefRLocal;
+import com.monster.taint.z3.stmts.AssignStmtLIFieldRefRSFieldRef;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRARef;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRConstant;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRExpr;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRIFieldRef;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRLocal;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRSFieldRef;
+import com.monster.taint.z3.stmts.AssignStmtLSFieldRefRARef;
+import com.monster.taint.z3.stmts.AssignStmtLSFieldRefRConstant;
+import com.monster.taint.z3.stmts.AssignStmtLSFieldRefRExpr;
+import com.monster.taint.z3.stmts.AssignStmtLSFieldRefRIFieldRef;
+import com.monster.taint.z3.stmts.AssignStmtLSFieldRefRLocal;
+import com.monster.taint.z3.stmts.AssignStmtLSFieldRefRSFieldRef;
 import com.monster.taint.z3.stmts.MyIfStmt;
 
 /**
@@ -286,9 +304,107 @@ public class SMT2FileGenerator {
 				lLocalRExpr.jet();
 			}
 		}else if(lvalue instanceof InstanceFieldRef){
+			InstanceFieldRef lIFieldRef = (InstanceFieldRef) lvalue;
 			
+			if(rvalue instanceof Constant){
+				Constant rConstant = (Constant) rvalue;
+				AssignStmtLIFieldRefRConstant lIFiedlRefRConstant = new AssignStmtLIFieldRefRConstant(writer, 
+						this, stmtIdx, lIFieldRef, rConstant);
+				lIFiedlRefRConstant.jet();
+			}else if(rvalue instanceof Local){
+				Local rLocal = (Local) rvalue;
+				AssignStmtLIFieldRefRLocal lIFieldRefRLocal = new AssignStmtLIFieldRefRLocal(writer, 
+						this, stmtIdx, lIFieldRef, rLocal);
+				lIFieldRefRLocal.jet();
+			}else if(rvalue instanceof InstanceFieldRef){
+				InstanceFieldRef rIFieldRef = (InstanceFieldRef) rvalue;
+				AssignStmtLIFieldRefRIFieldRef lIFieldRefRIFieldRef = new AssignStmtLIFieldRefRIFieldRef(writer, 
+						this, stmtIdx, lIFieldRef, rIFieldRef);
+				lIFieldRefRIFieldRef.jet();
+			}else if(rvalue instanceof StaticFieldRef){
+				StaticFieldRef rSFieldRef = (StaticFieldRef) rvalue;
+				AssignStmtLIFieldRefRSFieldRef lIFieldRefRSFieldRef = new AssignStmtLIFieldRefRSFieldRef(writer, this,
+						stmtIdx, lIFieldRef, rSFieldRef);
+				lIFieldRefRSFieldRef.jet();
+			}else if(rvalue instanceof ArrayRef){
+				ArrayRef rARef = (ArrayRef) rvalue;
+				AssignStmtLIFieldRefRARef lIFieldRefRARef = new AssignStmtLIFieldRefRARef(writer, this,
+						stmtIdx, lIFieldRef, rARef);
+				lIFieldRefRARef.jet();
+			}else if(rvalue instanceof Expr){
+				Expr rExpr = (Expr) rvalue;
+				AssignStmtLIFieldRefRExpr lIFieldRefRExpr = new AssignStmtLIFieldRefRExpr(writer, this,
+						stmtIdx, lIFieldRef, rExpr);
+				lIFieldRefRExpr.jet();
+			}
 		}else if(lvalue instanceof StaticFieldRef){
+			StaticFieldRef lSFieldRef = (StaticFieldRef) lvalue;
+			
+			if(rvalue instanceof Constant){
+				Constant rConstant = (Constant) rvalue;
+				AssignStmtLSFieldRefRConstant lSFieldRefRConstant = new AssignStmtLSFieldRefRConstant(writer, 
+						this, stmtIdx, lSFieldRef, rConstant);
+				lSFieldRefRConstant.jet();
+			}else if(rvalue instanceof Local){
+				Local rLocal = (Local) rvalue;
+				AssignStmtLSFieldRefRLocal lSFieldRefRLocal = new AssignStmtLSFieldRefRLocal(writer, this,
+						stmtIdx, lSFieldRef, rLocal);
+				lSFieldRefRLocal.jet();
+			}else if(rvalue instanceof InstanceFieldRef){
+				InstanceFieldRef rIFieldRef = (InstanceFieldRef) rvalue;
+				AssignStmtLSFieldRefRIFieldRef lSFieldRefRIFieldRef = new AssignStmtLSFieldRefRIFieldRef(writer, this,
+						stmtIdx, lSFieldRef, rIFieldRef);
+				lSFieldRefRIFieldRef.jet();
+			}else if(rvalue instanceof StaticFieldRef){
+				StaticFieldRef rSFieldRef = (StaticFieldRef) rvalue;
+				AssignStmtLSFieldRefRSFieldRef lSFieldRefRSFieldRef = new AssignStmtLSFieldRefRSFieldRef(writer, this,
+						stmtIdx, lSFieldRef, rSFieldRef);
+				lSFieldRefRSFieldRef.jet();
+			}else if(rvalue instanceof ArrayRef){
+				ArrayRef rARef = (ArrayRef) rvalue;
+				AssignStmtLSFieldRefRARef lSFieldRefRARef = new AssignStmtLSFieldRefRARef(writer, this,
+						stmtIdx, lSFieldRef, rARef);
+				lSFieldRefRARef.jet();
+			}else if(rvalue instanceof Expr){
+				Expr rExpr = (Expr) rvalue;
+				AssignStmtLSFieldRefRExpr lSFieldRefRExpr = new AssignStmtLSFieldRefRExpr(writer, this,
+						stmtIdx, lSFieldRef, rExpr);
+				lSFieldRefRExpr.jet();
+			}
 		}else if(lvalue instanceof ArrayRef){
+			ArrayRef lARef = (ArrayRef) lvalue;
+			
+			if(rvalue instanceof Constant){
+				Constant rConstant = (Constant) rvalue;
+				AssignStmtLARefRConstant lARefRConstant = new AssignStmtLARefRConstant(writer, this,
+						stmtIdx, lARef, rConstant);
+				lARefRConstant.jet();
+			}else if(rvalue instanceof Local){
+				Local rLocal = (Local) rvalue;
+				AssignStmtLARefRLocal lARefRLocal = new AssignStmtLARefRLocal(writer, this,
+						stmtIdx, lARef, rLocal);
+				lARefRLocal.jet();
+			}else if(rvalue instanceof InstanceFieldRef){
+				InstanceFieldRef rIFieldRef = (InstanceFieldRef) rvalue;
+				AssignStmtLARefRIFieldRef lARefRIFieldRef = new AssignStmtLARefRIFieldRef(writer, this,
+						stmtIdx, lARef, rIFieldRef);
+				lARefRIFieldRef.jet();
+			}else if(rvalue instanceof StaticFieldRef){
+				StaticFieldRef rSFieldRef = (StaticFieldRef) rvalue;
+				AssignStmtLARefRSFieldRef lARefRSFieldRef = new AssignStmtLARefRSFieldRef(writer, this,
+						stmtIdx, lARef, rSFieldRef);
+				lARefRSFieldRef.jet();
+			}else if(rvalue instanceof ArrayRef){
+				ArrayRef rARef = (ArrayRef) rvalue;
+				AssignStmtLARefRARef lARefRARef = new AssignStmtLARefRARef(writer, this,
+						stmtIdx, lARef, rARef);
+				lARefRARef.jet();
+			}else if(rvalue instanceof Expr){
+				Expr rExpr = (Expr) rvalue;
+				AssignStmtLARefRExpr lARefRExpr = new AssignStmtLARefRExpr(writer, this,
+						stmtIdx, lARef, rExpr);
+				lARefRExpr.jet();
+			}
 		}
 	}
 	

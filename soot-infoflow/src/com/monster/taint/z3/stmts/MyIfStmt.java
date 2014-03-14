@@ -78,6 +78,7 @@ public class MyIfStmt {
 				jetEq(op1, op2);
 			}
 		}
+		this.writer.println("(check-sat)");
 	}
 
 	/**
