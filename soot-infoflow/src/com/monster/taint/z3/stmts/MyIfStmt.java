@@ -3,6 +3,8 @@ package com.monster.taint.z3.stmts;
 import java.io.PrintWriter;
 
 import com.monster.taint.z3.SMT2FileGenerator;
+import com.monster.taint.z3.Z3MiscFunctions;
+import com.monster.taint.z3.Z3Type;
 
 import soot.Value;
 import soot.jimple.ConditionExpr;
@@ -84,6 +86,9 @@ public class MyIfStmt {
 	/**
 	 * if a == b
 	 * (assert (= a b))
+	 * if z == 0
+	 * (assert (= z false))
+	 * """ In the Java virtual machine, false is represented by integer zero and true by any non-zero integer"""
 	 * @param op1
 	 * @param op2
 	 */
@@ -94,7 +99,13 @@ public class MyIfStmt {
 		sb.append("(assert (= ");
 		sb.append(op1Name);
 		sb.append(" ");
-		sb.append(op2Name);
+		if(Z3MiscFunctions.v().z3Type(op1.getType()) == Z3Type.Z3Boolean
+				&& Z3MiscFunctions.v().z3Type(op2.getType()) != Z3Type.Z3Boolean){
+			assert(op2Name.equals("0"));
+			sb.append("false");
+		}else{
+			sb.append(op2Name);
+		}
 		sb.append("))");
 		this.writer.println(sb.toString());
 	}
@@ -166,7 +177,13 @@ public class MyIfStmt {
 		sb.append("(assert (not (= ");
 		sb.append(op1Name);
 		sb.append(" ");
-		sb.append(op2Name);
+		if(Z3MiscFunctions.v().z3Type(op1.getType()) == Z3Type.Z3Boolean
+				&& Z3MiscFunctions.v().z3Type(op2.getType()) != Z3Type.Z3Boolean){
+			assert(op2Name.equals("0"));
+			sb.append("false");
+		}else{
+			sb.append(op2Name);
+		}
 		sb.append(")))");
 		this.writer.println(sb.toString());
 	}
