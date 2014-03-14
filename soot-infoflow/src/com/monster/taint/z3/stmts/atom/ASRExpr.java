@@ -275,7 +275,7 @@ public class ASRExpr {
 	 * 	(assert (= b (Contains s1 s2)))
 	 * 
 	 * 2. b = r2.get(s)
-	 *  (assert (= b get(r2 s)))
+	 *  (assert (= b (get r2 s)))
 	 *	see this.jetFunctions for more 
 	 *	
 	 * invoke_expr = interface_invoke_expr | special_invoke_expr | static_invoke_expr |
@@ -297,8 +297,9 @@ public class ASRExpr {
 			}
 			String funStr = constructFunStr(invokeExpr);
 			StringBuilder sb = new StringBuilder();
-			sb.append(funStr);
 			sb.append("(");
+			sb.append(funStr);
+			sb.append(" ");
 			
 			if(thisBase != null){
 				String thisBaseName = fileGenerator.getRenameOf(thisBase, false, this.stmtIdx);
