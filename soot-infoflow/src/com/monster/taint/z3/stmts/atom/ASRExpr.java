@@ -148,16 +148,16 @@ public class ASRExpr {
 		funSB.append(methodRef.declaringClass().getName().replace(".", "_"));
 		funSB.append("$$");
 		//return type
-		funSB.append(methodRef.returnType().toString().replace(".", "_"));
+		funSB.append(methodRef.returnType().toString().replace(".", "_").replace("[]", "ARRAY"));
 		//parameter and this types
 		funSB.append("$$");
 		//this type
 		if(thisType != null){
-			funSB.append(thisType.toString().replace(".", "_"));
+			funSB.append(thisType.toString().replace(".", "_").replace("[]", "ARRAY"));
 			funSB.append("$");
 		}
 		for(Type paramType : methodRef.parameterTypes()){
-			funSB.append(paramType.toString().replace(".", "_"));
+			funSB.append(paramType.toString().replace(".", "_").replace("[]", "ARRAY"));
 			funSB.append("$");
 		}
 		funSB.append(methodRef.name());

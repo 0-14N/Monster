@@ -9,12 +9,14 @@ import com.monster.taint.z3.Z3Type;
 import soot.Local;
 import soot.Value;
 import soot.jimple.ConditionExpr;
+import soot.jimple.Constant;
 import soot.jimple.EqExpr;
 import soot.jimple.GeExpr;
 import soot.jimple.GtExpr;
 import soot.jimple.LeExpr;
 import soot.jimple.LtExpr;
 import soot.jimple.NeExpr;
+import soot.jimple.NullConstant;
 
 public class MyIfStmt {
 	private SMT2FileGenerator fileGenerator = null;
@@ -102,8 +104,23 @@ public class MyIfStmt {
 	/**
 	 * if a == b
 	 * (assert (= a b))
+	 * 
 	 * if z == 0
 	 * (assert (= z false))
+	 * 
+	 * ***special cases for array type variables and null****
+	 * String[]/UnknownArray:
+	 * (declare-const a (Array Int String) )
+	 * if a == null
+	 * 
+	 * Int[]:
+	 * (declare-const a (Array Int Int))
+	 * if a == null
+	 * 
+	 * Real[]: 
+	 * 
+	 * Bool[]:
+	 * ======(assert (= true true))
 	 * """ In the Java virtual machine, false is represented by integer zero and true by any non-zero integer"""
 	 * @param op1
 	 * @param op2
@@ -112,17 +129,25 @@ public class MyIfStmt {
 		StringBuilder sb = new StringBuilder();
 		String op1Name = this.fileGenerator.getRenameOf(op1, false, stmtIdx);
 		String op2Name = this.fileGenerator.getRenameOf(op2, false, stmtIdx);
-		sb.append("(assert (= ");
-		sb.append(op1Name);
-		sb.append(" ");
-		if(Z3MiscFunctions.v().z3Type(op1.getType()) == Z3Type.Z3Boolean
-				&& Z3MiscFunctions.v().z3Type(op2.getType()) != Z3Type.Z3Boolean){
-			assert(op2Name.equals("0"));
-			sb.append("false");
+		Z3Type op1Z3Type = Z3MiscFunctions.v().z3Type(op1.getType());
+		Z3Type op2Z3Type = Z3MiscFunctions.v().z3Type(op2.getType());
+		
+		//handle the special cases
+		if(Z3MiscFunctions.v().isArrayType(op1.getType()) && op2 instanceof Constant){
+			assert(op2 instanceof NullConstant);
+			sb.append("(assert (= true true))");
 		}else{
-			sb.append(op2Name);
+			sb.append("(assert (= ");
+			sb.append(op1Name);
+			sb.append(" ");
+			if(op1Z3Type == Z3Type.Z3Boolean && op2Z3Type != Z3Type.Z3Boolean){
+				assert(op2Name.equals("0"));
+				sb.append("false");
+			}else{
+				sb.append(op2Name);
+			}
+			sb.append("))");
 		}
-		sb.append("))");
 		this.writer.println(sb.toString());
 	}
 
@@ -183,6 +208,22 @@ public class MyIfStmt {
 	/**
 	 * if a != b
 	 * (assert (not (= a b)))
+	 * 
+	 * ***special cases for array type variables and null****
+	 * String[]/UnknownArray:
+	 * (declare-const a (Array Int String) )
+	 * if a != null
+	 * (assert (not (= (select a 0) "shoon")))
+	 * 
+	 * Int[]:
+	 * (declare-const a (Array Int Int))
+	 * if a != null
+	 * (assert (not (= (select a 0) 42)))
+	 * 
+	 * Real[]: 42.0 
+	 * 
+	 * Bool[]:
+	 * (assert (or (select b 0) (select b 0)))
 	 * @param op1
 	 * @param op2
 	 */
@@ -190,17 +231,43 @@ public class MyIfStmt {
 		StringBuilder sb = new StringBuilder();
 		String op1Name = this.fileGenerator.getRenameOf(op1, false, stmtIdx);
 		String op2Name = this.fileGenerator.getRenameOf(op2, false, stmtIdx);
-		sb.append("(assert (not (= ");
-		sb.append(op1Name);
-		sb.append(" ");
-		if(Z3MiscFunctions.v().z3Type(op1.getType()) == Z3Type.Z3Boolean
-				&& Z3MiscFunctions.v().z3Type(op2.getType()) != Z3Type.Z3Boolean){
-			assert(op2Name.equals("0"));
-			sb.append("false");
+		Z3Type op1Z3Type = Z3MiscFunctions.v().z3Type(op1.getType());
+		Z3Type op2Z3Type = Z3MiscFunctions.v().z3Type(op2.getType());
+		
+		//handle the special cases
+		if(Z3MiscFunctions.v().isArrayType(op1.getType()) && op2 instanceof Constant){
+			assert(op2 instanceof NullConstant);
+			if(op1Z3Type == Z3Type.Z3BooleanArray){
+				sb.append("(assert (or (select ");
+				sb.append(op1Name);
+				sb.append(" 0) (select ");
+				sb.append(op1Name);
+				sb.append(" 0)))");
+			}else{
+				sb.append("(assert (not (= (select ");
+				sb.append(op1Name);
+				sb.append(" 0) ");
+				if(op1Z3Type == Z3Type.Z3StringArray || op1Z3Type == Z3Type.Z3UnKnownArray){
+					sb.append("\"shoon\"");
+				}else if(op1Z3Type == Z3Type.Z3IntArray){
+					sb.append("42");
+				}else if(op1Z3Type == Z3Type.Z3RealArray){
+					sb.append("42.0");
+				}
+				sb.append(")))");
+			}
 		}else{
-			sb.append(op2Name);
+			sb.append("(assert (not (= ");
+			sb.append(op1Name);
+			sb.append(" ");
+			if(op1Z3Type == Z3Type.Z3Boolean && op2Z3Type != Z3Type.Z3Boolean){
+				assert(op2Name.equals("0"));
+				sb.append("false");
+			}else{
+				sb.append(op2Name);
+			}
+			sb.append(")))");
 		}
-		sb.append(")))");
 		this.writer.println(sb.toString());
 	}
 }
