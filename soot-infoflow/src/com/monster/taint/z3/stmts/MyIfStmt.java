@@ -6,6 +6,7 @@ import com.monster.taint.z3.SMT2FileGenerator;
 import com.monster.taint.z3.Z3MiscFunctions;
 import com.monster.taint.z3.Z3Type;
 
+import soot.Local;
 import soot.Value;
 import soot.jimple.ConditionExpr;
 import soot.jimple.EqExpr;
@@ -43,6 +44,21 @@ public class MyIfStmt {
 	public void jet(){
 		Value op1 = conditionExpr.getOp1();
 		Value op2 = conditionExpr.getOp2();
+		Z3Type op1Z3Type = Z3MiscFunctions.v().z3Type(op1.getType());
+		Z3Type op2Z3Type = Z3MiscFunctions.v().z3Type(op2.getType());
+		String op1Name = fileGenerator.getRenameOf(op1, false, stmtIdx);
+		String op2Name = fileGenerator.getRenameOf(op2, false, stmtIdx);
+	
+		if(op1 instanceof Local && !fileGenerator.getDeclaredVariables().contains(op1Name)){
+			writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(op1Name, op1Z3Type));
+			fileGenerator.getDeclaredVariables().add(op1Name);
+		}
+		
+		if(op2 instanceof Local && !fileGenerator.getDeclaredVariables().contains(op2Name)){
+			writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(op2Name, op2Z3Type));
+			fileGenerator.getDeclaredVariables().add(op2Name);
+		}
+		
 		if(conditionExpr instanceof EqExpr){
 			if(satisfied){
 				jetEq(op1, op2);

@@ -225,7 +225,7 @@ public class SMT2FileGenerator {
 				AssignStmt assignStmt = (AssignStmt) unit;
 				parseAssignStmt(assignStmt, i, smt2Writer);
 			}else if(unit instanceof InvokeStmt){
-					
+				
 			}else if(unit instanceof IfStmt){
 				IfStmt ifStmt = (IfStmt) unit;
 				boolean satisfied = false;
@@ -236,6 +236,7 @@ public class SMT2FileGenerator {
 					}
 				}
 				parseIfStmt(ifStmt, satisfied, i, smt2Writer);;
+			}else{
 			}
 		}
 		
