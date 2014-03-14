@@ -92,24 +92,13 @@ public class SSAMiscFunctions {
 		return false;
 	}
 	
-	public int getDefRedefineTimes(List<Integer> redefineLineNumbers, int index){
+	public int getDefineTimes(List<Integer> defineLineNumbers, int index){
 		int i = 0;
-		for(Integer integer : redefineLineNumbers){
+		for(Integer integer : defineLineNumbers){
 			if(index >= integer.intValue()){
 				i++;
 			}
 		}
 		return i;
 	}
-	
-	public int getUseRedefineTimes(List<Integer> redefineLineNumbers, int index){
-		int i = 0;
-		for(Integer integer : redefineLineNumbers){
-			if(index > integer.intValue()){
-				i++;
-			}
-		}
-		return i;
-	}
-	
 }

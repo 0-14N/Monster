@@ -114,15 +114,17 @@ public class SMT2FileGenerator {
 	
 	private static SMT2FileGenerator instance = null;
 	
-	//we use a map to record the variables need to rename, key is the variable andk
+	//we use a map to record the variables need to rename, key is the variable and
 	//value is a list of unit indexes at which the variable should be renamed
-	HashMap<Value, ArrayList<Integer>> renamesMap = null;
+	private HashMap<Value, ArrayList<Integer>> definedNamesMap = null;
+	//record the line numbers where there is a same variable appears in both sides of '='
+	private ArrayList<Integer> bothSidesVariableLineNumbers = null;
 	//the declared variables names
-	ArrayList<String> declaredVariables = null;
+	private ArrayList<String> declaredVariables = null;
 	//the declared functions
-	ArrayList<String> declaredFunctions = null;
+	private ArrayList<String> declaredFunctions = null;
 	//array size map
-	HashMap<String, String> arraySizeMap = null;
+	private HashMap<String, String> arraySizeMap = null;
 	
 	private SMT2FileGenerator(){}
 	
@@ -147,19 +149,20 @@ public class SMT2FileGenerator {
 				"-" + methodPath.getPathID() + ".smt";
 		PrintWriter smt2Writer = new PrintWriter(SMT2_DIR + fileName, "UTF-8");
 	
-		renamesMap = new HashMap<Value, ArrayList<Integer>>();
+		definedNamesMap = new HashMap<Value, ArrayList<Integer>>();
 		declaredVariables = new ArrayList<String>();
 		declaredFunctions = new ArrayList<String>();
 		arraySizeMap = new HashMap<String, String>();
+		bothSidesVariableLineNumbers = new ArrayList<Integer>();
 		
 		//first, we should handle the case (e.g.'i0 = i0 + 1') in which the
 		//defboxes and useboxes share certain same values
-		handleRedefinedValues(allRelatedUnits);
+		handleSSA(allRelatedUnits);
 	
 		//test
 		if(debug){
 			smt2Writer.println("***********************");
-			Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
+			Iterator<Entry<Value, ArrayList<Integer>>> iter = definedNamesMap.entrySet().iterator();
 			while(iter.hasNext()){
 				Entry<Value, ArrayList<Integer>> entry = iter.next();
 				Value kValue = entry.getKey();
@@ -185,7 +188,7 @@ public class SMT2FileGenerator {
 						Value defValue = defBox.getValue();
 						ArrayList<Integer> defineLineNumbers = getDefineLineNumbers(defValue); 
 						if(defineLineNumbers != null){
-							int redefineTimes = SSAMiscFunctions.v().getDefRedefineTimes(defineLineNumbers, i);
+							int redefineTimes = SSAMiscFunctions.v().getDefineTimes(defineLineNumbers, i);
 							if(redefineTimes > 0){
 								smt2Writer.print(defValue.toString() + "_redefine_" + redefineTimes);
 							}else{
@@ -198,7 +201,7 @@ public class SMT2FileGenerator {
 						Value useValue = useBox.getValue();
 						ArrayList<Integer> defineLineNumbers = getDefineLineNumbers(useValue);
 						if(defineLineNumbers != null){
-							int redefineTimes = SSAMiscFunctions.v().getUseRedefineTimes(defineLineNumbers, i);
+							int redefineTimes = SSAMiscFunctions.v().getDefineTimes(defineLineNumbers, i);
 							if(redefineTimes > 0){
 								smt2Writer.print(useValue.toString() + "_redefine_" + redefineTimes);
 							}else{
@@ -236,7 +239,6 @@ public class SMT2FileGenerator {
 					}
 				}
 				parseIfStmt(ifStmt, satisfied, i, smt2Writer);;
-			}else{
 			}
 		}
 		
@@ -410,7 +412,7 @@ public class SMT2FileGenerator {
 	}
 	
 	private void recordValueInRenameMap(Value value, int index){
-		Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
+		Iterator<Entry<Value, ArrayList<Integer>>> iter = definedNamesMap.entrySet().iterator();
 		boolean valueExist = false;
 		while(iter.hasNext()){
 			Entry<Value, ArrayList<Integer>> entry = iter.next();
@@ -424,7 +426,7 @@ public class SMT2FileGenerator {
 		if(!valueExist){
 			ArrayList<Integer> lineNumbersList = new ArrayList<Integer>();
 			lineNumbersList.add(new Integer(index));
-			renamesMap.put(value, lineNumbersList);
+			definedNamesMap.put(value, lineNumbersList);
 		}
 	}
 	private void addIntegerToList(ArrayList<Integer> integerList, int n){
@@ -440,7 +442,7 @@ public class SMT2FileGenerator {
 		}
 	}
 	private ArrayList<Integer> getDefineLineNumbers(Value value){
-		Iterator<Entry<Value, ArrayList<Integer>>> iter = renamesMap.entrySet().iterator();
+		Iterator<Entry<Value, ArrayList<Integer>>> iter = definedNamesMap.entrySet().iterator();
 		while(iter.hasNext()){
 			Entry<Value, ArrayList<Integer>> entry = iter.next();
 			Value kValue = entry.getKey();
@@ -462,10 +464,17 @@ public class SMT2FileGenerator {
 	public HashMap<String, String> getArraySizeMap(){
 		return this.arraySizeMap;
 	}
-	
+
+	/**
+	 * 
+	 * @param value
+	 * @param defValue
+	 * @param index
+	 * @return
+	 */
 	public String getRenameOf(Value value, boolean defValue, int index){
 		ArrayList<Integer> lineNumbers = getDefineLineNumbers(value);
-		int redefineTimes = 0;
+		int defineTimes = 0;
 		String valueStr = null;
 		
 		//constant
@@ -492,82 +501,80 @@ public class SMT2FileGenerator {
 		
 		if(lineNumbers != null){
 			if(defValue){
-				redefineTimes = SSAMiscFunctions.v().getDefRedefineTimes(lineNumbers, index);
+				defineTimes = SSAMiscFunctions.v().getDefineTimes(lineNumbers, index);
+				if(isInBothSidesVariableMap(index)){
+					defineTimes++;
+				}
 			}else{
-				redefineTimes = SSAMiscFunctions.v().getUseRedefineTimes(lineNumbers, index);
+				defineTimes = SSAMiscFunctions.v().getDefineTimes(lineNumbers, index);
 			}
 		}
-		if(redefineTimes > 0){
-			return valueStr + "_redefine_" + redefineTimes;
+		if(defineTimes > 1){
+			return valueStr + "_redefine_" + (defineTimes - 1);
 		}else{
 			return valueStr;
 		}
 	}
 	
+	private boolean isInBothSidesVariableMap(int index){
+		for(Integer integer : this.bothSidesVariableLineNumbers){
+			if(integer.intValue() == index){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
-	 * iterate 'units' and handle the pattern @11 -- refer comment of this class 
+	 * 
 	 * @param units
 	 */
-	private void handleRedefinedValues(ArrayList<Unit> units){
+	private void handleSSA(ArrayList<Unit> units){
 		for(int i = 0; i < units.size(); i++){
 			Unit unit = units.get(i);
-			/* "assign_stmt = variable "=" rvalue;"
-			 * -- we only handle the assign_stmt
-			 */
 			if(unit instanceof AssignStmt){
 				AssignStmt assignStmt = (AssignStmt) unit;
-				Value lvalue = assignStmt.getLeftOp();
-				Value rvalue = assignStmt.getRightOp();
-				/*
-				 * variable = array_ref | instance_field_ref | static_field_ref | local;
-				 * 
-				 * rvalue = array_ref | constant | expr | instance_field_ref | local |
-				 * next_next_stmt_address | static_field_ref;
-				 */
-				List<ValueBox> rUseBoxes = rvalue.getUseBoxes();
-				//i = i + 1, a[i] = a[i] + 1, b.f = b.f + 1, i = f(i)
-				if(rvalue instanceof Expr){
-					if(lvalue instanceof ArrayRef){
-						/*
-						 * (declare-const a1 (Array Int Int))
-						 * (declare-const i Int)
-						 * ;a[i] = a[i] + 42
-						 * (declare-const b1 (Array Int Int))
-						 * (assert (= (select b1 i) (+ (select a1 i) 42)))
-						 * (check-sat)
-						 * (get-model)
-						 * ;a[i] = a[i+1] + 3
-						 * (assert (= (select a1 i) (+ (select a1 (+ 1 i)) 3)))
-						 * (check-sat)
-						 * (get-model)
-						 * -- If the array ref's base and index are both the same as one of the
-						 * 	  right value's useboxes.
-						 */
-						ArrayRef aRef = (ArrayRef) lvalue;
-						if(SSAMiscFunctions.v().arrayRefRedefined(aRef, rUseBoxes)){
-							recordValueInRenameMap(aRef, i);
-						}
-					}else if(lvalue instanceof InstanceFieldRef){
-						//b.f = b.f + 42
-						InstanceFieldRef iFieldRef = (InstanceFieldRef) lvalue;
-						if(SSAMiscFunctions.v().instanceFieldRefRedefined(iFieldRef, rUseBoxes)){
-							recordValueInRenameMap(iFieldRef, i);
-						}
-					}else if(lvalue instanceof StaticFieldRef){
-						StaticFieldRef sFieldRef = (StaticFieldRef) lvalue;
-						if(SSAMiscFunctions.v().staticFieldRefRedefined(sFieldRef, rUseBoxes)){
-							recordValueInRenameMap(sFieldRef, i);
-						}
-					}else if(lvalue instanceof Local){
-						Local local = (Local) lvalue;
-						if(SSAMiscFunctions.v().localRedefined(local, rUseBoxes)){
-							recordValueInRenameMap(local, i);
-						}
+				Value lValue = assignStmt.getLeftOp();
+				Value rValue = assignStmt.getRightOp();
+				List<ValueBox> rUseBoxes = rValue.getUseBoxes();
+			    //"assign_stmt = variable "=" rvalue;"
+				//variable = array_ref | instance_field_ref | static_field_ref | local;
+				if(lValue instanceof ArrayRef){
+					//a[i] = ..., extract 'a'
+					ArrayRef aRef = (ArrayRef) lValue;
+					recordValueInRenameMap(aRef.getBase(), i);
+					
+					if(SSAMiscFunctions.v().arrayRefRedefined(aRef, rUseBoxes)){
+						addBothSideVariable(i);
 					}
 				}else{
-					//1. i = 0; i = 1
+					recordValueInRenameMap(lValue, i);
+					
+					if(lValue instanceof InstanceFieldRef){
+						InstanceFieldRef iFieldRef = (InstanceFieldRef) lValue;
+						if(SSAMiscFunctions.v().instanceFieldRefRedefined(iFieldRef, rUseBoxes)){
+							addBothSideVariable(i);
+						}
+					}else if(lValue instanceof StaticFieldRef){
+						StaticFieldRef sFieldRef = (StaticFieldRef) lValue;
+						if(SSAMiscFunctions.v().staticFieldRefRedefined(sFieldRef, rUseBoxes)){
+							addBothSideVariable(i);
+						}
+					}else if(lValue instanceof Local){
+						Local local = (Local) lValue;
+						if(SSAMiscFunctions.v().localRedefined(local, rUseBoxes)){
+							addBothSideVariable(i);
+						}
+					}
 				}
+				//rvalue = array_ref | constant | expr | instance_field_ref | local |
+				//next_next_stmt_address | static_field_ref;
 			}
 		}
 	}
+	
+	private void addBothSideVariable(int index){
+		addIntegerToList(bothSidesVariableLineNumbers, index);
+	}
+
 }
