@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 
 import soot.jimple.Constant;
 import soot.jimple.NullConstant;
+import soot.jimple.NumericConstant;
 
 import com.monster.taint.z3.SMT2FileGenerator;
 
@@ -24,12 +25,22 @@ public class ASRConstant {
 
 	/**
 	 * initialize constStr
+	 * 
+	 * -42
+	 * (- 0 42)
 	 */
 	public void jet(){
 		//constant = double_constant | float_constant | int_constant | long_constant |
 		//string_constant | null_constant;
 		if(rConstant instanceof NullConstant){
 			constStr = "\"\"";
+		}else if (rConstant instanceof NumericConstant){
+			String tmp = rConstant.toString();
+			if(tmp.startsWith("-")){
+				constStr = "(- 0 " + tmp.substring(1) + ")";
+			}else{
+				constStr = rConstant.toString();
+			}
 		}else{
 			constStr = rConstant.toString();
 		}

@@ -17,6 +17,7 @@ import soot.jimple.LeExpr;
 import soot.jimple.LtExpr;
 import soot.jimple.NeExpr;
 import soot.jimple.NullConstant;
+import soot.jimple.NumericConstant;
 
 public class MyIfStmt {
 	private SMT2FileGenerator fileGenerator = null;
@@ -144,7 +145,15 @@ public class MyIfStmt {
 				assert(op2Name.equals("0"));
 				sb.append("false");
 			}else{
-				sb.append(op2Name);
+				//$i0 == -1
+				//(assert (= $i0 (- 0 1)))
+				if(op2 instanceof NumericConstant && op2Name.startsWith("-")){
+					sb.append("(- 0 ");
+					sb.append(op2Name.substring(1));
+					sb.append(")");
+				}else{
+					sb.append(op2Name);
+				}
 			}
 			sb.append("))");
 		}
@@ -164,7 +173,15 @@ public class MyIfStmt {
 		sb.append("(assert (>= ");
 		sb.append(op1Name);
 		sb.append(" ");
-		sb.append(op2Name);
+		//$i0 >= -1
+		//(assert (>= $i0 (- 0 1)))
+		if(op2 instanceof NumericConstant && op2Name.startsWith("-")){
+			sb.append("(- 0 ");
+			sb.append(op2Name.substring(1));
+			sb.append(")");
+		}else{
+			sb.append(op2Name);
+		}
 		sb.append("))");
 		this.writer.println(sb.toString());
 	}
@@ -176,7 +193,15 @@ public class MyIfStmt {
 		sb.append("(assert (> ");
 		sb.append(op1Name);
 		sb.append(" ");
-		sb.append(op2Name);
+		//$i0 > -1
+		//(assert (> $i0 (- 0 1)))
+		if(op2 instanceof NumericConstant && op2Name.startsWith("-")){
+			sb.append("(- 0 ");
+			sb.append(op2Name.substring(1));
+			sb.append(")");
+		}else{
+			sb.append(op2Name);
+		}
 		sb.append("))");
 		this.writer.println(sb.toString());
 	}
@@ -188,7 +213,15 @@ public class MyIfStmt {
 		sb.append("(assert (<= ");
 		sb.append(op1Name);
 		sb.append(" ");
-		sb.append(op2Name);
+		//$i0 <= -1
+		//(assert (<= $i0 (- 0 1)))
+		if(op2 instanceof NumericConstant && op2Name.startsWith("-")){
+			sb.append("(- 0 ");
+			sb.append(op2Name.substring(1));
+			sb.append(")");
+		}else{
+			sb.append(op2Name);
+		}
 		sb.append("))");
 		this.writer.println(sb.toString());
 	}
@@ -200,7 +233,15 @@ public class MyIfStmt {
 		sb.append("(assert (< ");
 		sb.append(op1Name);
 		sb.append(" ");
-		sb.append(op2Name);
+		//$i0 < -1
+		//(assert (< $i0 (- 0 1)))
+		if(op2 instanceof NumericConstant && op2Name.startsWith("-")){
+			sb.append("(- 0 ");
+			sb.append(op2Name.substring(1));
+			sb.append(")");
+		}else{
+			sb.append(op2Name);
+		}
 		sb.append("))");
 		this.writer.println(sb.toString());
 	}
@@ -264,7 +305,15 @@ public class MyIfStmt {
 				assert(op2Name.equals("0"));
 				sb.append("false");
 			}else{
-				sb.append(op2Name);
+				//$i0 != -1
+				//(assert (not (= $i0 (- 0 1))))
+				if(op2 instanceof NumericConstant && op2Name.startsWith("-")){
+					sb.append("(- 0 ");
+					sb.append(op2Name.substring(1));
+					sb.append(")");
+				}else{
+					sb.append(op2Name);
+				}
 			}
 			sb.append(")))");
 		}

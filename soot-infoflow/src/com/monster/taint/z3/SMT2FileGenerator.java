@@ -518,46 +518,54 @@ public class SMT2FileGenerator {
 				AssignStmt assignStmt = (AssignStmt) unit;
 				Value lvalue = assignStmt.getLeftOp();
 				Value rvalue = assignStmt.getRightOp();
-				List<ValueBox> rUseBoxes = rvalue.getUseBoxes();
 				/*
 				 * variable = array_ref | instance_field_ref | static_field_ref | local;
+				 * 
+				 * rvalue = array_ref | constant | expr | instance_field_ref | local |
+				 * next_next_stmt_address | static_field_ref;
 				 */
-				if(lvalue instanceof ArrayRef){
-					/*
-					 * (declare-const a1 (Array Int Int))
-					 * (declare-const i Int)
-					 * ;a[i] = a[i] + 42
-					 * (declare-const b1 (Array Int Int))
-					 * (assert (= (select b1 i) (+ (select a1 i) 42)))
-					 * (check-sat)
-					 * (get-model)
-					 * ;a[i] = a[i+1] + 3
-					 * (assert (= (select a1 i) (+ (select a1 (+ 1 i)) 3)))
-					 * (check-sat)
-					 * (get-model)
-					 * -- If the array ref's base and index are both the same as one of the
-					 * 	  right value's useboxes.
-					 */
-					ArrayRef aRef = (ArrayRef) lvalue;
-					if(SSAMiscFunctions.v().arrayRefRedefined(aRef, rUseBoxes)){
-						recordValueInRenameMap(aRef, i);
+				List<ValueBox> rUseBoxes = rvalue.getUseBoxes();
+				//i = i + 1, a[i] = a[i] + 1, b.f = b.f + 1, i = f(i)
+				if(rvalue instanceof Expr){
+					if(lvalue instanceof ArrayRef){
+						/*
+						 * (declare-const a1 (Array Int Int))
+						 * (declare-const i Int)
+						 * ;a[i] = a[i] + 42
+						 * (declare-const b1 (Array Int Int))
+						 * (assert (= (select b1 i) (+ (select a1 i) 42)))
+						 * (check-sat)
+						 * (get-model)
+						 * ;a[i] = a[i+1] + 3
+						 * (assert (= (select a1 i) (+ (select a1 (+ 1 i)) 3)))
+						 * (check-sat)
+						 * (get-model)
+						 * -- If the array ref's base and index are both the same as one of the
+						 * 	  right value's useboxes.
+						 */
+						ArrayRef aRef = (ArrayRef) lvalue;
+						if(SSAMiscFunctions.v().arrayRefRedefined(aRef, rUseBoxes)){
+							recordValueInRenameMap(aRef, i);
+						}
+					}else if(lvalue instanceof InstanceFieldRef){
+						//b.f = b.f + 42
+						InstanceFieldRef iFieldRef = (InstanceFieldRef) lvalue;
+						if(SSAMiscFunctions.v().instanceFieldRefRedefined(iFieldRef, rUseBoxes)){
+							recordValueInRenameMap(iFieldRef, i);
+						}
+					}else if(lvalue instanceof StaticFieldRef){
+						StaticFieldRef sFieldRef = (StaticFieldRef) lvalue;
+						if(SSAMiscFunctions.v().staticFieldRefRedefined(sFieldRef, rUseBoxes)){
+							recordValueInRenameMap(sFieldRef, i);
+						}
+					}else if(lvalue instanceof Local){
+						Local local = (Local) lvalue;
+						if(SSAMiscFunctions.v().localRedefined(local, rUseBoxes)){
+							recordValueInRenameMap(local, i);
+						}
 					}
-				}else if(lvalue instanceof InstanceFieldRef){
-					//b.f = b.f + 42
-					InstanceFieldRef iFieldRef = (InstanceFieldRef) lvalue;
-					if(SSAMiscFunctions.v().instanceFieldRefRedefined(iFieldRef, rUseBoxes)){
-						recordValueInRenameMap(iFieldRef, i);
-					}
-				}else if(lvalue instanceof StaticFieldRef){
-					StaticFieldRef sFieldRef = (StaticFieldRef) lvalue;
-					if(SSAMiscFunctions.v().staticFieldRefRedefined(sFieldRef, rUseBoxes)){
-						recordValueInRenameMap(sFieldRef, i);
-					}
-				}else if(lvalue instanceof Local){
-					Local local = (Local) lvalue;
-					if(SSAMiscFunctions.v().localRedefined(local, rUseBoxes)){
-						recordValueInRenameMap(local, i);
-					}
+				}else{
+					//1. i = 0; i = 1
 				}
 			}
 		}

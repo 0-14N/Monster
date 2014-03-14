@@ -19,6 +19,7 @@ import soot.jimple.InvokeExpr;
 import soot.jimple.LengthExpr;
 import soot.jimple.NegExpr;
 import soot.jimple.NewArrayExpr;
+import soot.jimple.NumericConstant;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.StaticInvokeExpr;
@@ -312,7 +313,14 @@ public class ASRExpr {
 					sb.append(param.toString());
 				}else{
 					String paramName = fileGenerator.getRenameOf(param, false, this.stmtIdx);
-					sb.append(paramName);
+					if(param instanceof NumericConstant && paramName.startsWith("-")){
+						//-1 --> (- 0 1)
+						sb.append("(- 0 ");
+						sb.append(paramName.substring(1));
+						sb.append(")");
+					}else{
+						sb.append(paramName);
+					}
 				}
 				sb.append(" ");
 			}
