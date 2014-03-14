@@ -33,6 +33,14 @@ public class Constraint {
 		this.flagsArray = new int[unitsOnPath.size()];
 	}
 	
+	public boolean isSatisfied(){
+		return this.satisfied;
+	}
+	
+	public boolean ifStmtEquals(IfStmt inIfStmt){
+		return this.ifStmt.equals(inIfStmt);
+	}
+	
 	public void stepBackwrads(){
 		ConditionExpr conditionExpr = (ConditionExpr) this.ifStmt.getCondition();
 		Value v1 = conditionExpr.getOp1();

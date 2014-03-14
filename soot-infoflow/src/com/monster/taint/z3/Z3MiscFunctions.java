@@ -7,7 +7,6 @@ import com.monster.taint.z3.stmts.atom.BinopExprType;
 import com.monster.taint.z3.stmts.atom.ExprType;
 
 import soot.Type;
-import soot.Value;
 import soot.JastAddJ.SubExpr;
 import soot.jimple.AddExpr;
 import soot.jimple.AndExpr;

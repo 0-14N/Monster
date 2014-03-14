@@ -18,11 +18,13 @@ import soot.Value;
 import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.AssignStmt;
+import soot.jimple.ConditionExpr;
 import soot.jimple.Constant;
 import soot.jimple.Expr;
 import soot.jimple.IfStmt;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.InvokeStmt;
+import soot.jimple.NullConstant;
 import soot.jimple.StaticFieldRef;
 
 import com.monster.taint.path.MethodPath;
@@ -32,6 +34,7 @@ import com.monster.taint.z3.stmts.AssignStmtLLocalRExpr;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRIFieldRef;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRLocal;
 import com.monster.taint.z3.stmts.AssignStmtLLocalRSFieldRef;
+import com.monster.taint.z3.stmts.MyIfStmt;
 
 /**
  * The patterns we can handle currently:
@@ -206,11 +209,39 @@ public class SMT2FileGenerator {
 			}else if(unit instanceof InvokeStmt){
 					
 			}else if(unit instanceof IfStmt){
-				smt2Writer.println();	
+				IfStmt ifStmt = (IfStmt) unit;
+				boolean satisfied = false;
+				for(Constraint constraint : constraintList){
+					if(constraint.ifStmtEquals(ifStmt)){
+						satisfied = constraint.isSatisfied();
+						break;
+					}
+				}
+				parseIfStmt(ifStmt, satisfied, i, smt2Writer);;
 			}
 		}
 		
 		smt2Writer.close();
+	}
+
+	/**
+	 * condition = eq_expr | ge_expr | le_expr | lt_expr | ne_expr | gt_expr;
+	 * eq_expr = immediate "==" immediate; **the immediate maybe a null constant
+	 * ge_expr = immediate ">=" immediate; 
+	 * gt_expr = immediate ">" immediate; 
+	 * le_expr = immediate "<=" immediate; 
+	 * lt_expr = immediate "<" immediate;
+	 * ne_expr = immediate "!=" immediate; 
+	 * @param ifStmt
+	 * @param satisfied
+	 * @param stmtIdx
+	 * @param writer
+	 */
+	private void parseIfStmt(IfStmt ifStmt, boolean satisfied, int stmtIdx, PrintWriter writer){
+		Value conditionValue = ifStmt.getCondition();
+		ConditionExpr conditionExpr = (ConditionExpr) conditionValue;
+		MyIfStmt myIfStmt = new MyIfStmt(this, writer, satisfied, conditionExpr, stmtIdx);
+		myIfStmt.jet();
 	}
 	
 	private void parseAssignStmt(AssignStmt assignStmt, int stmtIdx, PrintWriter writer){
@@ -255,6 +286,7 @@ public class SMT2FileGenerator {
 				lLocalRExpr.jet();
 			}
 		}else if(lvalue instanceof InstanceFieldRef){
+			
 		}else if(lvalue instanceof StaticFieldRef){
 		}else if(lvalue instanceof ArrayRef){
 		}
@@ -321,7 +353,11 @@ public class SMT2FileGenerator {
 		
 		//constant
 		if(value instanceof Constant){
-			return value.toString();
+			if(value instanceof NullConstant){
+				return "\"\"";
+			}else{
+				return value.toString();
+			}
 		}
 		
 		if(value instanceof Local){
