@@ -30,5 +30,6 @@ soot-infoflow-android/sootOutput
 soot-infoflow-android/test
 soot-infoflow-android/testAPKs
 soot-infoflow-android/tmp.log
+soot-infoflow-android/moster.jar
 monster-out/
 backup/
