@@ -37,11 +37,14 @@ public class TaintOutput {
 	}
 
 	/**
-	 * Currently, we only care about 'inArgsTVs'
-	 * @param inThisTVs
-	 * @param inArgsTVs
-	 * @param inStaticTVs
-	 * @param activationUnit
+	 * When we meet a sink with taint values, we collect the taint propagation
+	 * path.
+	 * 
+	 * @param inThisTVs : taint values of 'this'
+	 * @param inArgsTVs : args's taint values
+	 * @param inStaticTVs : static fields' taint values
+	 * @param activationUnit : the stmt invoking the sink
+	 * 
 	 * @throws ParserConfigurationException 
 	 */
 	public void collectTaint(ArrayList<TaintValue> inThisTVs, 
