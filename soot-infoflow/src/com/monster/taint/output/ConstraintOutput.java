@@ -67,8 +67,10 @@ public class ConstraintOutput {
 		sinkContainerElement.setAttribute("SinkInvoking", pathChain.getActivationUnit().toString());
 		rootElement.appendChild(sinkContainerElement);
 		
+		//the stmt invoking the sink
 		Unit activationUnit = pathChain.getActivationUnit();
 		ArrayList<Unit> unitsOnPath = pathChain.getSinglePath().getUnitsOnPath(); 
+		//indicate whether a stmt should be contained in the slice
 		int[] flagsArray = new int[unitsOnPath.size()];
 		int activationIndex = unitsOnPath.indexOf(activationUnit);
 		assert(activationIndex >= 0 && activationIndex < unitsOnPath.size());
@@ -96,15 +98,16 @@ public class ConstraintOutput {
 				flagsArray[i] = 1;
 				boolean satisfied = false;
 				Stmt target = ifStmt.getTarget();
+				//whether the condition is satisfied
 				if(i + 1 < unitsOnPath.size()){
 					Stmt nextStmt = (Stmt) unitsOnPath.get(i + 1);
-					//warn: in most cases, using 'toString' to compare two stmt 
-					//has no problem
-					if(target.toString().equals(nextStmt.toString())){
+					//if(target.toString().equals(nextStmt.toString())){
+					if(target.equals(nextStmt)){
 						satisfied = true;
 					}
 				}
 				Constraint constraint = new Constraint(ifStmt, satisfied, i, unitsOnPath);
+				//get the propagation of condition values
 				constraint.stepBackwrads();
 				constraintList.add(constraint);
 			}
@@ -113,6 +116,8 @@ public class ConstraintOutput {
 		ArrayList<Constraint> filteredConstraints = new ArrayList<Constraint>();
 		for(int i = constraintList.size() - 1; i >= 0; i--){
 			Constraint constraint = constraintList.get(i);
+			//currently, we only care about the constraints related to String/Intent type
+			//parameter passed in
 			if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
 				filteredConstraints.add(constraint);
 				unionTwoIntArray(flagsArray, constraint.getFlagsArray());
@@ -142,7 +147,8 @@ public class ConstraintOutput {
 		sinkContainerElement.appendChild(constraintRelatedPathElement);
 		
 		//generate the SMT2 file according the constraints
-		SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath(), allRelatedUnits);
+		String dependenceFileName = SMT2FileGenerator.v().generateSMT2File(filteredConstraints, 
+				pathChain.getSinglePath(), allRelatedUnits, outputFileName);
 		
 		//handle the InDependence Chains
 		if(pathChain.hasInDepPaths()){
@@ -150,7 +156,7 @@ public class ConstraintOutput {
 			ArrayList<PathChain> inDepChains = pathChain.getInDepPaths();
 			inDepsElement.setAttribute("size", "" + inDepChains.size());
 			for(PathChain inDepChain : inDepChains){
-				extractConstraintsOfPathChain(inDepChain, inDepsElement, doc, "InDepPath");
+				extractConstraintsOfPathChain(inDepChain, inDepsElement, doc, "InDepPath", dependenceFileName);
 			}
 			rootElement.appendChild(inDepsElement);
 		}
@@ -161,7 +167,7 @@ public class ConstraintOutput {
 			ArrayList<PathChain> retDepChains = pathChain.getRetDepPaths();
 			retDepsElement.setAttribute("size", "" + retDepChains.size());
 			for(PathChain retDeChain : retDepChains){
-				extractConstraintsOfPathChain(retDeChain, retDepsElement, doc, "RetDepPath");
+				extractConstraintsOfPathChain(retDeChain, retDepsElement, doc, "RetDepPath", dependenceFileName);
 			}
 			rootElement.appendChild(retDepsElement);
 		}
@@ -182,14 +188,17 @@ public class ConstraintOutput {
 	 * @param pathChain
 	 * @param parentElement
 	 * @param doc
+	 * @param elementName : "InDependencePaths", "RetDependencePaths"
+	 * @param dependenceFileName : for smt2 file generator
 	 */
 	private void extractConstraintsOfPathChain(PathChain pathChain, Element parentElement, 
-			Document doc, String elementName){
+			Document doc, String elementName, String dependenceFileName){
 		Unit activationUnit = pathChain.getActivationUnit();
 		ArrayList<Unit> unitsOnPath = pathChain.getSinglePath().getUnitsOnPath(); 
 		int[] flagsArray = new int[unitsOnPath.size()];
 		int activationIndex = unitsOnPath.indexOf(activationUnit);
 		SootMethod method = pathChain.getSinglePath().getMethodHub().getMethod();
+		String thisSMT2FileName =null;
 		assert(activationIndex >= 0 && activationIndex < unitsOnPath.size());
 		
 		Element pathChainElement = doc.createElement(elementName);
@@ -268,7 +277,8 @@ public class ConstraintOutput {
 			
 			//generate SMT2 file
 			try {
-				SMT2FileGenerator.v().generateSMT2File(filteredConstraints, pathChain.getSinglePath(), allRelatedUnits);
+				thisSMT2FileName = SMT2FileGenerator.v().generateSMT2File(filteredConstraints, 
+						pathChain.getSinglePath(), allRelatedUnits, dependenceFileName);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -280,7 +290,7 @@ public class ConstraintOutput {
 			ArrayList<PathChain> inDepChains = pathChain.getInDepPaths();
 			inDepsElement.setAttribute("size", "" + inDepChains.size());
 			for(PathChain inDepChain : inDepChains){
-				extractConstraintsOfPathChain(inDepChain, inDepsElement, doc, "InDepPath");
+				extractConstraintsOfPathChain(inDepChain, inDepsElement, doc, "InDepPath", thisSMT2FileName);
 			}
 			pathChainElement.appendChild(inDepsElement);
 		}
@@ -291,7 +301,7 @@ public class ConstraintOutput {
 			ArrayList<PathChain> retDepChains = pathChain.getRetDepPaths();
 			retDepsElement.setAttribute("size", "" + retDepChains.size());
 			for(PathChain retDeChain : retDepChains){
-				extractConstraintsOfPathChain(retDeChain, retDepsElement, doc, "RetDepPath");
+				extractConstraintsOfPathChain(retDeChain, retDepsElement, doc, "RetDepPath", thisSMT2FileName);
 			}
 			pathChainElement.appendChild(retDepsElement);
 		}

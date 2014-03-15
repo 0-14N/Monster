@@ -138,12 +138,15 @@ public class SMT2FileGenerator {
 	/**
 	 * generate the smt2 format file according to the 'constraintList'
 	 * 
-	 * @param constraintList
+	 * @param constraintList : all the constraints on methodPath
 	 * @param methodPath
+	 * @param allRelatedUnits : all units on methodPath related to constraints
+	 * @param dependenceFileName : this file may contain the 'InDependencePath' or 'RetDependence', so it
+	 *                             depends on other file
 	 * @throws IOException
 	 */
-	public void generateSMT2File(ArrayList<Constraint> constraintList, MethodPath methodPath,
-			ArrayList<Unit> allRelatedUnits) throws IOException{
+	public String generateSMT2File(ArrayList<Constraint> constraintList, MethodPath methodPath,
+			ArrayList<Unit> allRelatedUnits, String dependenceFileName) throws IOException{
 		SootMethod method = methodPath.getMethodHub().getMethod();
 		String fileName = method.getDeclaringClass().getName() + "-" + method.getName() + 
 				"-" + methodPath.getPathID() + ".smt";
@@ -213,7 +216,11 @@ public class SMT2FileGenerator {
 				}
 			}
 		}
-	
+
+		if(dependenceFileName != null){
+			smt2Writer.println(";this file depends on " + dependenceFileName);
+		}
+		
 		smt2Writer.println(";this path has " + constraintList.size() + " constraints");
 		smt2Writer.println();
 		
@@ -243,6 +250,8 @@ public class SMT2FileGenerator {
 		}
 		
 		smt2Writer.close();
+		
+		return fileName;
 	}
 
 	/**

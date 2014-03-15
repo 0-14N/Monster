@@ -40,7 +40,11 @@ public class Constraint {
 	public boolean ifStmtEquals(IfStmt inIfStmt){
 		return this.ifStmt.equals(inIfStmt);
 	}
-	
+
+	/**
+	 * start from the IfStmt to get the propagation of 
+	 * condition values.
+	 */
 	public void stepBackwrads(){
 		ConditionExpr conditionExpr = (ConditionExpr) this.ifStmt.getCondition();
 		Value v1 = conditionExpr.getOp1();
@@ -60,7 +64,14 @@ public class Constraint {
 			}
 		}
 	}
-	
+
+	/**
+	 * first find the stmt whose defvalues contain value and then
+	 * get the propagation of stmt's use values
+	 * 
+	 * @param value
+	 * @param startIndex
+	 */
 	private void propagationOf(Value value, int startIndex){
 		for(int i = startIndex; i >= 0; i--){
 			Unit unit = this.unitsOnPath.get(i);

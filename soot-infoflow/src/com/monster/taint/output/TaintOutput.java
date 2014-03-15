@@ -44,7 +44,8 @@ public class TaintOutput {
 	 * @param inArgsTVs : args's taint values
 	 * @param inStaticTVs : static fields' taint values
 	 * @param activationUnit : the stmt invoking the sink
-	 * 
+	 * @param method : the method contains 'activationUnit'
+	 * @param pathID : ID of this path of method
 	 * @throws ParserConfigurationException 
 	 */
 	public void collectTaint(ArrayList<TaintValue> inThisTVs, 
@@ -58,7 +59,8 @@ public class TaintOutput {
 		
 		Element sinkElement = doc.createElement("Sink");
 		doc.appendChild(sinkElement);
-		
+	
+		//currently, we only care about the arguments' taint values
 		for(int i = 0; i < inArgsTVs.size(); i++){
 			ArrayList<TaintValue> argTVs = inArgsTVs.get(i);
 			if(argTVs.size() > 0){
@@ -68,6 +70,7 @@ public class TaintOutput {
 					PathChain pathChain = new PathChain();
 					Element methodElement = getMethodElement(method, activationUnit, argTV, doc,
 							"SinkTV", pathChain);
+					
 					//handle path chain, do ITE and IntentSource slices 
 					PathOutput.v().handlePathChain(pathChain, doc, methodElement);
 					sinkElement.appendChild(methodElement);
@@ -87,12 +90,12 @@ public class TaintOutput {
 
 	/**
 	 * 
-	 * @param method
-	 * @param activationUnit
-	 * @param tv
+	 * @param method : method contains activationUnit
+	 * @param activationUnit : the stmt invoking the Sink
+	 * @param tv : the tainted param
 	 * @param doc
 	 * @param name : "SinkTV", "inDependence", "retDependence"
-	 * @param pathChain
+	 * @param pathChain : the path of method contains activationUnit
 	 * @return
 	 */
 	private Element getMethodElement(SootMethod method, Unit activationUnit, TaintValue tv, 
@@ -106,7 +109,11 @@ public class TaintOutput {
 		//for the inDependence or retDependence, there maybe more than
 		//one patt, paths elements
 		Element pathsElement = doc.createElement("paths");
-	
+
+		/*
+		 * methodPaths'size may larger than 1 if 'tv' name is
+		 * 'inDependence' or 'retDependence'
+		 */
 		ArrayList<MethodPath> methodPaths = tv.getContexts();
 		//if this is the root pathchain, init it
 		if("SinkTV".equals(name)){
