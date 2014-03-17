@@ -108,4 +108,13 @@ public class MyWrapper {
 	public boolean isInCollectionPutList(String className, String subSignature){
 		return this.isInList(className, subSignature, this.collectionPutList);
 	}
+	
+	public boolean isInIncludeList(String className){
+		for(String packagePrefix : this.includeList){
+			if(className.startsWith(packagePrefix)){
+				return true;
+			}
+		}
+		return false;
+	}
 }

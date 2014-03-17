@@ -350,6 +350,9 @@ public class BackwardsProblem {
 		}else if(MyWrapper.v().isInKillList(className, subSignature)){
 			isInTaintWrapper = true;
 			return;
+		}else if(MyWrapper.v().isInCollectionPutList(className, subSignature)){
+			isInTaintWrapper = true;
+			return;
 		}
 		
 		if(!isInTaintWrapper && method != null && method.hasActiveBody() &&

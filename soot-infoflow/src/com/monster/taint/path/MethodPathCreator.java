@@ -2,7 +2,10 @@ package com.monster.taint.path;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import com.monster.taint.Monster;
 
@@ -39,7 +42,7 @@ public class MethodPathCreator {
 		List<Block> heads = graph.getHeads();
 		List<Block> tails = graph.getTails();
 		int i = 0;
-		
+	
 		ArrayList<Block> nonExceptionHeads = new ArrayList<Block>();
 		HashMap<String, Block> exceptionHandlers = new HashMap<String, Block>();
 		for(i = 0; i < heads.size(); i++){
@@ -60,12 +63,43 @@ public class MethodPathCreator {
 				nonExceptionHeads.add(headBlk);
 			}
 		}
+	
+		//use an iterative algorithm to get the paths
+		LinkedList<ArrayList<Integer>> pathSucc = new LinkedList<ArrayList<Integer>>();
+		for(i = 0; i < nonExceptionHeads.size(); i++){
+			ArrayList<Integer> headStart = new ArrayList<Integer>();
+			Block head = nonExceptionHeads.get(i);
+			headStart.add(new Integer(allBlocks.indexOf(head)));
+			pathSucc.offer(headStart);
+		}
+		ArrayList<ArrayList<Integer>> intLists = this.getPathIterately(pathSucc, allBlocks, tails);
+		for(ArrayList<Integer> intList : intLists){
+			ArrayList<Block> blockList = new ArrayList<Block>();
+			for(Integer integer : intList){
+				Block b = allBlocks.get(integer.intValue());
+				blockList.add(b);
+				//if the block throws an exception
+				Unit tail = b.getTail();
+				if(tail instanceof ThrowStmt){
+					ThrowStmt ts = (ThrowStmt) tail;
+					Value exception = ts.getOp();
+					String exceptionType = exception.getType().toString();
+					Block handlerBlk = exceptionHandlers.get(exceptionType);
+					if(handlerBlk != null){
+						blockList.add(handlerBlk);
+					}
+				}
+			}
+			result.add(blockList);
+		}
 		
+	
+		/* the heavy overhead algorithm
 		for(i = 0; i < nonExceptionHeads.size(); i++){
 			Block head = nonExceptionHeads.get(i);
 			ArrayList<Integer> source = new ArrayList<Integer>();
 			//get the paths start from this head
-			ArrayList<ArrayList<Integer>> intLists = forkPaths(source, head, allBlocks, tails);
+			ArrayList<ArrayList<Integer>> intLists = forkPathsRecursively(source, head, allBlocks, tails);
 			//convert the integer list to block list
 			for(ArrayList<Integer> intList : intLists){
 				ArrayList<Block> blockList = new ArrayList<Block>();
@@ -87,6 +121,7 @@ public class MethodPathCreator {
 				result.add(blockList);
 			}
 		}
+		*/
 		return result;
 	}
 
@@ -98,7 +133,7 @@ public class MethodPathCreator {
 	 * @param tails : it is used for judging whether it comes to end
 	 * @return
 	 */
-	private ArrayList<ArrayList<Integer>> forkPaths(ArrayList<Integer> source, Block branch, List<Block> allBlocks, List<Block> tails){
+	private ArrayList<ArrayList<Integer>> forkPathsRecursively(ArrayList<Integer> source, Block branch, List<Block> allBlocks, List<Block> tails){
 		ArrayList<ArrayList<Integer>> results = new ArrayList<ArrayList<Integer>>();
 		//branch is one of the end blocks
 		if(tails.contains(branch)){
@@ -109,7 +144,7 @@ public class MethodPathCreator {
 			//branch has only one succor, append to the end of source
 			if(succors.size() == 1){
 				source.add(new Integer(allBlocks.indexOf(branch)));
-				ArrayList<ArrayList<Integer>> tmp = forkPaths(source, succors.get(0), allBlocks, tails);
+				ArrayList<ArrayList<Integer>> tmp = forkPathsRecursively(source, succors.get(0), allBlocks, tails);
 				results.addAll(tmp);
 			}else{//more than one succors, produce a new path for each succor
 				int i = 0;
@@ -127,13 +162,52 @@ public class MethodPathCreator {
 						continue;
 					}else{
 						ArrayList<Integer> clone = cloneList(source);
-						ArrayList<ArrayList<Integer>> tmp =  forkPaths(clone, succor, allBlocks, tails);
+						ArrayList<ArrayList<Integer>> tmp =  forkPathsRecursively(clone, succor, allBlocks, tails);
 						results.addAll(tmp);
 					}
 				}
 			}
 		}
 		return results;
+	}
+
+	/**
+	 * Pull a path from pathSucc's front, if its last block is tail, record the path,
+	 * else, add its non-loop succors to it and offer it to pathSucc's end.
+	 * 
+	 * @param pathSucc
+	 * @param allBlocks
+	 * @param tails
+	 * @return
+	 */
+	private ArrayList<ArrayList<Integer>> getPathIterately(LinkedList<ArrayList<Integer>> pathSucc,
+			List<Block> allBlocks, List<Block> tails){
+		ArrayList<ArrayList<Integer>> paths = new ArrayList<ArrayList<Integer>>();
+		
+		while(!pathSucc.isEmpty()){
+			ArrayList<Integer> path = pathSucc.poll();
+			int size = path.size();
+			int lastBlockIndex = path.get(size-1).intValue();
+			Block lastBlock = allBlocks.get(lastBlockIndex);
+			if(tails.contains(lastBlock)){
+				paths.add(path);
+				continue;
+			}else{
+				List<Block> succors = lastBlock.getSuccs();
+				for(Block succor : succors){
+					int succIndex = allBlocks.indexOf(succor);
+					if(isInList(path, succIndex) != -1){
+						continue;
+					}else{
+						ArrayList<Integer> clonePath = cloneList(path);
+						clonePath.add(new Integer(succIndex));
+						pathSucc.offer(clonePath);
+					}
+				}
+			}
+		}
+		
+		return paths;
 	}
 	
 	private int isInList(ArrayList<Integer> lst, int n){

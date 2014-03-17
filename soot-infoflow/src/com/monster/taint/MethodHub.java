@@ -21,7 +21,6 @@ import soot.Local;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
-import soot.ValueBox;
 import soot.jimple.ArrayRef;
 import soot.jimple.Constant;
 import soot.jimple.InstanceFieldRef;
@@ -115,6 +114,7 @@ public class MethodHub {
 	 * calculated all the paths contain activationUnit
 	 */
 	private void calculatePaths(){
+		
 		ArrayList<ArrayList<Block>> originalPathBlockLists = MethodPathCreator.v().getPaths(this.zonedBlockGraph);
 		/*ArrayList<ArrayList<Block>> filteredPathBlockLists = this.filterPathWithLength(originalPathBlockLists);
 		if(filteredPathBlockLists.size() == 0){

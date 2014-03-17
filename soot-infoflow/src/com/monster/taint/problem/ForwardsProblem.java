@@ -367,20 +367,6 @@ public class ForwardsProblem {
 			subSignature = method.getSubSignature();
 		}
 	
-		/*
-		if(method != null && method.getSignature().equals("<android.os.Bundle: java.lang.Object get(java.lang.String)>")){
-			logger.info("Break Point!");
-		}
-		
-		if(method != null && method.getSignature().equals("<android.telephony.SmsMessage: android.telephony.SmsMessage createFromPdu(byte[])>")){
-			logger.info("Break Point!");
-		}
-		
-		if(method != null && method.getSignature().equals("<android.content.ContentValues: void put(java.lang.String,java.lang.String)>")){
-			logger.info("Break Point!");
-		}
-		*/
-	
 		boolean isInTaintWrapper = false;
 		//Regardless of method is null or not, check whether in taint wrapper
 		//in excludelist, do ignore invoking
@@ -421,6 +407,7 @@ public class ForwardsProblem {
 			}
 			return;
 		}else if(MyWrapper.v().isInCollectionPutList(className, subSignature)){
+			isInTaintWrapper = true;
 			boolean isTainted = false;
 			for(int i = 0; i < argsCount && !isTainted; i++){
 				Value arg = args.get(i);
