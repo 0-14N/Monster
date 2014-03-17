@@ -71,6 +71,7 @@ public class ForwardsProblem {
 	}
 	
 	public void solve(){
+		logger.info("Forwardsproblem.solve()");
 		int currIndex = startIndex;
 		while(currIndex < stopIndex){
 			Unit currUnit = this.units.get(currIndex);

@@ -58,6 +58,7 @@ public class BackwardsProblem {
 	}
 	
 	public void solve(){
+		logger.info("BackwardsProblem.solve()");
 		while(currIndex >= 0){
 			currUnit = this.units.get(currIndex);
 		

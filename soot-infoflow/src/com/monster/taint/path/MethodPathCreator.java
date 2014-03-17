@@ -190,7 +190,7 @@ public class MethodPathCreator {
 		
 		while(!pathSucc.isEmpty()){
 			
-			if(paths.size() == 4096){
+			if(paths.size() == 256){
 				break;
 			}
 			
@@ -216,8 +216,8 @@ public class MethodPathCreator {
 			}
 		}
 		
-		if(paths.size() == 4096){
-			logger.warn("Too many paths, we just analyze the first 4096!");
+		if(paths.size() == 256){
+			logger.warn("FUCK!!! Too many paths, we just analyze the first 256!");
 		}
 		
 		return paths;
