@@ -294,12 +294,12 @@
 <android.content.Intent: java.lang.String getStringExtra(java.lang.String)>
 
 <android.os.Bundle: java.lang.Object get(java.lang.String)>
-<android.os.Bundle: boolean get(java.lang.String)>
-<android.os.Bundle: boolean get(java.lang.String,boolean)>
+<android.os.Bundle: boolean getBoolean(java.lang.String)>
+<android.os.Bundle: boolean getBoolean(java.lang.String,boolean)>
 <android.os.Bundle: boolean[] getBooleanArray(java.lang.String)>
 <android.os.Bundle: android.os.Bundle getBundle(java.lang.String)>
 <android.os.Bundle: byte getByte(java.lang.String)>
-<android.os.Bundle: java.lang.Byte getByte(java.lang.String,byte)>
+<android.os.Bundle: java.lang.Byte getByte(java.lang.String,byte)
 <android.os.Bundle: byte[] getByteArray(java.lang.String)>
 <android.os.Bundle: char getChar(java.lang.String)>
 <android.os.Bundle: char getChar(java.lang.String,char)>

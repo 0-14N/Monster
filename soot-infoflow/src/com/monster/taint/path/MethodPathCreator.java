@@ -7,6 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.monster.taint.Monster;
 
 import soot.Scene;
@@ -19,6 +22,7 @@ import soot.toolkits.graph.Block;
 import soot.toolkits.graph.ZonedBlockGraph;
 
 public class MethodPathCreator {
+	private Logger logger = LoggerFactory.getLogger(getClass());
 	private static MethodPathCreator instance;
 	
 	private MethodPathCreator(){}
@@ -185,6 +189,11 @@ public class MethodPathCreator {
 		ArrayList<ArrayList<Integer>> paths = new ArrayList<ArrayList<Integer>>();
 		
 		while(!pathSucc.isEmpty()){
+			
+			if(paths.size() == 4096){
+				break;
+			}
+			
 			ArrayList<Integer> path = pathSucc.poll();
 			int size = path.size();
 			int lastBlockIndex = path.get(size-1).intValue();
@@ -205,6 +214,10 @@ public class MethodPathCreator {
 					}
 				}
 			}
+		}
+		
+		if(paths.size() == 4096){
+			logger.warn("Too many paths, we just analyze the first 4096!");
 		}
 		
 		return paths;
