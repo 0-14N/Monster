@@ -33,3 +33,5 @@ soot-infoflow-android/tmp.log
 soot-infoflow-android/moster.jar
 monster-out/
 backup/
+soot-infoflow-android/monster.jar
+upload-monster.sh
