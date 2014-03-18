@@ -61,7 +61,8 @@ public class MyIfStmt {
 			writer.println(Z3MiscFunctions.v().getVariableDeclareStmt(op2Name, op2Z3Type));
 			fileGenerator.getDeclaredVariables().add(op2Name);
 		}
-		
+	
+		writer.println(";" + satisfied);
 		if(conditionExpr instanceof EqExpr){
 			if(satisfied){
 				jetEq(op1, op2);

@@ -36,3 +36,5 @@ backup/
 soot-infoflow-android/monster.jar
 upload-monster.sh
 run-debug.sh
+monster.properties
+download-monsterout.sh

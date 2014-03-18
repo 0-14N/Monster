@@ -118,11 +118,11 @@ public class ConstraintOutput {
 			Constraint constraint = constraintList.get(i);
 			//currently, we only care about the constraints related to String/Intent type
 			//parameter passed in
-			if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
+			//if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
 				filteredConstraints.add(constraint);
 				unionTwoIntArray(flagsArray, constraint.getFlagsArray());
 				allConstaintsElement.appendChild(constraint.getConstraintElement(doc));
-			}
+			//}
 		}
 		allConstaintsElement.setAttribute("filtered_size", "" + filteredConstraints.size());
 		sinkContainerElement.appendChild(allConstaintsElement);
