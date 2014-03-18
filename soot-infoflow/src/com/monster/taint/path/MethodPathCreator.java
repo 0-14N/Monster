@@ -190,7 +190,7 @@ public class MethodPathCreator {
 		
 		while(!pathSucc.isEmpty()){
 			
-			if(paths.size() == 256){
+			if(Monster.MAX_PATH_NUM > 0 && paths.size() == Monster.MAX_PATH_NUM){
 				break;
 			}
 			
@@ -216,8 +216,8 @@ public class MethodPathCreator {
 			}
 		}
 		
-		if(paths.size() == 256){
-			logger.warn("FUCK!!! Too many paths, we just analyze the first 256!");
+		if(paths.size() == Monster.MAX_PATH_NUM){
+			logger.warn("FUCK!!! Too many paths, we just analyze the first {}!", Monster.MAX_PATH_NUM);
 		}
 		
 		return paths;

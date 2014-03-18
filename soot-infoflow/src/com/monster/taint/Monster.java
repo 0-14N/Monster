@@ -1,11 +1,14 @@
 package com.monster.taint;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -64,11 +67,33 @@ public class Monster {
 	private ArrayList<Unit> sourceTriggerUnits = new ArrayList<Unit>();
 	private ArrayList<Unit> sinkTriggerUnits = new ArrayList<Unit>();
 	
+	public static int MAX_PATH_NUM = -1;
+	
 	private Monster(){}
 	
 	public static Monster v(){
 		if(monster == null){
 			monster = new Monster();
+			
+			//get the max_path_num from "monster.properties"
+			Properties prop = new Properties();
+			InputStream input = null;
+			
+			try{
+				input = new FileInputStream("monster.properties");
+				prop.load(input);
+				MAX_PATH_NUM = Integer.parseInt(prop.getProperty("max_paths_num"));
+			}catch(IOException ioe){
+				ioe.printStackTrace();
+			}finally{
+				if(input != null){
+					try{
+						input.close();
+					}catch(IOException ioe){
+						ioe.printStackTrace();
+					}
+				}
+			}
 		}
 		return monster;
 	}
