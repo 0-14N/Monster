@@ -174,7 +174,7 @@ public class TaintValue {
 				return false;
 			}
 			if(!(this.base.toString().equals(other.getBase().toString()) &&
-					this.base.getType().toString().equals(other.getType().toString()))){
+					this.base.getType().toString().equals(other.getBase().getType().toString()))){
 				return false;
 			}
 		}

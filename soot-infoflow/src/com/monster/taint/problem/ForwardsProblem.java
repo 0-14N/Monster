@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,12 +70,10 @@ public class ForwardsProblem {
 	}
 	
 	public void solve(){
-		logger.info("Forwardsproblem.solve()");
 		int currIndex = startIndex;
 		while(currIndex < stopIndex){
 			Unit currUnit = this.units.get(currIndex);
 			
-		
 			//at the beginning of method, assign parameters to
 			//local variables
 			if(currUnit instanceof IdentityStmt){
