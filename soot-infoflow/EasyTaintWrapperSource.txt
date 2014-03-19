@@ -434,5 +434,10 @@
 <android.database.Cursor: java.lang.String getString(int)>
 <android.database.Cursor: int getType(int)>
 
+#ContentUris
+<android.content.ContentUris: android.net.Uri.Builder appendId(android.net.Uri.Builder,long)>
+<android.content.ContentUris: long parseId(android.net.Uri)>
+<android.content.ContentUris: android.net.Uri withAppendedId(android.net.Uri,long)>
+
 
 
