@@ -414,3 +414,25 @@
 
 ~<android.text.TextUtils: boolean isEmpty(java.lang.CharSequence)>
 ~<java.lang.String: boolean startsWith(java.lang.String)>
+
+#ContentResolver
+<android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,android.os.CancellationSignal)>
+<android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)>
+
+#Cursor
+<android.database.Cursor: byte[] getBlob(int)>
+<android.database.Cursor: int getColumnIndex(java.lang.String)>
+<android.database.Cursor: java.lang.String getColumnName(int)>
+<android.database.Cursor: java.lang.String[] getColumnNames()>
+<android.database.Cursor: double getDouble(int)>
+<android.database.Cursor: android.os.Bundle getExtras()>
+<android.database.Cursor: float getFloat(int)>
+<android.database.Cursor: int getInt(int)>
+<android.database.Cursor: long getLong(int)>
+<android.database.Cursor: android.net.Uri getNotificationUri()>
+<android.database.Cursor: short getShort(int)>
+<android.database.Cursor: java.lang.String getString(int)>
+<android.database.Cursor: int getType(int)>
+
+
+
