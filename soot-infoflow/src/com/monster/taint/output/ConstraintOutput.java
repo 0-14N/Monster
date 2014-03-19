@@ -119,10 +119,11 @@ public class ConstraintOutput {
 			//currently, we only care about the constraints related to String/Intent type
 			//parameter passed in
 			//if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
+			if(constraint.dependOnParameters()){
 				filteredConstraints.add(constraint);
 				unionTwoIntArray(flagsArray, constraint.getFlagsArray());
 				allConstaintsElement.appendChild(constraint.getConstraintElement(doc));
-			//}
+			}
 		}
 		allConstaintsElement.setAttribute("filtered_size", "" + filteredConstraints.size());
 		sinkContainerElement.appendChild(allConstaintsElement);
@@ -247,7 +248,8 @@ public class ConstraintOutput {
 		ArrayList<Constraint> filteredConstraints = new ArrayList<Constraint>();
 		for(int i = constraintList.size() - 1; i >= 0; i--){
 			Constraint constraint = constraintList.get(i);
-			if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
+			//if(constraint.dependOnIntentParameters() || constraint.dependOnStringParameters()){
+			if(constraint.dependOnParameters()){
 				filteredConstraints.add(constraint);
 				unionTwoIntArray(flagsArray, constraint.getFlagsArray());
 				allConstaintsElement.appendChild(constraint.getConstraintElement(doc));
@@ -256,7 +258,7 @@ public class ConstraintOutput {
 		allConstaintsElement.setAttribute("size", "" + filteredConstraints.size());
 		pathChainElement.appendChild(allConstaintsElement);
 
-		if(filteredConstraints.size() > 0){
+		//if(filteredConstraints.size() > 0){
 			//path relevant to constraints
 			Element constraintRelatedPathElement = doc.createElement("ConstraintRelatedPath");
 			ArrayList<Unit> allRelatedUnits = new ArrayList<Unit>();
@@ -282,7 +284,7 @@ public class ConstraintOutput {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
+		//}
 		
 		//handle the InDependence Chains
 		if(pathChain.hasInDepPaths()){

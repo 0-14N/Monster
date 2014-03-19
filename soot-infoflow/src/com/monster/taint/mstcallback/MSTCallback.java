@@ -22,11 +22,12 @@ public class MSTCallback {
 	private int[] taintedArgs = null;
 	
 	public MSTCallback(String signature, boolean isStatic,
-			int argCount, int[] taintedArgs) {
+			int argCount, int[] taintedArgs) throws RuntimeException{
 		this.signature = signature;
 		this.isStatic = isStatic;
 		this.argCount = argCount;
 		this.taintedArgs = taintedArgs;
+		//this may throw RuntimeException: nonexistent method
 		this.method = Scene.v().getMethod(this.signature);
 	}
 

@@ -57,8 +57,17 @@ public class MSTCallbackFactory {
 		    		}
 		    	}
 		    	
-		    	MSTCallback mstCallback = new MSTCallback(signature, isStatic, argCount, taintedArgs);
-		    	mstCallbacks.add(mstCallback);
+		    	MSTCallback mstCallback = null;
+		    	try{
+		    		mstCallback = new MSTCallback(signature, isStatic, argCount, taintedArgs);
+		    	}
+		    	catch(RuntimeException re){
+		    		mstCallback = null;
+		    		re.printStackTrace();
+		    	}
+		    	if(mstCallback != null){
+		    		mstCallbacks.add(mstCallback);
+		    	}
 		    }
 		}catch(IOException ioe){
 			logger.error("Failed to parse \"{}\"", MSTCALLBACKS_FILE);

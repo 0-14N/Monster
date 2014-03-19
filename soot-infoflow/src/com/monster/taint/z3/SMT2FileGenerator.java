@@ -149,7 +149,7 @@ public class SMT2FileGenerator {
 			ArrayList<Unit> allRelatedUnits, String dependenceFileName) throws IOException{
 		SootMethod method = methodPath.getMethodHub().getMethod();
 		String fileName = method.getDeclaringClass().getName() + "-" + method.getName() + 
-				"-" + methodPath.getPathID() + "-" + System.currentTimeMillis() / 1000 + ".smt";
+				"-" + methodPath.getPathID() + "-" + dependenceFileName.hashCode() + ".smt";
 		PrintWriter smt2Writer = new PrintWriter(SMT2_DIR + fileName, "UTF-8");
 	
 		definedNamesMap = new HashMap<Value, ArrayList<Integer>>();
