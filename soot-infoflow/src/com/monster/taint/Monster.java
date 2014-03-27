@@ -67,7 +67,11 @@ public class Monster {
 	private ArrayList<Unit> sourceTriggerUnits = new ArrayList<Unit>();
 	private ArrayList<Unit> sinkTriggerUnits = new ArrayList<Unit>();
 	
+	//monster properties
 	public static int MAX_PATH_NUM = -1;
+	public static String EXPORTED_SERVICES = null;
+	public static String EXPORTED_RECEIVERS = null;
+	public static String EXPORTED_ACTIVITIES = null;
 	
 	private Monster(){}
 	
@@ -83,6 +87,11 @@ public class Monster {
 				input = new FileInputStream("monster.properties");
 				prop.load(input);
 				MAX_PATH_NUM = Integer.parseInt(prop.getProperty("max_paths_num"));
+				EXPORTED_SERVICES = prop.getProperty("exported_services");
+				EXPORTED_RECEIVERS = prop.getProperty("exported_receivers");
+				EXPORTED_ACTIVITIES = prop.getProperty("exported_activities");
+				//init the exported components
+				ExportedComponents.v().init(EXPORTED_SERVICES, EXPORTED_RECEIVERS, EXPORTED_ACTIVITIES);
 			}catch(IOException ioe){
 				ioe.printStackTrace();
 			}finally{
