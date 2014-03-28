@@ -146,4 +146,10 @@ public class DefaultSourceSinkManager extends MethodBasedSourceSinkManager {
 		this.returnTaintMethods = returnTaintMethods;
 	}
 
+	@Override
+	public String getAppPackageName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

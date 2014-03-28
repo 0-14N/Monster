@@ -33,4 +33,10 @@ public class EmptySourceSinkManager extends MethodBasedSourceSinkManager {
 		return false;
 	}
 
+	@Override
+	public String getAppPackageName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

@@ -129,6 +129,8 @@ public class Monster {
 		this.pta = pta;
 		MyWrapper.v().init(taintWrapper);
 		this.sources = sources;
+		String appPackageName = sourcesSinks.getAppPackageName();
+		ExportedComponents.v().setAppPackageName(appPackageName);
 		this.sinks = sinks;
 		this.methodReachableSFsMap = methodReachableSFsMap;
 		this.sourceMethodHubs = new HashSet<MethodHub>();
@@ -172,6 +174,7 @@ public class Monster {
 		logger.info("\n");
 		
 		createSourceMethodHubs();
+		logger.info("Total {} exported sources!", this.sourceMethodHubs.size());
 		
 		for(MethodHub methodHub : this.sourceMethodHubs){
 			logger.info("\nStart analyzing source {}", methodHub.getMethod().toString());
@@ -222,6 +225,10 @@ public class Monster {
 		while(iter.hasNext()){
 			Entry<SootMethod, Set<Unit>> entry = (Entry<SootMethod, Set<Unit>>) iter.next();
 			SootMethod method = entry.getKey();
+			String className = method.getDeclaringClass().getName();
+			if(!ExportedComponents.v().isExported(className)){
+				continue;
+			}
 			Set<Unit> sourceUnits = entry.getValue();
 			for(Unit unit : sourceUnits){
 				MethodHubType type = null;

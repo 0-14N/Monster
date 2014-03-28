@@ -13,6 +13,7 @@ public class ExportedComponents {
 	private HashMap<String, Set<String>> exportedServicesMap = null;
 	private HashMap<String, Set<String>> exportedReceiversMap = null;
 	private HashMap<String, Set<String>> exportedActivitiesMap = null;
+	private String appPackageName = null;
 	
 	private ExportedComponents(){}
 	
@@ -24,13 +25,50 @@ public class ExportedComponents {
 	}
 	
 	public void init(String exportedServices, String exportedReceivers, String exportedActivities){
-		initExportedServices(exportedServices);
-		initExportedReceivers(exportedReceivers);
-		initExportedActivities(exportedActivities);
+		initExportedComponents(exportedServices, exportedServicesMap);
+		initExportedComponents(exportedReceivers, exportedReceiversMap);
+		initExportedComponents(exportedActivities, exportedActivitiesMap);
+	}
+
+	public boolean isExported(String className){
+		assert(appPackageName != null);
+		
+		Set<String> exportedServices = exportedServicesMap.get(appPackageName);
+		if(exportedServices != null){
+			for(String serviceName : exportedServices){
+				if(serviceName.equals(className)){
+					return true;
+				}
+			}
+		}
+		
+		Set<String> exportedReceivers = exportedReceiversMap.get(appPackageName);
+		if(exportedReceivers != null){
+			for(String receiverName : exportedReceivers){
+				if(receiverName.equals(className)){
+					return true;
+				}
+			}
+		}
+		
+		Set<String> exportedActivities = exportedActivitiesMap.get(appPackageName);
+		if(exportedActivities != null){
+			for(String activityName : exportedActivities){
+				if(activityName.equals(className)){
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
-	private void initExportedServices(String fileName){
-		exportedServicesMap = new HashMap<String, Set<String>>();
+	public void setAppPackageName(String appPackageName){
+		this.appPackageName = appPackageName;
+	}
+	
+	private void initExportedComponents(String fileName, HashMap<String, Set<String>> exportedComponentsMap){
+		exportedComponentsMap = new HashMap<String, Set<String>>();
 		FileReader fdr = null;
 		BufferedReader br = null;
 		String line = null;
@@ -55,11 +93,11 @@ public class ExportedComponents {
 					}
 				}
 				assert(componentName != null);
-				Set<String> components = exportedServicesMap.get(packageName);
+				Set<String> components = exportedComponentsMap.get(packageName);
 				if(components == null){
 					components = new HashSet<String>();
 					components.add(componentName);
-					exportedServicesMap.put(packageName, components);
+					exportedComponentsMap.put(packageName, components);
 				}else{
 					components.add(componentName);
 				}
@@ -67,13 +105,19 @@ public class ExportedComponents {
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
+		finally{
+			try{
+				if(br != null){
+					br.close();
+				}
+			
+				if(fdr != null){
+					fdr.close();
+				}
+			}catch(IOException ioe){
+				ioe.printStackTrace();
+			}
+		}
 	}
-	
-	private void initExportedReceivers(String fileName){
-		
-	}
-	
-	private void initExportedActivities(String fileName){
-		
-	}
+
 }

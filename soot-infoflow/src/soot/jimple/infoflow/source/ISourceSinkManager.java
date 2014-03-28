@@ -37,4 +37,5 @@ public interface ISourceSinkManager {
 	 */
 	public boolean isSink(Stmt sCallSite, InterproceduralCFG<Unit, SootMethod> cfg);
 
+	public String getAppPackageName();
 }

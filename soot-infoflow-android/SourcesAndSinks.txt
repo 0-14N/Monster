@@ -8,3 +8,21 @@
 <android.content.ContentResolver: int update(android.net.Uri,android.content.ContentValues,java.lang.String,java.lang.String[])> android.permission.READ_USER_DICTIONARY -> _SINK_
 <android.content.ContentResolver: int delete(android.net.Uri,java.lang.String,java.lang.String[])> android.permission.READ_USER_DICTIONARY -> _SINK_
 <android.content.ContentResolver: android.net.Uri insert(android.net.Uri,android.content.ContentValues)> android.permission.READ_USER_DICTIONARY -> _SINK_
+
+<android.database.sqlite.SQLiteDatabase: int delete(java.lang.String,java.lang.String,java.lang.String[])> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: boolean deleteDatabase(java.io.File)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: void execSQL(java.lang.String)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: void execSQL(java.lang.String,java.lang.Object[])> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: long insert(java.lang.String,java.lang.String,android.content.ContentValues)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: long insertOrThrow(java.lang.String,java.lang.String,android.content.ContentValues)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: long insertWithOnConflict(java.lang.String,java.lang.String,android.content.ContentValues,int)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor query(java.lang.String,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,java.lang.String,java.lang.String,java.lang.String)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor query(boolean,java.lang.String,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,java.lang.String,java.lang.String,java.lang.String,android.os.CancellationSignal)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor query(java.lang.String,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,java.lang.String,java.lang.String)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor query(boolean,java.lang.String,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,java.lang.String,java.lang.String,java.lang.String)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor queryWithFactory(android.database.sqlite.SQLiteDatabase.CursorFactory,boolean,java.lang.String,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,java.lang.String,java.lang.String,java.lang.String,android.os.CancellationSignal)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor queryWithFactory(android.database.sqlite.SQLiteDatabase.CursorFactory,boolean,java.lang.String,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,java.lang.String,java.lang.String,java.lang.String)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor rawQuery(java.lang.String,java.lang.String[],android.os.CancellationSignal)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor rawQuery(java.lang.String,java.lang.String[])> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor rawQueryWithFactory(android.database.sqlite.SQLiteDatabase.CursorFactory,java.lang.String,java.lang.String[],java.lang.String)> android.permission.null -> _SINK_
+<android.database.sqlite.SQLiteDatabase: android.database.Cursor rawQueryWithFactory(android.database.sqlite.SQLiteDatabase.CursorFactory,java.lang.String,java.lang.String[],java.lang.String,android.os.CancellationSignal)> android.permission.null -> _SINK_

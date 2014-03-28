@@ -473,5 +473,9 @@ public class AndroidSourceSinkManager extends MethodBasedSourceSinkManager {
 	public void setAppPackageName(String appPackageName) {
 		this.appPackageName = appPackageName;
 	}
+	
+	public String getAppPackageName(){
+		return this.appPackageName;
+	}
 
 }
