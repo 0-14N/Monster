@@ -25,9 +25,12 @@ public class ExportedComponents {
 	}
 	
 	public void init(String exportedServices, String exportedReceivers, String exportedActivities){
-		initExportedComponents(exportedServices, exportedServicesMap);
-		initExportedComponents(exportedReceivers, exportedReceiversMap);
-		initExportedComponents(exportedActivities, exportedActivitiesMap);
+		this.exportedServicesMap = new HashMap<String, Set<String>>();
+		this.exportedReceiversMap = new HashMap<String, Set<String>>();
+		this.exportedActivitiesMap = new HashMap<String, Set<String>>();
+		initExportedComponents(exportedServices, this.exportedServicesMap);
+		initExportedComponents(exportedReceivers, this.exportedReceiversMap);
+		initExportedComponents(exportedActivities, this.exportedActivitiesMap);
 	}
 
 	public boolean isExported(String className){
@@ -68,7 +71,6 @@ public class ExportedComponents {
 	}
 	
 	private void initExportedComponents(String fileName, HashMap<String, Set<String>> exportedComponentsMap){
-		exportedComponentsMap = new HashMap<String, Set<String>>();
 		FileReader fdr = null;
 		BufferedReader br = null;
 		String line = null;
