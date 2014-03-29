@@ -510,6 +510,7 @@ public class ForwardsProblem {
 					
 					//check component invoking
 					if(TargetManager.v().isStartComponent(className, subSignature)){
+						//TODO
 						logger.info("****Start another component****{}", currUnit);
 						return;
 					}

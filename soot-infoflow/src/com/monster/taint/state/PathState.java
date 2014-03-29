@@ -145,7 +145,7 @@ public class PathState {
 		if(path1.size() != path2.size())
 			return false;
 		for(int i = 0; i < path1.size(); i++){
-			if(!path1.get(i).equals(path2.get(i)))
+			if(!path1.get(i).toString().equals(path2.get(i).toString()))
 				return false;
 		}
 		return true;
