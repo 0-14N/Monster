@@ -39,3 +39,4 @@ run-debug.sh
 monster.properties
 download-monsterout.sh
 soot-infoflow-android/monster.properties
+soot-infoflow-android/MSTCALLBACKS.txt
