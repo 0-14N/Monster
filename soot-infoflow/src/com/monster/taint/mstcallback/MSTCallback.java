@@ -44,7 +44,17 @@ public class MSTCallback {
 		if(this.signature.equals(inSignature) && isParamTainted(paramIdx)){
 			return true;
 		}
-		SootMethod inMethod = Scene.v().getMethod(inSignature);
+		
+		SootMethod inMethod = null;
+		try{
+			inMethod = Scene.v().getMethod(inSignature);
+		}catch(RuntimeException re){
+			re.printStackTrace();
+			return false;
+		}
+		if(inMethod == null){
+			return false;
+		}
 		SootClass inClass = inMethod.getDeclaringClass();
 		List<SootClass> superClasses = Scene.v().getActiveHierarchy().getSuperclassesOf(inClass);
 		//inClass is the subclass of this.method's declaring class
