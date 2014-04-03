@@ -400,7 +400,9 @@ public class SetupApplication {
 		Options.v().set_output_format(Options.output_format_none);
 		Options.v().set_whole_program(true);
 		Options.v().set_process_dir(Collections.singletonList(apkFileLocation));
-		Options.v().set_soot_classpath(Scene.v().getAndroidJarPath(androidJar, apkFileLocation));
+		
+		String androidJarPath = Scene.v().getAndroidJarPath(androidJar, apkFileLocation);
+		Options.v().set_soot_classpath(androidJarPath);
 		Options.v().set_android_jars(androidJar);
 		Options.v().set_src_prec(Options.src_prec_apk);
 		Main.v().autoSetOptions();

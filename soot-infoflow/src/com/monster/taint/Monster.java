@@ -201,7 +201,7 @@ public class Monster {
 			}
 			return;
 		}
-		Set<Unit> callerUnits = iCfg.getCallersOf(smOnSourcePath);
+		Set<Unit> callerUnits = (Set<Unit>) iCfg.getCallersOf(smOnSourcePath);
 		for(Unit callUnit : callerUnits){
 			try{
 				SootMethod caller = iCfg.getMethodOf(callUnit);
@@ -250,7 +250,7 @@ public class Monster {
 	private ArrayList<MethodHub> getCallerHubsOf(MethodHub methodHub){
 		ArrayList<MethodHub> callerHubs = new ArrayList<MethodHub>();
 		SootMethod method = methodHub.getMethod();
-		Set<Unit> callerUnits = this.iCfg.getCallersOf(method);
+		Set<Unit> callerUnits = (Set<Unit>) this.iCfg.getCallersOf(method);
 		for(Unit callerUnit : callerUnits){
 			SootMethod caller = this.iCfg.getMethodOf(callerUnit);
 			//check loop existence

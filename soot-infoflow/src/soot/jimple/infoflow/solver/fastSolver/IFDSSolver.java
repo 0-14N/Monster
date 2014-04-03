@@ -231,7 +231,7 @@ public class IFDSSolver<N,D extends LinkedNode<D>,M,I extends InterproceduralCFG
 		Collection<N> returnSiteNs = icfg.getReturnSitesOfCallAt(n);
 		
 		//for each possible callee
-		Set<M> callees = icfg.getCalleesOfCallAt(n);
+		Set<M> callees = (Set<M>) icfg.getCalleesOfCallAt(n);
 		for(M sCalledProcN: callees) { //still line 14
 			//compute the call-flow function
 			FlowFunction<D> function = flowFunctions.getCallFlowFunction(n, sCalledProcN);
@@ -354,7 +354,7 @@ public class IFDSSolver<N,D extends LinkedNode<D>,M,I extends InterproceduralCFG
 		//note: we propagate that way only values that originate from ZERO, as conditionally generated values should only
 		//be propagated into callers that have an incoming edge for this condition
 		if(followReturnsPastSeeds && (inc == null || inc.isEmpty()) && d1.equals(zeroValue)) {
-				Set<N> callers = icfg.getCallersOf(methodThatNeedsSummary);
+				Set<N> callers = (Set<N>) icfg.getCallersOf(methodThatNeedsSummary);
 				for(N c: callers) {
 					for(N retSiteC: icfg.getReturnSitesOfCallAt(c)) {
 						FlowFunction<D> retFunction = flowFunctions.getReturnFlowFunction(c, methodThatNeedsSummary,n,retSiteC);

@@ -159,11 +159,11 @@ public class InfoflowCFG implements IInfoflowCFG {
 	}
 
 	public Set<SootMethod> getCalleesOfCallAt(Unit u) {
-		return delegate.getCalleesOfCallAt(u);
+		return (Set<SootMethod>) delegate.getCalleesOfCallAt(u);
 	}
 
 	public Set<Unit> getCallersOf(SootMethod m) {
-		return delegate.getCallersOf(m);
+		return (Set<Unit>) delegate.getCallersOf(m);
 	}
 
 	public Collection<Unit> getReturnSitesOfCallAt(Unit u) {
