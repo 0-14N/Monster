@@ -508,6 +508,19 @@ public class ForwardsProblem {
 						return;
 					}
 					
+					//check whether this is a native invoking
+					if(method != null && method.isNative()){
+						logger.info("Oh, my God! We arrived at native invoking {}!", invokeExpr);
+						//record the taint propagation
+						try{
+							TaintOutput.v().collectTaint(inThisTVs, inArgsTVs, inStaticTVs, currUnit, 
+									this.methodPath.getMethodHub().getMethod(), this.methodPath.getPathID());
+						} catch(Exception e){
+							e.printStackTrace();
+						}
+						return;
+					}
+					
 					//check component invoking
 					if(TargetManager.v().isStartComponent(className, subSignature)){
 						//TODO
