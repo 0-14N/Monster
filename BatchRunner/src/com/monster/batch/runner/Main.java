@@ -62,6 +62,8 @@ public class Main {
 					} catch (TimeoutException te) {
 						System.out.println("Timeout: " + apk.getAbsolutePath());
 						te.printStackTrace();
+						worker.interrupt();
+						Thread.currentThread().interrupt();
 					}
 					
 					InputStream stdout = new BufferedInputStream(process.getInputStream());
@@ -72,6 +74,8 @@ public class Main {
 					FileOutputStream stderrFileOutputStream = new FileOutputStream(apkOutDir+"/"+"errlog");
 					ByteStreams.copy(stderr, stderrFileOutputStream);
 					
+					
+					process.destroy();
 				} catch (Exception e) {
 					System.out.println("Exception happens when getRuntime.exec: " + apk.getAbsolutePath());
 					e.printStackTrace();
@@ -84,6 +88,7 @@ public class Main {
 					System.out.println("Copy monster-out exception");
 					e.printStackTrace();
 				}
+				
 			}
 		}
 		
