@@ -53,27 +53,21 @@ public class Main {
 					Worker worker = new Worker(process);
 					worker.start();
 					
-					try {
-						//20 minutes
-						worker.join(1000 * 60 * 20);
-						if(worker.exit == null){
-							throw new TimeoutException();
-						}
-					} catch (TimeoutException te) {
+					//20 minutes
+					worker.join(1000 * 60 * 20);
+					if(worker.exit == null){
 						System.out.println("Timeout: " + apk.getAbsolutePath());
-						te.printStackTrace();
 						worker.interrupt();
 						Thread.currentThread().interrupt();
+					}else{
+						InputStream stdout = new BufferedInputStream(process.getInputStream());
+						FileOutputStream stdoutFileOutputStream = new FileOutputStream(apkOutDir+"/"+"stdlog");
+						ByteStreams.copy(stdout, stdoutFileOutputStream);
+					
+						InputStream stderr = new BufferedInputStream(process.getErrorStream());
+						FileOutputStream stderrFileOutputStream = new FileOutputStream(apkOutDir+"/"+"errlog");
+						ByteStreams.copy(stderr, stderrFileOutputStream);
 					}
-					
-					InputStream stdout = new BufferedInputStream(process.getInputStream());
-					FileOutputStream stdoutFileOutputStream = new FileOutputStream(apkOutDir+"/"+"stdlog");
-					ByteStreams.copy(stdout, stdoutFileOutputStream);
-					
-					InputStream stderr = new BufferedInputStream(process.getErrorStream());
-					FileOutputStream stderrFileOutputStream = new FileOutputStream(apkOutDir+"/"+"errlog");
-					ByteStreams.copy(stderr, stderrFileOutputStream);
-					
 					
 					process.destroy();
 				} catch (Exception e) {
@@ -136,6 +130,7 @@ class Worker extends Thread {
 	    try { 
 	      exit = process.waitFor();
 	    } catch (InterruptedException ignore) {
+	    	Thread.currentThread().interrupt();
 	    	System.out.println("InterruptedException happens in Worker.run()!");
 	    }
 	  }  
