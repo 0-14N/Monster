@@ -611,6 +611,9 @@ public class ForwardsProblem {
 					
 					//for the new produced taint values, start backwards problems if it is necessary
 					logger.info("{} return with {} new taint values.", method, newProducedTVs.size());
+					if(newProducedTVs.size() > 5){
+						logger.info("Break Point!");
+					}
 					if(newProducedStaticTVs.size() > 0){
 						for(TaintValue tv : newProducedTVs){
 							if(tv.isStaticField() && tv.getAccessPath().size() > 1){

@@ -11,3 +11,9 @@
 
 #Activity
 <android.app.Activity: void onCreate(android.os.Bundle)>~0~1~0
+
+#Content Provider
+<android.content.ContentProvider: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)>~0~5~0
+<android.content.ContentProvider: android.net.Uri insert(android.net.Uri,android.content.ContentValues)>~0~2~0
+<android.content.ContentProvider: int update(android.net.Uri,android.content.ContentValues,java.lang.String,java.lang.String[])>~0~4~0
+<android.content.ContentProvider: int delete(android.net.Uri,java.lang.String,java.lang.String[])>~0~3~0

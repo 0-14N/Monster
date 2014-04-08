@@ -10,19 +10,27 @@
  ******************************************************************************/
 package soot.jimple.infoflow.android;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmlpull.v1.XmlPullParser;
 
+import android.content.res.AXmlResourceParser;
+import soot.G;
 import soot.Main;
 import soot.PackManager;
 import soot.Scene;
@@ -47,6 +55,7 @@ import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.jimple.infoflow.util.SootMethodRepresentationParser;
 import soot.options.Options;
+import test.AXMLPrinter;
 
 public class SetupApplication {
 
@@ -390,6 +399,157 @@ public class SetupApplication {
 		return sourceSinkManager;
 	}
 
+	private String getAndroidJarPath(String jars, String apk) {
+		File jarsF = new File(jars);
+		File apkF = new File(apk);
+
+		int APIVersion = -1;
+		String jarPath = "";
+
+		int maxAPI = getMaxAPIAvailable(jars);
+
+		if (!jarsF.exists())
+			throw new RuntimeException("file '" + jars + "' does not exist!");
+
+		if (!apkF.exists())
+			throw new RuntimeException("file '" + apk + "' does not exist!");
+
+		// get AndroidManifest
+		InputStream manifestIS = null;
+		ZipFile archive = null;
+		try {
+		try {
+			archive = new ZipFile(apkF);
+			for (@SuppressWarnings("rawtypes") Enumeration entries = archive.entries(); entries.hasMoreElements();) {
+				ZipEntry entry = (ZipEntry) entries.nextElement();
+				String entryName = entry.getName();
+				// We are dealing with the Android manifest
+				if (entryName.equals("AndroidManifest.xml")) {
+					manifestIS = archive.getInputStream(entry);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Error when looking for manifest in apk: " + e);
+		}
+		final int defaultSdkVersion = 15;
+		if (manifestIS == null) {
+			G.v().out.println("Could not find sdk version in Android manifest! Using default: "+defaultSdkVersion);
+			APIVersion = defaultSdkVersion;
+		} else {
+
+			// process AndroidManifest.xml
+			int sdkTargetVersion = -1;
+			int minSdkVersion = -1;
+			try {
+				AXmlResourceParser parser = new AXmlResourceParser();
+				parser.open(manifestIS);
+				int depth = 0;
+				while (true) {
+					int type = parser.next();
+					if (type == XmlPullParser.END_DOCUMENT) {
+						// throw new RuntimeException
+						// ("target sdk version not found in Android manifest ("+
+						// apkF +")");
+						break;
+					}
+					switch (type) {
+					case XmlPullParser.START_DOCUMENT: {
+						break;
+					}
+					case XmlPullParser.START_TAG: {
+						depth++;
+						String tagName = parser.getName();
+						if (depth == 2 && tagName.equals("uses-sdk")) {
+							for (int i = 0; i != parser.getAttributeCount(); ++i) {
+								String attributeName = parser.getAttributeName(i);
+								String attributeValue = AXMLPrinter.getAttributeValue(parser, i);
+								if (attributeName.equals("targetSdkVersion")) {
+									sdkTargetVersion = Integer.parseInt(attributeValue);
+								} else if (attributeName.equals("minSdkVersion")) {
+									minSdkVersion = Integer.parseInt(attributeValue);
+								}
+							}
+						}
+						break;
+					}
+					case XmlPullParser.END_TAG:
+						depth--;
+						break;
+					case XmlPullParser.TEXT:
+						break;
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			if (sdkTargetVersion != -1) {
+			    if (sdkTargetVersion > maxAPI
+			            && minSdkVersion != -1
+			            && minSdkVersion <= maxAPI) {
+			        G.v().out.println("warning: Android API version '"+ sdkTargetVersion +"' not available, using minApkVersion '"+ minSdkVersion +"' instead");
+			        APIVersion = minSdkVersion;
+			    } else {
+			        APIVersion = sdkTargetVersion;
+			    }
+			} else if (minSdkVersion != -1) {
+				APIVersion = minSdkVersion;
+			} else {
+				G.v().out.println("Could not find sdk version in Android manifest! Using default: "+defaultSdkVersion);
+				APIVersion = defaultSdkVersion;
+			}
+			
+			if (APIVersion <= 2)
+					APIVersion = 3;
+		}
+
+		// get path to appropriate android.jar
+		//jarPath = jars + File.separator + "android-" + APIVersion + File.separator + "android.jar";
+		jarPath = jars + File.separator + "android-" + maxAPI + File.separator + "android.jar";
+
+		// check that jar exists
+		File f = new File(jarPath);
+		if (!f.isFile())
+		    throw new RuntimeException("error: target android.jar ("+ jarPath +") does not exist.");
+
+		return jarPath;
+		}
+		finally {
+			if (archive != null)
+				try {
+					archive.close();
+				} catch (IOException e) {
+					throw new RuntimeException("Error when looking for manifest in apk: " + e);
+				}
+		}
+	}
+	
+	private int getMaxAPIAvailable(String dir) {
+        File d = new File(dir);
+        if (!d.exists())
+        	throw new RuntimeException("The Android platform directory you have"
+        			+ "specified (" + dir + ") does not exist. Please check.");
+        
+        File[] files = d.listFiles();
+        int maxApi = -1;
+        for (File f: files) {
+            String name = f.getName();
+            if (f.isDirectory() && name.startsWith("android-")) {
+            	try {
+                int v = Integer.decode(name.split("android-")[1]);
+                if (v > maxApi)
+                    maxApi = v;
+            	}
+            	catch (NumberFormatException ex) {
+            		// We simply ignore directories that do not follow the
+            		// Android naming structure
+            	}
+            }
+        }
+        return maxApi;
+    }
+	
 	/**
 	 * Initializes soot for running the soot-based phases of the application
 	 * metadata analysis
@@ -401,7 +561,7 @@ public class SetupApplication {
 		Options.v().set_whole_program(true);
 		Options.v().set_process_dir(Collections.singletonList(apkFileLocation));
 		
-		String androidJarPath = Scene.v().getAndroidJarPath(androidJar, apkFileLocation);
+		String androidJarPath = getAndroidJarPath(androidJar, apkFileLocation);
 		Options.v().set_soot_classpath(androidJarPath);
 		Options.v().set_android_jars(androidJar);
 		Options.v().set_src_prec(Options.src_prec_apk);

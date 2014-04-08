@@ -451,7 +451,7 @@ public class ASRExpr {
 		case AND:
 			//and_expr = immediate "&" immediate;
 			//TODO
-			assert(false) : "AND Expr";
+			//assert(false) : "AND Expr";
 			break;
 		//[start] DIV
 		case DIV:
