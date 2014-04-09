@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.FileUtils;
 
@@ -19,7 +18,7 @@ public class Main {
 	}
 	
 	private void run(String[] argv){
-		if(argv.length != 3){
+		if(argv.length != 5){
 			printUsage();
 			System.exit(-1);
 		}
@@ -27,6 +26,8 @@ public class Main {
 		String apkDir = argv[0];
 		String monsterOutPath = argv[1];
 		String thisOut = argv[2];
+		String handledDir = argv[3];
+		int timeoutMins = Integer.parseInt(argv[4]);
 		
 		if(!verifyDirExist(apkDir)){
 			printUsage();
@@ -54,11 +55,10 @@ public class Main {
 					worker.start();
 					
 					//20 minutes
-					worker.join(1000 * 60 * 20);
+					worker.join(1000 * 60 * timeoutMins);
 					if(worker.exit == null){
 						System.out.println("Timeout: " + apk.getAbsolutePath());
 						worker.interrupt();
-						Thread.currentThread().interrupt();
 					}else{
 						InputStream stdout = new BufferedInputStream(process.getInputStream());
 						FileOutputStream stdoutFileOutputStream = new FileOutputStream(apkOutDir+"/"+"stdlog");
@@ -83,6 +83,14 @@ public class Main {
 					e.printStackTrace();
 				}
 				
+				//move the handled apk
+				try{
+					FileUtils.moveFileToDirectory(new File(apkPath), new File(handledDir), true);
+				}catch(IOException ioe){
+					System.out.println("Move apk exception");
+					ioe.printStackTrace();
+				}
+				
 			}
 		}
 		
@@ -91,7 +99,7 @@ public class Main {
 	private void printUsage(){
 		System.out.println("Usage: \n" + 
 								"java -ea -jar BatchRunner.jar " +
-								"apkDir/ monsterOutPath batchRunnerOutDir");
+								"apkDir/ monsterOutPath batchRunnerOutDir handledDir timeoutMins");
 	}
 	
 	private boolean verifyDirExist(String apkDir){
@@ -124,6 +132,7 @@ class Worker extends Thread {
 	  
 	  Worker(Process process) {
 	    this.process = process;
+	    this.exit = null;
 	  }
 	  
 	  public void run() {
